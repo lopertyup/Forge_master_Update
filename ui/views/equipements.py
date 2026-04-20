@@ -1,7 +1,8 @@
 """
 ============================================================
   FORGE MASTER UI — Comparateur d'équipements
-  Coller texte avec NEW! → calcul + simulation automatique.
+  Disposition : texte à gauche | ancien/nouveau empilés à droite
+  Simulation auto dès détection de NEW!
 ============================================================
 """
 
@@ -35,15 +36,21 @@ class EquipementsView(ctk.CTkFrame):
 
     def __init__(self, parent, controller, app):
         super().__init__(parent, fg_color=C["bg"], corner_radius=0)
-        self.controller = controller
-        self.app        = app
+        self.controller    = controller
+        self.app           = app
+        self._result_data  = None
+        self._profil_nouveau = None
+        self._after_id     = None  # pour debounce auto-analyse
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
-        self._result_data = None
         self._build()
 
+    # ════════════════════════════════════════════════════════
+    #  CONSTRUCTION UI
+    # ════════════════════════════════════════════════════════
+
     def _build(self):
-        # En-tête
+        # ── En-tête ──────────────────────────────────────────
         header = ctk.CTkFrame(self, fg_color=C["surface"], corner_radius=0, height=64)
         header.grid(row=0, column=0, sticky="ew")
         header.grid_propagate(False)
@@ -51,190 +58,181 @@ class EquipementsView(ctk.CTkFrame):
                      font=FONT_TITLE, text_color=C["text"]).pack(
             side="left", padx=24, pady=16)
 
-        # Scrollable body
-        scroll = ctk.CTkScrollableFrame(self, fg_color=C["bg"], corner_radius=0)
-        scroll.grid(row=1, column=0, sticky="nsew")
-        scroll.grid_columnconfigure(0, weight=1)
+        # ── Corps principal (pas scrollable — tout doit tenir à l'écran) ──
+        body = ctk.CTkFrame(self, fg_color=C["bg"], corner_radius=0)
+        body.grid(row=1, column=0, sticky="nsew", padx=16, pady=12)
+        body.grid_columnconfigure(0, weight=2)   # colonne texte
+        body.grid_columnconfigure(1, weight=3)   # colonne équipements
+        body.grid_rowconfigure(0, weight=1)
+        body.grid_rowconfigure(1, weight=0)
 
-        # ── Zone de saisie ────────────────────────────────────
-        input_card = ctk.CTkFrame(scroll, fg_color=C["card"], corner_radius=12)
-        input_card.grid(row=0, column=0, padx=16, pady=16, sticky="ew")
-        input_card.grid_columnconfigure(0, weight=1)
+        # ── Colonne gauche : saisie ──────────────────────────
+        left = ctk.CTkFrame(body, fg_color=C["card"], corner_radius=12)
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 8), pady=(0, 8))
+        left.grid_columnconfigure(0, weight=1)
+        left.grid_rowconfigure(1, weight=1)
 
-        ctk.CTkLabel(input_card, text="Texte de comparaison",
+        ctk.CTkLabel(left, text="Coller le texte ici",
                      font=FONT_SUB, text_color=C["text"]).grid(
-            row=0, column=0, padx=20, pady=(16, 4), sticky="w")
-
-        ctk.CTkLabel(input_card,
-                     text="Collez le texte de comparaison depuis le jeu (doit contenir « NEW! »).",
-                     font=FONT_SMALL, text_color=C["muted"]).grid(
-            row=1, column=0, padx=20, pady=(0, 8), sticky="w")
+            row=0, column=0, padx=16, pady=(14, 4), sticky="w")
 
         self.text_box = ctk.CTkTextbox(
-            input_card, height=180, font=("Consolas", 11),
+            left, font=("Consolas", 11),
             fg_color="#0D0F14", text_color=C["text"],
             border_color=C["border"], border_width=1,
         )
-        self.text_box.grid(row=2, column=0, padx=16, pady=(0, 8), sticky="ew")
+        self.text_box.grid(row=1, column=0, padx=12, pady=(0, 8), sticky="nsew")
+        self.text_box.bind("<KeyRelease>", self._on_text_change)
 
-        # Type arme (optionnel si détecté)
-        type_f = ctk.CTkFrame(input_card, fg_color="transparent")
-        type_f.grid(row=3, column=0, padx=16, pady=(0, 8), sticky="w")
-        ctk.CTkLabel(type_f, text="Type arme (si non détecté) :",
-                     font=FONT_SMALL, text_color=C["muted"]).pack(side="left")
-        self.weapon_type = ctk.StringVar(value="auto")
-        for val, lbl in [("auto", "Auto"), ("corps_a_corps", "⚔ Mêlée"), ("distance", "🏹 Distance")]:
-            ctk.CTkRadioButton(type_f, text=lbl, variable=self.weapon_type,
-                               value=val, text_color=C["text"],
-                               font=FONT_SMALL).pack(side="left", padx=10)
+        self._lbl_err = ctk.CTkLabel(left, text="",
+                                      font=FONT_SMALL, text_color=C["lose"],
+                                      wraplength=260)
+        self._lbl_err.grid(row=2, column=0, padx=12, pady=(0, 4))
 
-        self._lbl_err = ctk.CTkLabel(input_card, text="",
-                                      font=FONT_SMALL, text_color=C["lose"])
-        self._lbl_err.grid(row=4, column=0, padx=20)
+        self._lbl_status = ctk.CTkLabel(left, text="En attente du texte…",
+                                         font=FONT_SMALL, text_color=C["muted"],
+                                         wraplength=260)
+        self._lbl_status.grid(row=3, column=0, padx=12, pady=(0, 12))
 
-        ctk.CTkButton(
-            input_card, text="🔍  Analyser et simuler",
-            font=FONT_SUB, height=40, corner_radius=8,
-            fg_color=C["accent"], hover_color="#c94828",
-            command=self._analyser,
-        ).grid(row=5, column=0, padx=16, pady=(0, 16), sticky="ew")
+        # ── Colonne droite : ancien + nouveau empilés ────────
+        right = ctk.CTkFrame(body, fg_color="transparent", corner_radius=0)
+        right.grid(row=0, column=1, sticky="nsew", padx=(8, 0), pady=(0, 8))
+        right.grid_columnconfigure(0, weight=1)
+        right.grid_rowconfigure(0, weight=1)
+        right.grid_rowconfigure(1, weight=1)
 
-        # ── Zone résultats ────────────────────────────────────
-        self.result_container = ctk.CTkFrame(scroll, fg_color="transparent")
-        self.result_container.grid(row=1, column=0, padx=16, pady=(0, 16), sticky="ew")
-        self.result_container.grid_columnconfigure((0, 1), weight=1)
+        # Carte équipement actuel
+        self.card_ancien = ctk.CTkFrame(right, fg_color=C["card"], corner_radius=12)
+        self.card_ancien.grid(row=0, column=0, sticky="nsew", pady=(0, 6))
+        self.card_ancien.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(self.card_ancien, text="Équipement actuel",
+                     font=FONT_SUB, text_color=C["muted"]).pack(
+            padx=16, pady=(12, 4), anchor="w")
+        self._inner_ancien = ctk.CTkFrame(self.card_ancien, fg_color="transparent")
+        self._inner_ancien.pack(fill="both", expand=True, padx=8, pady=(0, 10))
+
+        # Carte nouvel équipement
+        self.card_nouveau = ctk.CTkFrame(right, fg_color=C["card"], corner_radius=12)
+        self.card_nouveau.grid(row=1, column=0, sticky="nsew", pady=(6, 0))
+        self.card_nouveau.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(self.card_nouveau, text="Nouvel équipement",
+                     font=FONT_SUB, text_color=C["accent"]).pack(
+            padx=16, pady=(12, 4), anchor="w")
+        self._inner_nouveau = ctk.CTkFrame(self.card_nouveau, fg_color="transparent")
+        self._inner_nouveau.pack(fill="both", expand=True, padx=8, pady=(0, 10))
+
+        # ── Bas : résultats simulation ───────────────────────
+        self.bottom = ctk.CTkFrame(body, fg_color=C["card"], corner_radius=12)
+        self.bottom.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+        self.bottom.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
+        self._build_bottom_empty()
+
+    def _build_bottom_empty(self):
+        for w in self.bottom.winfo_children():
+            w.destroy()
+        ctk.CTkLabel(self.bottom,
+                     text="Les résultats de simulation apparaîtront ici.",
+                     font=FONT_SMALL, text_color=C["muted"]).pack(pady=18)
+
+    # ════════════════════════════════════════════════════════
+    #  AUTO-ANALYSE (debounce 600 ms)
+    # ════════════════════════════════════════════════════════
+
+    def _on_text_change(self, event=None):
+        if self._after_id:
+            self.after_cancel(self._after_id)
+        texte = self.text_box.get("1.0", "end").strip()
+        if "NEW!" in texte.upper():
+            self._after_id = self.after(600, self._analyser)
+        else:
+            self._lbl_status.configure(text="En attente de « NEW! » dans le texte…")
+            self._lbl_err.configure(text="")
+
+    # ════════════════════════════════════════════════════════
+    #  ANALYSE + SIMULATION
+    # ════════════════════════════════════════════════════════
 
     def _analyser(self):
+        self._after_id = None
+
         if not self.controller.has_profil():
             self._lbl_err.configure(
                 text="⚠ Aucun profil joueur. Allez dans Dashboard d'abord.")
             return
 
         texte = self.text_box.get("1.0", "end").strip()
-        if not texte:
-            self._lbl_err.configure(text="⚠ Collez le texte de comparaison.")
-            return
-
         result = self.controller.comparer_equipement(texte)
         if result is None:
             self._lbl_err.configure(
                 text="⚠ Texte invalide : assurez-vous que « NEW! » est présent.")
             return
 
-        eq_ancien, eq_nouveau, profil_nouveau = result
-
-        # Appliquer le type si forcé
-        if self.weapon_type.get() != "auto" and eq_nouveau.get("type_attaque") is None:
-            eq_nouveau["type_attaque"] = self.weapon_type.get()
-
         self._lbl_err.configure(text="")
-        self._result_data = (eq_ancien, eq_nouveau, profil_nouveau)
+        eq_ancien, eq_nouveau, profil_nouveau = result
+        self._profil_nouveau = profil_nouveau
 
-        # Afficher comparaison stats immédiatement
-        self._afficher_stats(eq_ancien, eq_nouveau, profil_nouveau)
+        # Afficher les équipements
+        self._render_eq(self._inner_ancien, eq_ancien)
+        self._render_eq(self._inner_nouveau, eq_nouveau)
 
-        # Lancer simulation en arrière-plan
-        self._lbl_verdict = ctk.CTkLabel(
-            self.result_container,
-            text="⏳ Simulation en cours (1000 combats)…",
-            font=FONT_BODY, text_color=C["muted"])
-        self._lbl_verdict.grid(row=2, column=0, columnspan=2, pady=8)
-        self.update()
+        # Lancer simulation
+        self._lbl_status.configure(text="⏳ Simulation en cours…")
+        self._build_bottom_loading()
 
         from backend.forge_master import stats_combat
-        # FIX : adversaire = profil actuel, joueur = profil avec nouvel équipement
         se_ancien = stats_combat(self.controller.get_profil())
         skills    = self.controller.get_skills_actifs()
 
-        # FIX : callback thread-safe via after()
         def on_result(wins, loses, draws):
-            self.after(0, lambda: self._on_sim_done(wins, loses, draws, profil_nouveau))
+            self.after(0, lambda: self._on_sim_done(wins, loses, draws))
 
         self.controller.simuler(
-            se_ancien,          # adversaire = profil actuel (sans le nouvel équip)
+            se_ancien,
             skills,
             on_result,
-            profil_override=profil_nouveau,   # joueur = avec le nouvel équip
+            profil_override=profil_nouveau,
             skills_override=skills,
         )
 
-    def _on_sim_done(self, wins, loses, draws, profil_nouveau):
-        if self._lbl_verdict and self._lbl_verdict.winfo_exists():
-            self._lbl_verdict.destroy()
-        self._afficher_simulation(wins, loses, draws, profil_nouveau)
+    def _build_bottom_loading(self):
+        for w in self.bottom.winfo_children():
+            w.destroy()
+        ctk.CTkLabel(self.bottom,
+                     text="⏳ Simulation en cours (1000 combats)…",
+                     font=FONT_BODY, text_color=C["muted"]).pack(pady=18)
 
-    def _afficher_stats(self, eq_ancien, eq_nouveau, profil_nouveau):
-        # Nettoyer les anciens résultats
-        for w in self.result_container.winfo_children():
+    def _on_sim_done(self, wins, loses, draws):
+        self._lbl_status.configure(text="✅ Analyse terminée.")
+        self._afficher_resultats(wins, loses, draws)
+
+    # ════════════════════════════════════════════════════════
+    #  RENDU ÉQUIPEMENT
+    # ════════════════════════════════════════════════════════
+
+    def _render_eq(self, parent, eq):
+        for w in parent.winfo_children():
             w.destroy()
 
-        profil_actuel = self.controller.get_profil()
-
-        # Colonne Ancien
-        col_a = ctk.CTkFrame(self.result_container, fg_color=C["card"], corner_radius=12)
-        col_a.grid(row=0, column=0, padx=(0, 8), pady=(0, 8), sticky="nsew")
-        ctk.CTkLabel(col_a, text="Équipement actuel",
-                     font=FONT_SUB, text_color=C["muted"]).pack(padx=16, pady=(14, 6))
-        self._render_eq_stats(col_a, eq_ancien)
-
-        # Colonne Nouveau
-        col_n = ctk.CTkFrame(self.result_container, fg_color=C["card"], corner_radius=12)
-        col_n.grid(row=0, column=1, padx=(8, 0), pady=(0, 8), sticky="nsew")
-        ctk.CTkLabel(col_n, text="Nouvel équipement",
-                     font=FONT_SUB, text_color=C["accent"]).pack(padx=16, pady=(14, 6))
-        self._render_eq_stats(col_n, eq_nouveau)
-
-        # Comparaison HP / ATQ
-        delta_frame = ctk.CTkFrame(self.result_container, fg_color=C["card"], corner_radius=12)
-        delta_frame.grid(row=1, column=0, columnspan=2, padx=0, pady=(0, 8), sticky="ew")
-        delta_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
-        ctk.CTkLabel(delta_frame, text="Impact sur le profil",
-                     font=FONT_SUB, text_color=C["text"]).grid(
-            row=0, column=0, columnspan=4, padx=20, pady=(14, 8), sticky="w")
-
-        for col, (label, key, is_big) in enumerate([
-            ("HP Total",  "hp_total",       True),
-            ("ATQ Total", "attaque_total",   True),
-            ("HP Base",   "hp_base",        False),
-            ("ATQ Base",  "attaque_base",   False),
-        ]):
-            v_old = profil_actuel.get(key, 0)
-            v_new = profil_nouveau.get(key, 0)
-            delta = v_new - v_old
-            color = C["up"] if delta > 0 else (C["down"] if delta < 0 else C["neutral"])
-            sign  = "+" if delta >= 0 else ""
-
-            f = ctk.CTkFrame(delta_frame, fg_color="#232840", corner_radius=8)
-            f.grid(row=1, column=col, padx=8, pady=(0, 14), sticky="ew")
-            ctk.CTkLabel(f, text=label, font=FONT_SMALL,
-                         text_color=C["muted"]).pack(pady=(8, 0))
-            ctk.CTkLabel(f, text=self.controller.fmt_nombre(v_new),
-                         font=("Segoe UI", 16, "bold"),
-                         text_color=C["text"]).pack()
-            ctk.CTkLabel(f,
-                         text=f"{sign}{self.controller.fmt_nombre(delta)}",
-                         font=FONT_SMALL, text_color=color).pack(pady=(0, 8))
-
-    def _render_eq_stats(self, parent, eq):
         stat_labels = [
-            ("hp_flat",         "Health (flat)"),
-            ("damage_flat",     "Damage (flat)"),
-            ("health_pct",      "Health %"),
-            ("damage_pct",      "Damage %"),
-            ("melee_pct",       "Melee %"),
-            ("ranged_pct",      "Ranged %"),
-            ("taux_crit",       "Crit Chance"),
-            ("degat_crit",      "Crit Damage"),
-            ("health_regen",    "Health Regen"),
-            ("lifesteal",       "Lifesteal"),
-            ("double_chance",   "Double Chance"),
-            ("vitesse_attaque", "Attack Speed"),
-            ("skill_damage",    "Skill Damage"),
-            ("skill_cooldown",  "Skill Cooldown"),
-            ("chance_blocage",  "Block Chance"),
+            ("hp_flat",         "Health (flat)",  True),
+            ("damage_flat",     "Damage (flat)",  True),
+            ("health_pct",      "Health %",       False),
+            ("damage_pct",      "Damage %",       False),
+            ("melee_pct",       "Melee %",        False),
+            ("ranged_pct",      "Ranged %",       False),
+            ("taux_crit",       "Crit Chance",    False),
+            ("degat_crit",      "Crit Damage",    False),
+            ("health_regen",    "Health Regen",   False),
+            ("lifesteal",       "Lifesteal",      False),
+            ("double_chance",   "Double Chance",  False),
+            ("vitesse_attaque", "Attack Speed",   False),
+            ("skill_damage",    "Skill Damage",   False),
+            ("skill_cooldown",  "Skill Cooldown", False),
+            ("chance_blocage",  "Block Chance",   False),
         ]
+
         any_shown = False
-        for i, (key, label) in enumerate(stat_labels):
+        for i, (key, label, is_flat) in enumerate(stat_labels):
             val = eq.get(key, 0.0)
             if not val:
                 continue
@@ -244,82 +242,130 @@ class EquipementsView(ctk.CTkFrame):
                 fg_color="#232840" if i % 2 == 0 else C["card"],
                 corner_radius=4,
             )
-            row_f.pack(padx=10, pady=1, fill="x")
+            row_f.pack(padx=4, pady=1, fill="x")
             row_f.grid_columnconfigure(1, weight=1)
             ctk.CTkLabel(row_f, text=label, font=FONT_SMALL,
                          text_color=C["muted"], anchor="w").grid(
-                row=0, column=0, padx=12, pady=5, sticky="w")
-            unit = "" if key in ("hp_flat", "damage_flat") else "%"
-            ctk.CTkLabel(row_f,
-                         text=self.controller.fmt_nombre(val) if key in ("hp_flat", "damage_flat") else f"+{val}{unit}",
+                row=0, column=0, padx=10, pady=4, sticky="w")
+            val_str = self.controller.fmt_nombre(val) if is_flat else f"+{val}%"
+            ctk.CTkLabel(row_f, text=val_str,
                          font=FONT_MONO, text_color=C["text"],
-                         anchor="e").grid(row=0, column=1, padx=12, pady=5, sticky="e")
+                         anchor="e").grid(row=0, column=1, padx=10, pady=4, sticky="e")
 
         t = eq.get("type_attaque")
         if t:
             ctk.CTkLabel(parent,
                          text=f"Type : {'🏹 Distance' if t == 'distance' else '⚔ Mêlée'}",
                          font=FONT_SMALL, text_color=C["muted"]).pack(
-                padx=12, pady=(4, 10), anchor="w")
+                padx=10, pady=(4, 4), anchor="w")
 
         if not any_shown and not t:
             ctk.CTkLabel(parent, text="Aucune stat détectée",
-                         font=FONT_SMALL, text_color=C["muted"]).pack(pady=20)
+                         font=FONT_SMALL, text_color=C["muted"]).pack(pady=10)
 
-    def _afficher_simulation(self, wins, loses, draws, profil_nouveau):
-        sim_frame = ctk.CTkFrame(self.result_container, fg_color=C["card"], corner_radius=12)
-        sim_frame.grid(row=2, column=0, columnspan=2, padx=0, pady=(0, 16), sticky="ew")
-        sim_frame.grid_columnconfigure((0, 1, 2), weight=1)
+    # ════════════════════════════════════════════════════════
+    #  RÉSULTATS SIMULATION
+    # ════════════════════════════════════════════════════════
 
-        ctk.CTkLabel(sim_frame, text="Résultat simulation (1000 combats)",
-                     font=FONT_SUB, text_color=C["text"]).grid(
-            row=0, column=0, columnspan=3, padx=20, pady=(14, 8), sticky="w")
+    def _afficher_resultats(self, wins, loses, draws):
+        for w in self.bottom.winfo_children():
+            w.destroy()
 
-        # Compteurs
+        total = wins + loses + draws
+
+        # ── Compteurs WIN / LOSE / DRAW ──────────────────────
         for col, (label, val, color) in enumerate([
             ("WIN",  wins,  C["win"]),
             ("LOSE", loses, C["lose"]),
             ("DRAW", draws, C["draw"]),
         ]):
-            f = ctk.CTkFrame(sim_frame, fg_color="#232840", corner_radius=10)
-            f.grid(row=1, column=col, padx=10, pady=(0, 8), sticky="ew")
+            f = ctk.CTkFrame(self.bottom, fg_color="#232840", corner_radius=10)
+            f.grid(row=0, column=col, padx=10, pady=(12, 6), sticky="ew")
             ctk.CTkLabel(f, text=label, font=FONT_SMALL,
-                         text_color=C["muted"]).pack(pady=(8, 0))
+                         text_color=C["muted"]).pack(pady=(6, 0))
             ctk.CTkLabel(f, text=str(val), font=FONT_BIG,
                          text_color=color).pack()
             ctk.CTkLabel(f, text=f"{val/10:.1f}%", font=FONT_SMALL,
-                         text_color=C["muted"]).pack(pady=(0, 8))
+                         text_color=C["muted"]).pack(pady=(0, 6))
 
-        # Barre win rate
-        bar = ctk.CTkProgressBar(sim_frame, height=10, corner_radius=5,
+        # ── Barre win rate ───────────────────────────────────
+        bar = ctk.CTkProgressBar(self.bottom, height=8, corner_radius=4,
                                   progress_color=C["win"] if wins >= loses else C["lose"])
-        bar.grid(row=2, column=0, columnspan=3, padx=20, pady=(4, 8), sticky="ew")
-        bar.set(wins / 1000)
+        bar.grid(row=1, column=0, columnspan=3, padx=16, pady=(0, 6), sticky="ew")
+        bar.set(wins / total if total else 0)
 
-        # Verdict + bouton sauvegarder
-        if wins > loses:
-            verdict = f"✅  Le nouvel équipement est meilleur ! ({wins/10:.1f}% WIN)"
-            color   = C["win"]
+        # ── Verdict ──────────────────────────────────────────
+        amelioration = wins > loses
+        if amelioration:
+            verdict = f"✅  Meilleur équipement ! ({wins/10:.1f}% WIN)"
+            verdict_color = C["win"]
         elif loses > wins:
-            verdict = f"❌  L'ancien équipement reste meilleur. ({loses/10:.1f}% LOSE)"
-            color   = C["lose"]
+            verdict = f"❌  Moins bon équipement. ({loses/10:.1f}% LOSE)"
+            verdict_color = C["lose"]
         else:
-            verdict = "🤝  Équivalents — aucun changement nécessaire."
-            color   = C["draw"]
+            verdict = "🤝  Équivalents."
+            verdict_color = C["draw"]
 
-        ctk.CTkLabel(sim_frame, text=verdict,
-                     font=FONT_SUB, text_color=color).grid(
-            row=3, column=0, columnspan=3, padx=20, pady=(0, 8))
+        ctk.CTkLabel(self.bottom, text=verdict,
+                     font=FONT_SUB, text_color=verdict_color).grid(
+            row=2, column=0, columnspan=3, padx=16, pady=(0, 8))
 
-        if wins > loses:
+        # ── Boutons ──────────────────────────────────────────
+        btn_frame = ctk.CTkFrame(self.bottom, fg_color="transparent")
+        btn_frame.grid(row=3, column=0, columnspan=3, padx=16, pady=(0, 12), sticky="ew")
+        btn_frame.grid_columnconfigure((0, 1), weight=1)
+
+        if amelioration:
+            # Amélioration → Appliquer en vert, Ne pas appliquer en rouge
             ctk.CTkButton(
-                sim_frame,
-                text="💾  Appliquer ce nouvel équipement",
+                btn_frame,
+                text="💾  Appliquer le nouvel équipement",
                 font=FONT_BODY, height=36, corner_radius=8,
                 fg_color=C["win"], hover_color="#27ae60", text_color="#0D0F14",
-                command=lambda: self._appliquer(profil_nouveau),
-            ).grid(row=4, column=0, columnspan=3, padx=20, pady=(0, 14), sticky="ew")
+                command=self._appliquer,
+            ).grid(row=0, column=0, padx=(0, 6), sticky="ew")
 
-    def _appliquer(self, profil_nouveau):
-        self.controller.appliquer_equipement(profil_nouveau)
-        self.app.refresh_current()
+            ctk.CTkButton(
+                btn_frame,
+                text="✖  Ne pas appliquer",
+                font=FONT_BODY, height=36, corner_radius=8,
+                fg_color=C["lose"], hover_color="#c0392b", text_color=C["text"],
+                command=self._clear,
+            ).grid(row=0, column=1, padx=(6, 0), sticky="ew")
+        else:
+            # Pas d'amélioration → Appliquer en rouge, Ne pas appliquer en vert
+            ctk.CTkButton(
+                btn_frame,
+                text="💾  Appliquer quand même",
+                font=FONT_BODY, height=36, corner_radius=8,
+                fg_color=C["lose"], hover_color="#c0392b", text_color=C["text"],
+                command=self._appliquer,
+            ).grid(row=0, column=0, padx=(0, 6), sticky="ew")
+
+            ctk.CTkButton(
+                btn_frame,
+                text="✔  Garder l'équipement actuel",
+                font=FONT_BODY, height=36, corner_radius=8,
+                fg_color=C["win"], hover_color="#27ae60", text_color="#0D0F14",
+                command=self._clear,
+            ).grid(row=0, column=1, padx=(6, 0), sticky="ew")
+
+    # ════════════════════════════════════════════════════════
+    #  ACTIONS
+    # ════════════════════════════════════════════════════════
+
+    def _appliquer(self):
+        if self._profil_nouveau:
+            self.controller.appliquer_equipement(self._profil_nouveau)
+            self.app.refresh_current()
+        self._clear()
+
+    def _clear(self):
+        self.text_box.delete("1.0", "end")
+        self._profil_nouveau = None
+        self._result_data    = None
+        self._lbl_err.configure(text="")
+        self._lbl_status.configure(text="En attente du texte…")
+        self._render_eq(self._inner_ancien, {})
+        self._render_eq(self._inner_nouveau, {})
+        self._build_bottom_empty()

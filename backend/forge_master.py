@@ -170,10 +170,13 @@ def parser_equipement(texte):
     if m:
         eq["damage_flat"] = parse_flat(m.group(1))
 
-    if re.search(r'\(.*ranged.*\)', texte_net, re.IGNORECASE):
-        eq["type_attaque"] = "distance"
-    elif eq["damage_flat"] > 0:
-        eq["type_attaque"] = "corps_a_corps"
+    if eq["damage_flat"] > 0:
+        if re.search(r'Damage\s*\(ranged\)', texte_net, re.IGNORECASE):
+            eq["type_attaque"] = "distance"
+        else:
+            eq["type_attaque"] = "corps_a_corps"
+    else:
+        eq["type_attaque"] = None
 
     eq["taux_crit"]       = extraire(texte_net, [r"\+([\d. ]+)%\s*Critical Chance"])
     eq["degat_crit"]      = extraire(texte_net, [r"\+([\d. ]+)%\s*Critical Damage"])
@@ -202,8 +205,11 @@ def appliquer_changement(profil, eq_ancien, eq_nouveau):
               "health_pct", "damage_pct", "melee_pct", "ranged_pct"]:
         nouveau[k] = round(profil.get(k, 0.0) - eq_ancien.get(k, 0.0) + eq_nouveau.get(k, 0.0), 6)
 
-    if eq_nouveau.get("type_attaque") is not None:
-        nouveau["type_attaque"] = eq_nouveau["type_attaque"]
+    ancien_ranged  = eq_ancien.get("type_attaque") == "distance"
+    nouveau_ranged = eq_nouveau.get("type_attaque") == "distance"
+
+    if ancien_ranged or nouveau_ranged:
+        nouveau["type_attaque"] = eq_nouveau.get("type_attaque") or "corps_a_corps"
         type_atq = nouveau["type_attaque"]
 
     nouveau["hp_base"]      = profil["hp_base"] - eq_ancien.get("hp_flat", 0) + eq_nouveau.get("hp_flat", 0)
