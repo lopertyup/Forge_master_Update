@@ -151,8 +151,10 @@ def stats_combat(profil):
 # ════════════════════════════════════════════════════════════
 
 def parser_equipement(texte):
-    texte_net = re.sub(r'\b[A-Z]\s*$', '', texte, flags=re.MULTILINE)
-    texte_net = re.sub(r'\n(?![+\-\[\dNEQV])', ' ', texte_net)
+    # Nettoyage : supprimer chiffres isolés et lettres isolées (artefacts UI)
+    texte_net = re.sub(r'(?m)^\s*\d+\s*$', '', texte)       # ligne = chiffre seul
+    texte_net = re.sub(r'(?m)^\s*[A-Z]\s*$', '', texte_net) # ligne = lettre seule
+    texte_net = re.sub(r'\n(?![+\-\[\dA-Za-z\[])', ' ', texte_net)
 
     eq = {k: 0.0 for k in [
         "hp_flat", "damage_flat", "health_pct", "damage_pct",
@@ -162,35 +164,35 @@ def parser_equipement(texte):
     ]}
     eq["type_attaque"] = None
 
-    m = re.search(r'([\d.]+[km]?)\s*Health(?!\s*Regen)(?!\s*%)', texte_net, re.IGNORECASE)
+    # Health flat : "877k Health" mais PAS "Health Regen" ni "Health %"
+    m = re.search(r'([\d.]+[kmb]?)\s*Health(?!\s*Regen)(?!\s*%)', texte_net, re.IGNORECASE)
     if m:
         eq["hp_flat"] = parse_flat(m.group(1))
 
-    m = re.search(r'([\d.]+[km]?)\s*Damage(?!\s*%)(\s*\(.*?\))?', texte_net, re.IGNORECASE)
+    # Damage flat : cherche TOUTES les occurrences et prend la première
+    # qui est directement suivie de rien ou de (ranged)
+    m = re.search(r'([\d.]+[kmb]?)\s*Damage(\s*\([^)]*\))?(?!\s*%)', texte_net, re.IGNORECASE)
+    m = re.search(r'([\d.]+[kmb]?)\s*Damage(\s*\([^)]*\))?(?!\s*%)', texte_net, re.IGNORECASE)
     if m:
         eq["damage_flat"] = parse_flat(m.group(1))
-
-    if eq["damage_flat"] > 0:
-        if re.search(r'Damage\s*\(ranged\)', texte_net, re.IGNORECASE):
+        suffix = m.group(2) or ""
+        if re.search(r'ranged', suffix, re.IGNORECASE):
             eq["type_attaque"] = "distance"
-        else:
-            eq["type_attaque"] = "corps_a_corps"
-    else:
-        eq["type_attaque"] = None
+        # sinon type reste None → profil conservé
 
-    eq["taux_crit"]       = extraire(texte_net, [r"\+([\d. ]+)%\s*Critical Chance"])
-    eq["degat_crit"]      = extraire(texte_net, [r"\+([\d. ]+)%\s*Critical Damage"])
-    eq["health_regen"]    = extraire(texte_net, [r"\+([\d. ]+)%\s*Health Regen"])
-    eq["lifesteal"]       = extraire(texte_net, [r"\+([\d. ]+)%\s*Lifesteal"])
-    eq["double_chance"]   = extraire(texte_net, [r"\+([\d. ]+)%\s*Double Chance"])
-    eq["vitesse_attaque"] = extraire(texte_net, [r"\+([\d. ]+)%\s*Attack Speed"])
-    eq["skill_damage"]    = extraire(texte_net, [r"\+([\d. ]+)%\s*Skill Damage"])
-    eq["skill_cooldown"]  = extraire(texte_net, [r"([+-][\d. ]+)%\s*Skill Cooldown"])
-    eq["chance_blocage"]  = extraire(texte_net, [r"\+([\d. ]+)%\s*Block Chance"])
-    eq["health_pct"]      = extraire(texte_net, [r"\+([\d. ]+)%\s*Health(?!\s*Regen)"])
-    eq["damage_pct"]      = extraire(texte_net, [r"\+([\d. ]+)%\s*Damage(?!\s*%)"])
-    eq["melee_pct"]       = extraire(texte_net, [r"\+([\d. ]+)%\s*Melee Damage"])
-    eq["ranged_pct"]      = extraire(texte_net, [r"\+([\d. ]+)%\s*Ranged Damage"])
+    eq["taux_crit"]       = extraire(texte_net, [r'\+([\d. ]+)%\s*Critical\s*Chance'])
+    eq["degat_crit"]      = extraire(texte_net, [r'\+([\d. ]+)%\s*Critical\s*Damage'])
+    eq["health_regen"]    = extraire(texte_net, [r'\+([\d. ]+)%\s*Health\s*Regen'])
+    eq["lifesteal"]       = extraire(texte_net, [r'\+([\d. ]+)%\s*Lifesteal'])
+    eq["double_chance"]   = extraire(texte_net, [r'\+([\d. ]+)%\s*Double\s*Chance'])
+    eq["vitesse_attaque"] = extraire(texte_net, [r'\+([\d. ]+)%\s*Attack\s*Speed'])
+    eq["skill_damage"]    = extraire(texte_net, [r'\+([\d. ]+)%\s*Skill\s*Damage'])
+    eq["skill_cooldown"]  = extraire(texte_net, [r'([+-][\d. ]+)%\s*Skill\s*Cooldown'])
+    eq["chance_blocage"]  = extraire(texte_net, [r'\+([\d. ]+)%\s*Block\s*Chance'])
+    eq["health_pct"]      = extraire(texte_net, [r'\+([\d. ]+)%\s*Health(?!\s*Regen)'])
+    eq["damage_pct"]      = extraire(texte_net, [r'\+([\d. ]+)%\s*Damage(?!\s*%)'])
+    eq["melee_pct"]       = extraire(texte_net, [r'\+([\d. ]+)%\s*Melee\s*Damage'])
+    eq["ranged_pct"]      = extraire(texte_net, [r'\+([\d. ]+)%\s*Ranged\s*Damage'])
 
     return eq
 
@@ -205,11 +207,8 @@ def appliquer_changement(profil, eq_ancien, eq_nouveau):
               "health_pct", "damage_pct", "melee_pct", "ranged_pct"]:
         nouveau[k] = round(profil.get(k, 0.0) - eq_ancien.get(k, 0.0) + eq_nouveau.get(k, 0.0), 6)
 
-    ancien_ranged  = eq_ancien.get("type_attaque") == "distance"
-    nouveau_ranged = eq_nouveau.get("type_attaque") == "distance"
-
-    if ancien_ranged or nouveau_ranged:
-        nouveau["type_attaque"] = eq_nouveau.get("type_attaque") or "corps_a_corps"
+    if eq_nouveau.get("type_attaque") is not None:
+        nouveau["type_attaque"] = eq_nouveau["type_attaque"]
         type_atq = nouveau["type_attaque"]
 
     nouveau["hp_base"]      = profil["hp_base"] - eq_ancien.get("hp_flat", 0) + eq_nouveau.get("hp_flat", 0)
@@ -436,8 +435,7 @@ def simuler(sj, se, skills_j=None, skills_e=None):
     e = Combattant(se, skills_e)
 
     if j.type_attaque == e.type_attaque:
-        j.timer = random.uniform(0, j.intervalle)
-        e.timer = random.uniform(0, e.intervalle)
+        j.timer, e.timer = 0.0, 0.0
     elif j.type_attaque == "distance":
         j.timer, e.timer = 0.0, -AVANCE_DISTANCE
     else:
@@ -470,14 +468,14 @@ def simuler(sj, se, skills_j=None, skills_e=None):
     elif e.vivant() and not j.vivant():
         return "LOSE"
     elif not j.vivant() and not e.vivant():
-        return "DRAW"
+        return "LOSE"
     else:
         return "DRAW"
 
 
-def simuler_100(sj, se, skills_j=None, skills_e=None):
+def simuler_100(sj, se, skills_j=None, skills_e=None, n=1000):
     wins, loses, draws = 0, 0, 0
-    for _ in range(1000):
+    for _ in range(n):
         r = simuler(sj, se, skills_j, skills_e)
         if r == "WIN":      wins += 1
         elif r == "LOSE":   loses += 1

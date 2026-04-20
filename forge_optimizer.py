@@ -1,44 +1,25 @@
 """
 ============================================================
-  FORGE MASTER — Optimiseur génétique v3
-  - hp_base / atk_base / type_attaque fixes par config
-  - 24 slots % uniquement (avec remise, additifs)
-  - Melee ignoré si distance, Ranged ignoré si corps_a_corps
-  - Skill Cooldown négatif (réduit le cooldown)
-  - Skills fixes : u1, u2, u3
-
-  Placer dans : forge_master_UI/forge_optimizer.py
+  FORGE MASTER — Optimiseur génétique v6
+  Sélection par win rate + mutation locale contrainte
+  Population : 32 builds
+  Adversaire : profil actuel du joueur (fixe)
 ============================================================
 """
 
 import random
-import itertools
-from collections import defaultdict
+import math
 
 # ════════════════════════════════════════════════════════════
-#  CONFIGURATION — à ajuster selon ton personnage
+#  CONFIGURATION
 # ════════════════════════════════════════════════════════════
 
-POPULATION_SIZE  = 32
-TOP_K            = 8
-NUM_GENERATIONS  = 10
-MAX_SUBSTATS     = 24   # nombre de slots (avec remise)
+N_BUILDS      = 32
+N_SUBSTATS    = 24      # points à distribuer par build
+SELECTION_PCT = 0.30    # garder top 30%
+N_SURVIVORS   = max(2, round(N_BUILDS * SELECTION_PCT))  # ≈ 10
 
-# ── Profil de base fixe ──────────────────────────────────────
-# Modifie ces valeurs selon ton personnage
-HP_BASE          = 14_882_381.0
-ATK_BASE         = 3_146_578.0
-TYPE_ATTAQUE     = "distance"   # "distance" ou "corps_a_corps"
-
-# ── Skills fixes ─────────────────────────────────────────────
-# Codes définis dans skills.txt
-SKILLS_CODES     = ["u1", "u2", "u3"]
-
-# ── Pool de substats % ───────────────────────────────────────
-# Format : clé_interne → (min_par_slot, max_par_slot)
-# Le Skill Cooldown est en négatif : chaque slot donne entre -7% et 0%
-# (une valeur plus négative = meilleur cooldown)
-
+# Plages par point (valeur ajoutée à chaque tirage)
 SUBSTATS_POOL = {
     "taux_crit":       (0.0,  12.0),
     "degat_crit":      (0.0, 100.0),
@@ -46,33 +27,15 @@ SUBSTATS_POOL = {
     "double_chance":   (0.0,  40.0),
     "damage_pct":      (0.0,  15.0),
     "skill_damage":    (0.0,  30.0),
-    "ranged_pct":      (0.0,  15.0),   # ignoré si corps_a_corps
-    "melee_pct":       (0.0,  50.0),   # ignoré si distance
+    "ranged_pct":      (0.0,  15.0),
+    "melee_pct":       (0.0,  50.0),
     "chance_blocage":  (0.0,   5.0),
     "lifesteal":       (0.0,  20.0),
     "health_regen":    (0.0,   6.0),
-    "skill_cooldown":  (-7.0,  0.0),   # négatif = réduit le cooldown
+    "skill_cooldown":  (-7.0,  0.0),
     "health_pct":      (0.0,  15.0),
 }
 
-# Max théorique absolu par stat (tous les slots sur la même stat)
-SUBSTATS_MAX_ABS = {
-    "taux_crit":       12.0  * MAX_SUBSTATS,
-    "degat_crit":      100.0 * MAX_SUBSTATS,
-    "vitesse_attaque": 40.0  * MAX_SUBSTATS,
-    "double_chance":   40.0  * MAX_SUBSTATS,
-    "damage_pct":      15.0  * MAX_SUBSTATS,
-    "skill_damage":    30.0  * MAX_SUBSTATS,
-    "ranged_pct":      15.0  * MAX_SUBSTATS,
-    "melee_pct":       50.0  * MAX_SUBSTATS,
-    "chance_blocage":  5.0   * MAX_SUBSTATS,
-    "lifesteal":       20.0  * MAX_SUBSTATS,
-    "health_regen":    6.0   * MAX_SUBSTATS,
-    "skill_cooldown":  7.0   * MAX_SUBSTATS,   # on compare en valeur absolue
-    "health_pct":      15.0  * MAX_SUBSTATS,
-}
-
-# Noms affichables
 SUBSTATS_LABELS = {
     "taux_crit":       "Crit Chance",
     "degat_crit":      "Crit Damage",
@@ -80,8 +43,8 @@ SUBSTATS_LABELS = {
     "double_chance":   "Double Chance",
     "damage_pct":      "Damage %",
     "skill_damage":    "Skill Damage",
-    "ranged_pct":      "Ranged Damage",
-    "melee_pct":       "Melee Damage",
+    "ranged_pct":      "Ranged Dmg",
+    "melee_pct":       "Melee Dmg",
     "chance_blocage":  "Block Chance",
     "lifesteal":       "Lifesteal",
     "health_regen":    "Health Regen",
@@ -89,201 +52,210 @@ SUBSTATS_LABELS = {
     "health_pct":      "Health %",
 }
 
+# Valeur moyenne par tirage pour chaque stat
+SUBSTATS_MOY_PAR_TIRAGE = {
+    k: abs(lo + hi) / 2 if (lo + hi) != 0 else 1.0
+    for k, (lo, hi) in SUBSTATS_POOL.items()
+}
 
-# ════════════════════════════════════════════════════════════
-#  CHARGEMENT DES SKILLS
-# ════════════════════════════════════════════════════════════
-
-_skills_cache = None
-
-def charger_skills_fixes():
-    """Charge u1, u2, u3 depuis le backend une seule fois."""
-    global _skills_cache
-    if _skills_cache is not None:
-        return _skills_cache
-    from backend.forge_master import charger_skills
-    tous = charger_skills()
-    _skills_cache = []
-    for code in SKILLS_CODES:
-        if code in tous:
-            _skills_cache.append((code, tous[code]))
-    return _skills_cache
+# Maximum théorique = 24 tirages × valeur moyenne par tirage
+# → représente un build qui mettrait TOUS ses points dans cette stat
+SUBSTATS_MAX_THEORIQUE = {
+    k: N_SUBSTATS * SUBSTATS_MOY_PAR_TIRAGE[k]
+    for k in SUBSTATS_POOL
+}
 
 
 # ════════════════════════════════════════════════════════════
 #  GÉNÉRATION D'UN BUILD
 # ════════════════════════════════════════════════════════════
 
-def _pool_actif():
-    """
-    Retourne le pool de stats pertinent selon le type d'attaque :
-    - distance  → exclut melee_pct
-    - corps_a_corps → exclut ranged_pct
-    """
-    exclus = "melee_pct" if TYPE_ATTAQUE == "distance" else "ranged_pct"
-    return {k: v for k, v in SUBSTATS_POOL.items() if k != exclus}
+def _build_depuis_substats(substats, hp_base, atk_base, type_attaque):
+    """Calcule hp_total et attaque_total depuis les substats + bases."""
+    hp_total  = hp_base * (1 + substats["health_pct"] / 100)
+    bonus_atq = substats["damage_pct"] + (
+        substats["ranged_pct"] if type_attaque == "distance" else substats["melee_pct"])
+    atk_total = atk_base * (1 + bonus_atq / 100)
+
+    return {
+        **substats,
+        "hp_total":      hp_total,
+        "attaque_total": atk_total,
+        "hp_base":       hp_base,
+        "attaque_base":  atk_base,
+        "type_attaque":  type_attaque,
+    }
 
 
-def build_aleatoire():
-    """
-    Génère un build aléatoire :
-    - hp_base, atk_base, type_attaque fixes (config)
-    - 24 slots % tirés avec remise dans le pool actif
-    - Les valeurs du même type s'additionnent
-    - Calcule hp_total et atk_total avec les bonus %
-    """
-    pool  = _pool_actif()
-    keys  = list(pool.keys())
-    stats = {k: 0.0 for k in SUBSTATS_POOL}
+def _substats_vides():
+    return {k: 0.0 for k in SUBSTATS_POOL}
 
-    for _ in range(MAX_SUBSTATS):
+
+def _distribuer_points(pool_actif):
+    """
+    Distribue N_SUBSTATS points sans biais :
+    chaque point va dans une stat aléatoire du pool actif,
+    avec une valeur uniforme dans son intervalle.
+    """
+    substats = _substats_vides()
+    keys = list(pool_actif.keys())
+    for _ in range(N_SUBSTATS):
         k = random.choice(keys)
-        lo, hi = pool[k]
-        stats[k] += random.uniform(lo, hi)
+        lo, hi = pool_actif[k]
+        substats[k] += round(random.uniform(lo, hi), 2)
+    return substats
 
-    # Calcul des totaux
-    hp_total = HP_BASE * (1 + stats["health_pct"] / 100)
 
-    if TYPE_ATTAQUE == "distance":
-        bonus_atq = stats["damage_pct"] + stats["ranged_pct"]
-    else:
-        bonus_atq = stats["damage_pct"] + stats["melee_pct"]
-    atk_total = ATK_BASE * (1 + bonus_atq / 100)
-
-    stats["hp_total"]      = hp_total
-    stats["attaque_total"] = atk_total
-    stats["hp_base"]       = HP_BASE
-    stats["attaque_base"]  = ATK_BASE
-    stats["type_attaque"]  = TYPE_ATTAQUE
-
-    return stats
+def build_aleatoire(hp_base, atk_base, type_attaque):
+    exclus   = "melee_pct" if type_attaque == "distance" else "ranged_pct"
+    pool     = {k: v for k, v in SUBSTATS_POOL.items() if k != exclus}
+    substats = _distribuer_points(pool)
+    return _build_depuis_substats(substats, hp_base, atk_base, type_attaque)
 
 
 # ════════════════════════════════════════════════════════════
-#  COMBAT
+#  MUTATION LOCALE
 # ════════════════════════════════════════════════════════════
 
-def score_combat(stats_j, stats_e, skills):
+def muter(build, hp_base, atk_base, type_attaque, force=None):
     """
-    Taux de victoire de j contre e (0.0 → 1.0).
-    Les deux combattants ont les mêmes skills.
+    Déplace 1 ou 2 points d'une stat vers une autre.
+    Contrainte : la somme des points reste N_SUBSTATS.
+    force=None → aléatoire entre 1 et 2 (parfois 3 pour échapper aux optima locaux)
     """
+    exclus   = "melee_pct" if type_attaque == "distance" else "ranged_pct"
+    pool     = {k: v for k, v in SUBSTATS_POOL.items() if k != exclus}
+    keys     = list(pool.keys())
+    substats = {k: build.get(k, 0.0) for k in SUBSTATS_POOL}
+
+    if force is None:
+        force = 3 if random.random() < 0.10 else random.randint(1, 2)
+
+    for _ in range(force):
+        sources = [k for k in keys if substats[k] != 0.0]
+        if not sources:
+            break
+        src = random.choice(sources)
+        lo_src, hi_src = pool[src]
+        retire = round(random.uniform(lo_src, hi_src), 2)
+        if lo_src >= 0:
+            substats[src] = max(0.0, substats[src] - retire)
+        else:
+            substats[src] = min(0.0, substats[src] + abs(retire))
+
+        cibles = [k for k in keys if k != src]
+        dst    = random.choice(cibles)
+        lo_dst, hi_dst = pool[dst]
+        ajoute = round(random.uniform(lo_dst, hi_dst), 2)
+        substats[dst] += ajoute
+
+    return _build_depuis_substats(substats, hp_base, atk_base, type_attaque)
+
+
+# ════════════════════════════════════════════════════════════
+#  ÉVALUATION
+# ════════════════════════════════════════════════════════════
+
+def evaluer(build, adversaire, skills, n_sims):
     from backend.forge_master import simuler_100
-    wins, loses, draws = simuler_100(stats_j, stats_e, skills, skills)
+    wins, loses, draws = simuler_100(build, adversaire, skills, skills, n=n_sims)
     total = wins + loses + draws
     return wins / total if total > 0 else 0.0
 
 
 # ════════════════════════════════════════════════════════════
-#  TOURNOI ROUND-ROBIN
+#  ANALYSE : MOYENNE + VARIANCE
 # ════════════════════════════════════════════════════════════
 
-def round_robin(population, skills, progress_callback=None):
+def analyser(builds, scores):
     """
-    Chaque build affronte tous les autres avec les skills fixes.
-    Retourne [(score, build), ...] trié du meilleur au pire.
+    Pour chaque substat, calcule dans le top 30% :
+      - pts_moy  : nombre de points investis en moyenne (moyenne / moy_par_tirage)
+      - pts_var  : écart-type du nombre de points (variance / moy_par_tirage)
+      - moyenne  : valeur brute moyenne (pour affichage)
+      - variance : écart-type brut
+
+    Retourne [(pts_moy, pts_var, moyenne, variance, key, label), ...]
+    trié par pts_moy desc.
     """
-    n      = len(population)
-    scores = [0.0] * n
-    paires = list(itertools.combinations(range(n), 2))
-    total  = len(paires)
+    n       = len(builds)
+    n_top   = max(1, round(n * SELECTION_PCT))
+    classes = sorted(range(n), key=lambda i: scores[i], reverse=True)
+    top     = [builds[i] for i in classes[:n_top]]
 
-    for idx, (i, j) in enumerate(paires):
-        if progress_callback:
-            progress_callback(idx, total)
+    resultats = []
+    for k in SUBSTATS_POOL:
+        moy_tirage = SUBSTATS_MOY_PAR_TIRAGE[k]
+        vals       = [abs(b.get(k, 0.0)) for b in top]
+        moyenne    = sum(vals) / len(vals)
+        variance   = math.sqrt(
+            sum((v - moyenne) ** 2 for v in vals) / len(vals)
+        ) if len(vals) > 1 else 0.0
 
-        win_i = score_combat(population[i], population[j], skills)
-        scores[i] += win_i
-        scores[j] += (1.0 - win_i)
+        pts_moy = moyenne  / moy_tirage if moy_tirage else 0.0
+        pts_var = variance / moy_tirage if moy_tirage else 0.0
 
-    for i in range(n):
-        scores[i] /= (n - 1)
+        resultats.append((pts_moy, pts_var, moyenne, variance, k, SUBSTATS_LABELS.get(k, k)))
 
-    return sorted(zip(scores, population), key=lambda x: x[0], reverse=True)
+    return sorted(resultats, key=lambda x: x[0], reverse=True)
 
 
 # ════════════════════════════════════════════════════════════
-#  ALGORITHME PRINCIPAL
+#  BOUCLE PRINCIPALE
 # ════════════════════════════════════════════════════════════
 
 def optimiser(
-    population_size=POPULATION_SIZE,
-    top_k=TOP_K,
-    num_generations=NUM_GENERATIONS,
-    generation_callback=None,
-    progress_callback=None,
+    profil,
+    skills,
+    n_generations=8,
+    n_sims=100,
+    generation_cb=None,
+    progress_cb=None,
     stop_flag=None,
 ):
-    """
-    Lance l'optimisation génétique.
+    hp_base      = profil["hp_base"]
+    atk_base     = profil["attaque_base"]
+    type_attaque = profil.get("type_attaque", "corps_a_corps")
 
-    Callbacks :
-      generation_callback(gen, top_score, avg_score, classement)
-      progress_callback(combat_idx, total_combats, gen)
-      stop_flag : threading.Event — si set(), arrête proprement
+    from backend.forge_master import stats_combat
+    adversaire = stats_combat(profil)
 
-    Retourne (hall_of_fame, historique).
-    """
-    skills       = charger_skills_fixes()
-    population   = [build_aleatoire() for _ in range(population_size)]
-    historique   = []
-    hall_of_fame = []
+    builds = [build_aleatoire(hp_base, atk_base, type_attaque)
+              for _ in range(N_BUILDS)]
 
-    for gen in range(1, num_generations + 1):
+    top_builds = []
+    analyse    = []
+
+    for gen in range(1, n_generations + 1):
         if stop_flag and stop_flag.is_set():
             break
 
-        def _progress(idx, total, g=gen):
-            if progress_callback:
-                progress_callback(idx, total, g)
+        scores = []
+        for i, b in enumerate(builds):
+            if stop_flag and stop_flag.is_set():
+                break
+            scores.append(evaluer(b, adversaire, skills, n_sims))
+            if progress_cb:
+                progress_cb(i + 1, len(builds), gen)
 
-        classement = round_robin(population, skills, progress_callback=_progress)
+        if not scores:
+            break
 
-        top_score = classement[0][0]
-        avg_score = sum(s for s, _ in classement[:top_k]) / top_k
-        historique.append((gen, top_score, avg_score))
+        analyse    = analyser(builds, scores)
+        classes    = sorted(zip(scores, builds), key=lambda x: x[0], reverse=True)
+        top_scores = [s for s, _ in classes[:N_SURVIVORS]]
+        top_builds = [b for _, b in classes[:N_SURVIVORS]]
+        wr_moyen   = sum(top_scores) / len(top_scores)
 
-        for score, build in classement[:top_k]:
-            hall_of_fame.append((score, gen, build))
+        if generation_cb:
+            # Meilleur build = premier du classement
+            meilleur = top_builds[0]
+            generation_cb(gen, top_builds, analyse, top_scores, wr_moyen, meilleur)
 
-        if generation_callback:
-            generation_callback(gen, top_score, avg_score, classement)
+        nouveaux = list(top_builds)
+        while len(nouveaux) < N_BUILDS:
+            parent = random.choice(top_builds)
+            nouveaux.append(muter(parent, hp_base, atk_base, type_attaque))
+        builds = nouveaux
 
-        survivants = [build for _, build in classement[:top_k]]
-        nouveaux   = [build_aleatoire() for _ in range(population_size - top_k)]
-        population = survivants + nouveaux
-
-    hall_of_fame.sort(key=lambda x: x[0], reverse=True)
-    return hall_of_fame, historique
-
-
-# ════════════════════════════════════════════════════════════
-#  ANALYSE DES RÉSULTATS
-# ════════════════════════════════════════════════════════════
-
-def analyser_substats(hall_of_fame):
-    """
-    Pour chaque substat, calcule la valeur moyenne dans les builds gagnants
-    et son taux par rapport au max théorique absolu.
-
-    Pour skill_cooldown (négatif), on compare en valeur absolue.
-
-    Retourne [(taux, clé, label, moyenne, max_abs), ...] trié desc.
-    """
-    totaux = defaultdict(float)
-    nb     = len(hall_of_fame)
-
-    for _, _, build in hall_of_fame:
-        for k in SUBSTATS_POOL:
-            totaux[k] += build.get(k, 0.0)
-
-    lignes = []
-    for k in SUBSTATS_POOL:
-        max_abs  = SUBSTATS_MAX_ABS[k]
-        moyenne  = totaux[k] / nb if nb > 0 else 0.0
-        # Pour cooldown : valeur négative, on compare en absolu
-        val_abs  = abs(moyenne)
-        taux     = val_abs / max_abs if max_abs > 0 else 0.0
-        lignes.append((taux, k, SUBSTATS_LABELS.get(k, k), moyenne, max_abs))
-
-    return sorted(lignes, reverse=True)
+    return top_builds, analyse

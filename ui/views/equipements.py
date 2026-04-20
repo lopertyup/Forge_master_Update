@@ -105,20 +105,20 @@ class EquipementsView(ctk.CTkFrame):
         self.card_ancien = ctk.CTkFrame(right, fg_color=C["card"], corner_radius=12)
         self.card_ancien.grid(row=0, column=0, sticky="nsew", pady=(0, 6))
         self.card_ancien.grid_columnconfigure(0, weight=1)
-        ctk.CTkLabel(self.card_ancien, text="Équipement actuel",
-                     font=FONT_SUB, text_color=C["muted"]).pack(
-            padx=16, pady=(12, 4), anchor="w")
-        self._inner_ancien = ctk.CTkFrame(self.card_ancien, fg_color="transparent")
+        self._lbl_titre_ancien = ctk.CTkLabel(self.card_ancien, text="Équipement actuel",
+                    font=FONT_SUB, text_color=C["muted"])
+        self._lbl_titre_ancien.pack(padx=16, pady=(12, 4), anchor="w")
+        self._inner_ancien = ctk.CTkScrollableFrame(self.card_ancien, fg_color="transparent", height=120)
         self._inner_ancien.pack(fill="both", expand=True, padx=8, pady=(0, 10))
 
         # Carte nouvel équipement
         self.card_nouveau = ctk.CTkFrame(right, fg_color=C["card"], corner_radius=12)
         self.card_nouveau.grid(row=1, column=0, sticky="nsew", pady=(6, 0))
         self.card_nouveau.grid_columnconfigure(0, weight=1)
-        ctk.CTkLabel(self.card_nouveau, text="Nouvel équipement",
-                     font=FONT_SUB, text_color=C["accent"]).pack(
-            padx=16, pady=(12, 4), anchor="w")
-        self._inner_nouveau = ctk.CTkFrame(self.card_nouveau, fg_color="transparent")
+        self._lbl_titre_nouveau = ctk.CTkLabel(self.card_nouveau, text="Nouvel équipement",
+                    font=FONT_SUB, text_color=C["accent"])
+        self._lbl_titre_nouveau.pack(padx=16, pady=(12, 4), anchor="w")
+        self._inner_nouveau = ctk.CTkScrollableFrame(self.card_nouveau, fg_color="transparent", height=120)
         self._inner_nouveau.pack(fill="both", expand=True, padx=8, pady=(0, 10))
 
         # ── Bas : résultats simulation ───────────────────────
@@ -174,6 +174,19 @@ class EquipementsView(ctk.CTkFrame):
         # Afficher les équipements
         self._render_eq(self._inner_ancien, eq_ancien)
         self._render_eq(self._inner_nouveau, eq_nouveau)
+
+        t_ancien  = eq_ancien.get("type_attaque")
+        t_nouveau = eq_nouveau.get("type_attaque")
+
+        lbl_a = "Équipement actuel"
+        lbl_n = "Nouvel équipement"
+        if t_ancien:
+            lbl_a += f"  {'🏹 Distance' if t_ancien == 'distance' else '⚔ Mêlée'}"
+        if t_nouveau:
+            lbl_n += f"  {'🏹 Distance' if t_nouveau == 'distance' else '⚔ Mêlée'}"
+
+        self._lbl_titre_ancien.configure(text=lbl_a)
+        self._lbl_titre_nouveau.configure(text=lbl_n)
 
         # Lancer simulation
         self._lbl_status.configure(text="⏳ Simulation en cours…")
@@ -252,14 +265,7 @@ class EquipementsView(ctk.CTkFrame):
                          font=FONT_MONO, text_color=C["text"],
                          anchor="e").grid(row=0, column=1, padx=10, pady=4, sticky="e")
 
-        t = eq.get("type_attaque")
-        if t:
-            ctk.CTkLabel(parent,
-                         text=f"Type : {'🏹 Distance' if t == 'distance' else '⚔ Mêlée'}",
-                         font=FONT_SMALL, text_color=C["muted"]).pack(
-                padx=10, pady=(4, 4), anchor="w")
-
-        if not any_shown and not t:
+        if not any_shown:
             ctk.CTkLabel(parent, text="Aucune stat détectée",
                          font=FONT_SMALL, text_color=C["muted"]).pack(pady=10)
 
