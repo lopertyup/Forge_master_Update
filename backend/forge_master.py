@@ -430,7 +430,8 @@ def simuler(sj, se, skills_j=None, skills_e=None):
     e = Combattant(se, skills_e)
 
     if j.type_attaque == e.type_attaque:
-        j.timer, e.timer = 0.0, 0.0
+        j.timer = random.uniform(0, j.intervalle)
+        e.timer = random.uniform(0, e.intervalle)
     elif j.type_attaque == "distance":
         j.timer, e.timer = 0.0, -AVANCE_DISTANCE
     else:
@@ -463,7 +464,7 @@ def simuler(sj, se, skills_j=None, skills_e=None):
     elif e.vivant() and not j.vivant():
         return "LOSE"
     elif not j.vivant() and not e.vivant():
-        return "LOSE"
+        return "DRAW"
     else:
         return "DRAW"
 
