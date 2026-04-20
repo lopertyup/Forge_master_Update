@@ -1,0 +1,25 @@
+# ============================================================
+# FORGE MASTER — Profil joueur (modifiable a la main)
+# ============================================================
+
+[JOUEUR]
+hp_total             = 14600000.0
+attaque_total        = 3140000.0
+hp_base              = 13825757.575757574
+attaque_base         = 3024756.767170793
+health_pct           = 5.6
+damage_pct           = 0.0
+melee_pct            = 0.0
+ranged_pct           = 3.81
+taux_crit            = 0.0
+degat_crit           = 0.0
+health_regen         = 13.1
+lifesteal            = 74.8
+double_chance        = 95.9
+vitesse_attaque      = 154.0
+skill_damage         = 0.0
+skill_cooldown       = -1.78
+chance_blocage       = 17.4
+type_attaque         = distance
+skills               = u1,u2,u3
+
