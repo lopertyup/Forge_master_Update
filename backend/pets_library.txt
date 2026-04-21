@@ -1,6 +1,6 @@
 # ============================================================
-# FORGE MASTER — Bibliothèque des pets (level 1)
-# Stats de référence au level 1, indexées par nom.
+# FORGE MASTER — Pets library (level 1)
+# Reference stats at level 1, indexed by name.
 # ============================================================
 
 [Baby Dragon]

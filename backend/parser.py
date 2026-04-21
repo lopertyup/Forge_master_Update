@@ -1,8 +1,8 @@
 """
 ============================================================
   FORGE MASTER — Parsers
-  Transforme du texte brut copié depuis le jeu en dictionnaires
-  de stats. Zéro dépendance sur persistance ou simulation.
+  Turn raw text copied from the game into stat dictionaries.
+  Zero dependency on persistence or simulation.
 ============================================================
 """
 
@@ -16,11 +16,11 @@ log = logging.getLogger(__name__)
 
 
 # ════════════════════════════════════════════════════════════
-#  UTILITAIRES BAS-NIVEAU
+#  LOW-LEVEL UTILITIES
 # ════════════════════════════════════════════════════════════
 
 def parse_flat(val_str: str) -> float:
-    """Convertit '877k' / '2.3m' / '1.5b' / '42' en float."""
+    """Convert '877k' / '2.3m' / '1.5b' / '42' to float."""
     val_str = str(val_str).strip().lower().replace(",", ".")
     try:
         if val_str.endswith("b"):
@@ -31,14 +31,14 @@ def parse_flat(val_str: str) -> float:
             return float(val_str[:-1]) * 1_000
         return float(val_str)
     except ValueError:
-        log.debug("parse_flat: impossible de parser %r", val_str)
+        log.debug("parse_flat: could not parse %r", val_str)
         return 0.0
 
 
-def extraire(texte: str, motifs: Iterable[str]) -> float:
-    """Premier pourcentage trouvé dans le texte pour un des motifs donnés."""
-    for motif in motifs:
-        m = re.search(motif, texte, re.IGNORECASE)
+def extract(text: str, patterns: Iterable[str]) -> float:
+    """First percentage found in the text matching any of the given patterns."""
+    for pat in patterns:
+        m = re.search(pat, text, re.IGNORECASE)
         if m:
             try:
                 return float(m.group(1).replace(",", ".").replace(" ", "."))
@@ -47,91 +47,91 @@ def extraire(texte: str, motifs: Iterable[str]) -> float:
     return 0.0
 
 
-def extraire_flat(texte: str, motifs: Iterable[str]) -> float:
-    """Première valeur plate (avec suffixe k/m/b possible) pour un des motifs."""
-    for motif in motifs:
-        m = re.search(motif, texte, re.IGNORECASE)
+def extract_flat(text: str, patterns: Iterable[str]) -> float:
+    """First flat value (k/m/b suffix allowed) matching any of the patterns."""
+    for pat in patterns:
+        m = re.search(pat, text, re.IGNORECASE)
         if m:
             return parse_flat(m.group(1))
     return 0.0
 
 
 # ════════════════════════════════════════════════════════════
-#  PROFIL JOUEUR
+#  PLAYER PROFILE
 # ════════════════════════════════════════════════════════════
 
-def parser_texte(texte: str) -> Dict[str, float]:
-    """Parse le bloc de stats joueur copié depuis le jeu."""
-    hp_total      = extraire_flat(texte, [r"([\d.]+[km]?)\s*Total Health"])
-    attaque_total = extraire_flat(texte, [r"([\d.]+[km]?)\s*Total Damage"])
-    health_pct    = extraire(texte, [r"\+([\d. ]+)%\s*Health(?!\s*Regen)"])
-    damage_pct    = extraire(texte, [r"\+([\d. ]+)%\s*Damage(?!\s*%)"])
-    melee_pct     = extraire(texte, [r"\+([\d. ]+)%\s*Melee Damage"])
-    ranged_pct    = extraire(texte, [r"\+([\d. ]+)%\s*Ranged Damage"])
+def parse_profile_text(text: str) -> Dict[str, float]:
+    """Parse the player stat block copied from the game."""
+    hp_total     = extract_flat(text, [r"([\d.]+[km]?)\s*Total Health"])
+    attack_total = extract_flat(text, [r"([\d.]+[km]?)\s*Total Damage"])
+    health_pct   = extract(text, [r"\+([\d. ]+)%\s*Health(?!\s*Regen)"])
+    damage_pct   = extract(text, [r"\+([\d. ]+)%\s*Damage(?!\s*%)"])
+    melee_pct    = extract(text, [r"\+([\d. ]+)%\s*Melee Damage"])
+    ranged_pct   = extract(text, [r"\+([\d. ]+)%\s*Ranged Damage"])
 
     hp_base = hp_total / (1 + health_pct / 100) if health_pct else hp_total
 
     return {
-        "hp_total":        hp_total,
-        "attaque_total":   attaque_total,
-        "hp_base":         hp_base,
-        "attaque_base":    attaque_total,
-        "health_pct":      health_pct,
-        "damage_pct":      damage_pct,
-        "melee_pct":       melee_pct,
-        "ranged_pct":      ranged_pct,
-        "taux_crit":       extraire(texte, [r"\+([\d. ]+)%\s*Critical Chance"]),
-        "degat_crit":      extraire(texte, [r"\+([\d. ]+)%\s*Critical Damage"]),
-        "health_regen":    extraire(texte, [r"\+([\d. ]+)%\s*Health Regen"]),
-        "lifesteal":       extraire(texte, [r"\+([\d. ]+)%\s*Lifesteal"]),
-        "double_chance":   extraire(texte, [r"\+([\d. ]+)%\s*Double Chance"]),
-        "vitesse_attaque": extraire(texte, [r"\+([\d. ]+)%\s*Attack Speed"]),
-        "skill_damage":    extraire(texte, [r"\+([\d. ]+)%\s*Skill Damage"]),
-        "skill_cooldown":  extraire(texte, [r"([+-][\d. ]+)%\s*Skill Cooldown"]),
-        "chance_blocage":  extraire(texte, [r"\+([\d. ]+)%\s*Block Chance"]),
+        "hp_total":       hp_total,
+        "attack_total":   attack_total,
+        "hp_base":        hp_base,
+        "attack_base":    attack_total,
+        "health_pct":     health_pct,
+        "damage_pct":     damage_pct,
+        "melee_pct":      melee_pct,
+        "ranged_pct":     ranged_pct,
+        "crit_chance":    extract(text, [r"\+([\d. ]+)%\s*Critical Chance"]),
+        "crit_damage":    extract(text, [r"\+([\d. ]+)%\s*Critical Damage"]),
+        "health_regen":   extract(text, [r"\+([\d. ]+)%\s*Health Regen"]),
+        "lifesteal":      extract(text, [r"\+([\d. ]+)%\s*Lifesteal"]),
+        "double_chance":  extract(text, [r"\+([\d. ]+)%\s*Double Chance"]),
+        "attack_speed":   extract(text, [r"\+([\d. ]+)%\s*Attack Speed"]),
+        "skill_damage":   extract(text, [r"\+([\d. ]+)%\s*Skill Damage"]),
+        "skill_cooldown": extract(text, [r"([+-][\d. ]+)%\s*Skill Cooldown"]),
+        "block_chance":   extract(text, [r"\+([\d. ]+)%\s*Block Chance"]),
     }
 
 
 # ════════════════════════════════════════════════════════════
-#  ÉQUIPEMENT
+#  EQUIPMENT
 # ════════════════════════════════════════════════════════════
 
-def parser_equipement(texte: str) -> Dict[str, Optional[float]]:
-    """Parse un bloc de stats d'équipement. type_attaque optionnel."""
-    # Nettoyage : supprimer chiffres/lettres isolés (artefacts UI)
-    texte_net = re.sub(r'(?m)^\s*\d+\s*$',   '', texte)
-    texte_net = re.sub(r'(?m)^\s*[A-Z]\s*$', '', texte_net)
-    texte_net = re.sub(r'\n(?![+\-\[\dA-Za-z\[])', ' ', texte_net)
+def parse_equipment(text: str) -> Dict[str, Optional[float]]:
+    """Parse an equipment stat block. attack_type optional."""
+    # Cleanup: drop lone digits / single letters (UI artifacts)
+    clean = re.sub(r'(?m)^\s*\d+\s*$',   '', text)
+    clean = re.sub(r'(?m)^\s*[A-Z]\s*$', '', clean)
+    clean = re.sub(r'\n(?![+\-\[\dA-Za-z\[])', ' ', clean)
 
     eq: Dict[str, Optional[float]] = {k: 0.0 for k in COMPANION_STATS_KEYS}
-    eq["type_attaque"] = None
+    eq["attack_type"] = None
 
-    # Health flat : "877k Health" mais pas "Health Regen" ni "Health %"
-    m = re.search(r'([\d.]+[kmb]?)\s*Health(?!\s*Regen)(?!\s*%)', texte_net, re.IGNORECASE)
+    # Flat health: "877k Health" but not "Health Regen" or "Health %"
+    m = re.search(r'([\d.]+[kmb]?)\s*Health(?!\s*Regen)(?!\s*%)', clean, re.IGNORECASE)
     if m:
         eq["hp_flat"] = parse_flat(m.group(1))
 
-    # Damage flat : "12.3m Damage" optionnellement suivi de (ranged)
-    m = re.search(r'([\d.]+[kmb]?)\s*Damage(\s*\([^)]*\))?(?!\s*%)', texte_net, re.IGNORECASE)
+    # Flat damage: "12.3m Damage" optionally followed by (ranged)
+    m = re.search(r'([\d.]+[kmb]?)\s*Damage(\s*\([^)]*\))?(?!\s*%)', clean, re.IGNORECASE)
     if m:
         eq["damage_flat"] = parse_flat(m.group(1))
         suffix = m.group(2) or ""
         if re.search(r'ranged', suffix, re.IGNORECASE):
-            eq["type_attaque"] = "distance"
+            eq["attack_type"] = "ranged"
 
-    eq["taux_crit"]       = extraire(texte_net, [r'\+([\d. ]+)%\s*Critical\s*Chance'])
-    eq["degat_crit"]      = extraire(texte_net, [r'\+([\d. ]+)%\s*Critical\s*Damage'])
-    eq["health_regen"]    = extraire(texte_net, [r'\+([\d. ]+)%\s*Health\s*Regen'])
-    eq["lifesteal"]       = extraire(texte_net, [r'\+([\d. ]+)%\s*Lifesteal'])
-    eq["double_chance"]   = extraire(texte_net, [r'\+([\d. ]+)%\s*Double\s*Chance'])
-    eq["vitesse_attaque"] = extraire(texte_net, [r'\+([\d. ]+)%\s*Attack\s*Speed'])
-    eq["skill_damage"]    = extraire(texte_net, [r'\+([\d. ]+)%\s*Skill\s*Damage'])
-    eq["skill_cooldown"]  = extraire(texte_net, [r'([+-][\d. ]+)%\s*Skill\s*Cooldown'])
-    eq["chance_blocage"]  = extraire(texte_net, [r'\+([\d. ]+)%\s*Block\s*Chance'])
-    eq["health_pct"]      = extraire(texte_net, [r'\+([\d. ]+)%\s*Health(?!\s*Regen)'])
-    eq["damage_pct"]      = extraire(texte_net, [r'\+([\d. ]+)%\s*Damage(?!\s*%)'])
-    eq["melee_pct"]       = extraire(texte_net, [r'\+([\d. ]+)%\s*Melee\s*Damage'])
-    eq["ranged_pct"]      = extraire(texte_net, [r'\+([\d. ]+)%\s*Ranged\s*Damage'])
+    eq["crit_chance"]    = extract(clean, [r'\+([\d. ]+)%\s*Critical\s*Chance'])
+    eq["crit_damage"]    = extract(clean, [r'\+([\d. ]+)%\s*Critical\s*Damage'])
+    eq["health_regen"]   = extract(clean, [r'\+([\d. ]+)%\s*Health\s*Regen'])
+    eq["lifesteal"]      = extract(clean, [r'\+([\d. ]+)%\s*Lifesteal'])
+    eq["double_chance"]  = extract(clean, [r'\+([\d. ]+)%\s*Double\s*Chance'])
+    eq["attack_speed"]   = extract(clean, [r'\+([\d. ]+)%\s*Attack\s*Speed'])
+    eq["skill_damage"]   = extract(clean, [r'\+([\d. ]+)%\s*Skill\s*Damage'])
+    eq["skill_cooldown"] = extract(clean, [r'([+-][\d. ]+)%\s*Skill\s*Cooldown'])
+    eq["block_chance"]   = extract(clean, [r'\+([\d. ]+)%\s*Block\s*Chance'])
+    eq["health_pct"]     = extract(clean, [r'\+([\d. ]+)%\s*Health(?!\s*Regen)'])
+    eq["damage_pct"]     = extract(clean, [r'\+([\d. ]+)%\s*Damage(?!\s*%)'])
+    eq["melee_pct"]      = extract(clean, [r'\+([\d. ]+)%\s*Melee\s*Damage'])
+    eq["ranged_pct"]     = extract(clean, [r'\+([\d. ]+)%\s*Ranged\s*Damage'])
 
     return eq
 
@@ -140,42 +140,42 @@ def parser_equipement(texte: str) -> Dict[str, Optional[float]]:
 #  COMPANION (pet + mount)
 # ════════════════════════════════════════════════════════════
 
-def _companion_vide() -> Dict[str, float]:
+def _empty_companion() -> Dict[str, float]:
     return {k: 0.0 for k in COMPANION_STATS_KEYS}
 
 
-def parser_companion(texte: str) -> Dict[str, float]:
-    """Parse un bloc de stats de pet ou de mount — schéma identique."""
-    texte_net = re.sub(r'\n(?![+\-\[\d])', ' ', texte)
-    c = _companion_vide()
+def parse_companion(text: str) -> Dict[str, float]:
+    """Parse a pet or mount stat block — identical schema."""
+    clean = re.sub(r'\n(?![+\-\[\d])', ' ', text)
+    c = _empty_companion()
 
-    m = re.search(r'([\d.]+[km]?)\s*Health(?!\s*Regen)(?!\s*%)', texte_net, re.IGNORECASE)
+    m = re.search(r'([\d.]+[km]?)\s*Health(?!\s*Regen)(?!\s*%)', clean, re.IGNORECASE)
     if m:
         c["hp_flat"] = parse_flat(m.group(1))
 
-    m = re.search(r'([\d.]+[km]?)\s*Damage(?!\s*%)', texte_net, re.IGNORECASE)
+    m = re.search(r'([\d.]+[km]?)\s*Damage(?!\s*%)', clean, re.IGNORECASE)
     if m:
         c["damage_flat"] = parse_flat(m.group(1))
 
-    c["taux_crit"]       = extraire(texte_net, [r"\+([\d. ]+)%\s*Critical Chance"])
-    c["degat_crit"]      = extraire(texte_net, [r"\+([\d. ]+)%\s*Critical Damage"])
-    c["health_regen"]    = extraire(texte_net, [r"\+([\d. ]+)%\s*Health Regen"])
-    c["lifesteal"]       = extraire(texte_net, [r"\+([\d. ]+)%\s*Lifesteal"])
-    c["double_chance"]   = extraire(texte_net, [r"\+([\d. ]+)%\s*Double Chance"])
-    c["vitesse_attaque"] = extraire(texte_net, [r"\+([\d. ]+)%\s*Attack Speed"])
-    c["skill_damage"]    = extraire(texte_net, [r"\+([\d. ]+)%\s*Skill Damage"])
-    c["skill_cooldown"]  = extraire(texte_net, [r"([+-][\d. ]+)%\s*Skill Cooldown"])
-    c["chance_blocage"]  = extraire(texte_net, [r"\+([\d. ]+)%\s*Block Chance"])
-    c["health_pct"]      = extraire(texte_net, [r"\+([\d. ]+)%\s*Health(?!\s*Regen)"])
-    c["damage_pct"]      = extraire(texte_net, [r"\+([\d. ]+)%\s*Damage(?!\s*%)"])
-    c["melee_pct"]       = extraire(texte_net, [r"\+([\d. ]+)%\s*Melee Damage"])
-    c["ranged_pct"]      = extraire(texte_net, [r"\+([\d. ]+)%\s*Ranged Damage"])
+    c["crit_chance"]    = extract(clean, [r"\+([\d. ]+)%\s*Critical Chance"])
+    c["crit_damage"]    = extract(clean, [r"\+([\d. ]+)%\s*Critical Damage"])
+    c["health_regen"]   = extract(clean, [r"\+([\d. ]+)%\s*Health Regen"])
+    c["lifesteal"]      = extract(clean, [r"\+([\d. ]+)%\s*Lifesteal"])
+    c["double_chance"]  = extract(clean, [r"\+([\d. ]+)%\s*Double Chance"])
+    c["attack_speed"]   = extract(clean, [r"\+([\d. ]+)%\s*Attack Speed"])
+    c["skill_damage"]   = extract(clean, [r"\+([\d. ]+)%\s*Skill Damage"])
+    c["skill_cooldown"] = extract(clean, [r"([+-][\d. ]+)%\s*Skill Cooldown"])
+    c["block_chance"]   = extract(clean, [r"\+([\d. ]+)%\s*Block Chance"])
+    c["health_pct"]     = extract(clean, [r"\+([\d. ]+)%\s*Health(?!\s*Regen)"])
+    c["damage_pct"]     = extract(clean, [r"\+([\d. ]+)%\s*Damage(?!\s*%)"])
+    c["melee_pct"]      = extract(clean, [r"\+([\d. ]+)%\s*Melee Damage"])
+    c["ranged_pct"]     = extract(clean, [r"\+([\d. ]+)%\s*Ranged Damage"])
 
     return c
 
 
 # ════════════════════════════════════════════════════════════
-#  MÉTADONNÉES COMPANION (nom / rareté / level)
+#  COMPANION METADATA (name / rarity / level)
 # ════════════════════════════════════════════════════════════
 
 _RE_LEVEL       = re.compile(r'Lv\.?\s*(\d+)', re.IGNORECASE)
@@ -185,22 +185,21 @@ _RE_NAME_RARITY = re.compile(
 )
 
 
-def parser_companion_meta(texte: str) -> Dict:
+def parse_companion_meta(text: str) -> Dict:
     """
-    Extrait les métadonnées d'un bloc pet/mount :
-      - name  : str ou None
-      - rarity: str (lowercase) ou None
-      - level : int ou None
-      - stats : dict complet (résultat de parser_companion)
+    Extract metadata from a pet/mount block:
+      - name  : str or None
+      - rarity: str (lowercase) or None
+      - level : int or None
+      - stats : full stat dict (result of parse_companion)
     """
-    m_lv = _RE_LEVEL.search(texte)
+    m_lv = _RE_LEVEL.search(text)
     level = int(m_lv.group(1)) if m_lv else None
 
-    m_nr = _RE_NAME_RARITY.search(texte)
+    m_nr = _RE_NAME_RARITY.search(text)
     if m_nr:
         rarity = m_nr.group(1).strip().lower()
         name   = m_nr.group(2).strip()
-        # Rejeter les captures "vides" ou qui ressemblent à des mots-clés parasites
         if not name:
             name = None
     else:
@@ -211,10 +210,10 @@ def parser_companion_meta(texte: str) -> Dict:
         "name":   name,
         "rarity": rarity,
         "level":  level,
-        "stats":  parser_companion(texte),
+        "stats":  parse_companion(text),
     }
 
 
-# Alias rétrocompatibles
-parser_pet   = parser_companion
-parser_mount = parser_companion
+# Back-compat aliases
+parse_pet   = parse_companion
+parse_mount = parse_companion

@@ -1,7 +1,7 @@
 """
 ============================================================
-  FORGE MASTER UI — Gestion du Mount
-  Un seul slot ; nouveau_moi (avec mount) vs ancien_moi.
+  FORGE MASTER UI — Mount Management
+  Single slot; new_me (with mount) vs old_me.
 ============================================================
 """
 
@@ -11,14 +11,14 @@ import customtkinter as ctk
 
 from ui.theme import (
     C, FONT_BODY, FONT_MONO_S, FONT_SMALL, FONT_SUB, FONT_TINY,
-    MOUNT_ICON, RARITY_ORDER, fmt_nombre, load_mount_icon, rarity_color,
+    MOUNT_ICON, RARITY_ORDER, fmt_number, load_mount_icon, rarity_color,
 )
 from ui.widgets import (
     build_header,
     build_import_zone,
     build_wld_bars,
     companion_slot_card,
-    confirmer,
+    confirm,
 )
 from backend.constants import N_SIMULATIONS
 
@@ -33,10 +33,10 @@ class MountView(ctk.CTkFrame):
         self.grid_rowconfigure(1, weight=1)
         self._build()
 
-    # ── Construction ─────────────────────────────────────────
+    # ── Build ─────────────────────────────────────────────────
 
     def _build(self) -> None:
-        build_header(self, f"{MOUNT_ICON}  Gestion du Mount")
+        build_header(self, f"{MOUNT_ICON}  Mount Management")
 
         self._scroll = ctk.CTkScrollableFrame(self, fg_color=C["bg"],
                                                corner_radius=0)
@@ -50,31 +50,31 @@ class MountView(ctk.CTkFrame):
 
     def _build_mount_card(self) -> None:
         mount = self.controller.get_mount() or {}
-        nom   = mount.get("__name__")
+        name  = mount.get("__name__")
         rar   = mount.get("__rarity__")
-        icon  = load_mount_icon(nom, size=48) if nom else None
+        icon  = load_mount_icon(name, size=48) if name else None
 
         card = companion_slot_card(
             self._scroll,
-            slot_label=f"{MOUNT_ICON}  Mount actuel",
-            name=nom,
+            slot_label=f"{MOUNT_ICON}  Current mount",
+            name=name,
             rarity=rar,
             stats=mount,
             icon_image=icon,
             fallback_emoji=MOUNT_ICON,
-            empty_text="(aucun mount enregistré)",
+            empty_text="(no mount registered)",
         )
         card.grid(row=0, column=0, padx=16, pady=16, sticky="ew")
 
     def _build_import(self) -> None:
         card, self._textbox, self._lbl_status = build_import_zone(
             self._scroll,
-            title="Tester un nouveau mount",
-            hint="Collez les stats du mount depuis le jeu.",
-            primary_label="🔬  Simuler le remplacement",
-            primary_cmd=self._tester_mount,
-            secondary_label="💾  Enregistrer directement",
-            secondary_cmd=self._enregistrer_direct,
+            title="Test a new mount",
+            hint="Paste the mount stats from the game.",
+            primary_label="🔬  Simulate replacement",
+            primary_cmd=self._test_mount,
+            secondary_label="💾  Save directly",
+            secondary_cmd=self._save_direct,
         )
         card.grid(row=1, column=0, padx=16, pady=(0, 8), sticky="ew")
 
@@ -85,16 +85,16 @@ class MountView(ctk.CTkFrame):
         self._result_outer.grid_columnconfigure(0, weight=1)
 
     def _build_library(self) -> None:
-        """Bibliothèque des mounts (stats Lv.1, indexées par nom)."""
+        """Mount library (Lv.1 stats, indexed by name)."""
         card = ctk.CTkFrame(self._scroll, fg_color=C["card"], corner_radius=12)
         card.grid(row=3, column=0, padx=16, pady=(0, 16), sticky="ew")
         card.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(card, text="📚  Bibliothèque des mounts",
+        ctk.CTkLabel(card, text="📚  Mount Library",
                      font=FONT_SUB, text_color=C["text"]).grid(
             row=0, column=0, sticky="w", padx=20, pady=(16, 2))
         ctk.CTkLabel(card,
-                     text="Les stats flat (HP/Damage) au Lv.1 servent de référence pour toutes les comparaisons.",
+                     text="Flat stats (HP/Damage) at Lv.1 are used as reference for all comparisons.",
                      font=FONT_SMALL, text_color=C["muted"],
                      wraplength=700, justify="left").grid(
             row=1, column=0, sticky="w", padx=20, pady=(0, 4))
@@ -104,7 +104,7 @@ class MountView(ctk.CTkFrame):
         if not library:
             ctk.CTkLabel(
                 card,
-                text="Aucun mount en bibliothèque. Collez un mount Lv.1 ci-dessus puis cliquez sur « Simuler » — il sera ajouté automatiquement.",
+                text="No mounts in library. Paste a Lv.1 mount above and click « Simulate » — it will be added automatically.",
                 font=FONT_SMALL, text_color=C["muted"],
                 wraplength=700, justify="left").grid(
                 row=2, column=0, padx=20, pady=(0, 16), sticky="w")
@@ -119,14 +119,14 @@ class MountView(ctk.CTkFrame):
             idx = RARITY_ORDER.index(rar) if rar in RARITY_ORDER else 0
             return (idx, n.lower())
 
-        for i, nom in enumerate(sorted(library.keys(), key=_sort_key)):
-            entry = library[nom]
+        for i, name in enumerate(sorted(library.keys(), key=_sort_key)):
+            entry = library[name]
             bg = C["card_alt"] if i % 2 == 0 else C["card"]
             row = ctk.CTkFrame(lst, fg_color=bg, corner_radius=6)
             row.grid(row=i, column=0, columnspan=5, sticky="ew", padx=4, pady=2)
             row.grid_columnconfigure(2, weight=1)
 
-            icon_img = load_mount_icon(nom, size=40)
+            icon_img = load_mount_icon(name, size=40)
             if icon_img:
                 ctk.CTkLabel(row, image=icon_img, text="",
                              fg_color="transparent").grid(
@@ -140,12 +140,12 @@ class MountView(ctk.CTkFrame):
             ctk.CTkLabel(row, text=rar.upper(),
                          font=FONT_TINY, text_color=rarity_color(rar),
                          width=80).grid(row=0, column=1, padx=(6, 6), pady=6)
-            ctk.CTkLabel(row, text=nom, font=FONT_BODY,
+            ctk.CTkLabel(row, text=name, font=FONT_BODY,
                          text_color=C["text"], anchor="w").grid(
                 row=0, column=2, padx=6, pady=6, sticky="w")
 
-            stats_txt = (f"⚔ {fmt_nombre(entry.get('damage_flat', 0))}   "
-                         f"❤ {fmt_nombre(entry.get('hp_flat', 0))}")
+            stats_txt = (f"⚔ {fmt_number(entry.get('damage_flat', 0))}   "
+                         f"❤ {fmt_number(entry.get('hp_flat', 0))}")
             ctk.CTkLabel(row, text=stats_txt, font=FONT_MONO_S,
                          text_color=C["muted"]).grid(
                 row=0, column=3, padx=6, pady=6)
@@ -155,17 +155,17 @@ class MountView(ctk.CTkFrame):
                 font=FONT_SMALL, corner_radius=6,
                 fg_color="transparent", hover_color=C["lose"],
                 text_color=C["muted"],
-                command=lambda n=nom: self._supprimer_library(n),
+                command=lambda n=name: self._delete_from_library(n),
             ).grid(row=0, column=4, padx=(4, 10), pady=4)
 
-    def _supprimer_library(self, nom: str) -> None:
-        if not confirmer(
-            self.app, "Supprimer de la bibliothèque",
-            f"Supprimer « {nom} » de la bibliothèque des mounts ?",
-            ok_label="Supprimer", danger=True,
+    def _delete_from_library(self, name: str) -> None:
+        if not confirm(
+            self.app, "Remove from library",
+            f"Remove « {name} » from the mount library?",
+            ok_label="Remove", danger=True,
         ):
             return
-        if self.controller.supprimer_mount_library(nom):
+        if self.controller.remove_mount_library(name):
             self.app.refresh_current()
 
     def _refresh_library_only(self) -> None:
@@ -175,59 +175,59 @@ class MountView(ctk.CTkFrame):
                 child.destroy()
         self._build_library()
 
-    # ── Actions ──────────────────────────────────────────────
+    # ── Actions ───────────────────────────────────────────────
 
-    def _tester_mount(self) -> None:
-        if not self.controller.has_profil():
+    def _test_mount(self) -> None:
+        if not self.controller.has_profile():
             self._lbl_status.configure(
-                text="⚠ Aucun profil joueur. Allez dans Dashboard d'abord.",
+                text="⚠ No player profile. Go to Dashboard first.",
                 text_color=C["lose"])
             return
 
-        texte = self._textbox.get("1.0", "end").strip()
-        if not texte:
-            self._lbl_status.configure(text="⚠ Collez les stats du mount.",
+        text = self._textbox.get("1.0", "end").strip()
+        if not text:
+            self._lbl_status.configure(text="⚠ Paste the mount stats.",
                                         text_color=C["lose"])
             return
 
-        nouveau, statut, meta = self.controller.resoudre_mount(texte)
+        new_mount, status, meta = self.controller.resolve_mount(text)
 
-        if statut == "no_name":
+        if status == "no_name":
             self._lbl_status.configure(
-                text="⚠ Impossible de lire le nom du mount (attendu : « [Rareté] Nom »).",
+                text="⚠ Could not read the mount name (expected: « [Rarity] Name »).",
                 text_color=C["lose"])
             return
 
-        if statut == "unknown_not_lvl1":
-            nom = meta.get("name") if meta else "?"
+        if status == "unknown_not_lvl1":
+            name = meta.get("name") if meta else "?"
             self._lbl_status.configure(
-                text=f"⚠ « {nom} » n'est pas en bibliothèque. Importez-le d'abord en Lv.1 pour enregistrer ses stats de référence.",
+                text=f"⚠ « {name} » is not in the library. Import it at Lv.1 first to register its reference stats.",
                 text_color=C["lose"])
             return
 
         for w in self._result_outer.winfo_children():
             w.destroy()
 
-        if statut == "added":
-            nom = meta.get("name") if meta else ""
+        if status == "added":
+            name = meta.get("name") if meta else ""
             self._lbl_status.configure(
-                text=f"✅ « {nom} » ajouté à la bibliothèque (Lv.1) — simulation en cours…",
+                text=f"✅ « {name} » added to library (Lv.1) — simulation running…",
                 text_color=C["win"])
             self.update_idletasks()
             self.app.after(50, self._refresh_library_only)
         else:
-            self._lbl_status.configure(text="⏳ Simulation en cours…",
+            self._lbl_status.configure(text="⏳ Simulation running…",
                                         text_color=C["muted"])
             self.update_idletasks()
 
         def on_result(w: int, l: int, d: int) -> None:
             self._lbl_status.configure(text="", text_color=C["muted"])
-            self._afficher_resultats(w, l, d, nouveau)
+            self._display_results(w, l, d, new_mount)
 
-        self.controller.tester_mount(nouveau, on_result)
+        self.controller.test_mount(new_mount, on_result)
 
-    def _afficher_resultats(self, wins: int, loses: int, draws: int,
-                             nouveau_mount: Dict) -> None:
+    def _display_results(self, wins: int, loses: int, draws: int,
+                          new_mount: Dict) -> None:
         for w in self._result_outer.winfo_children():
             w.destroy()
 
@@ -235,11 +235,11 @@ class MountView(ctk.CTkFrame):
                              corner_radius=12)
         card.pack(fill="x", pady=(0, 8))
 
-        ctk.CTkLabel(card, text="Résultat — Nouveau mount vs Ancien mount",
+        ctk.CTkLabel(card, text="Result — New mount vs Old mount",
                      font=FONT_SUB, text_color=C["text"]).pack(
             padx=20, pady=(16, 4), anchor="w")
         ctk.CTkLabel(card,
-                     text="Nouveau moi (avec ce mount) vs Ancien moi (avec l'ancien mount).",
+                     text="New me (with this mount) vs Old me (with the old mount).",
                      font=("Segoe UI", 11), text_color=C["muted"]).pack(
             padx=20, pady=(0, 12), anchor="w")
 
@@ -247,15 +247,15 @@ class MountView(ctk.CTkFrame):
         bars.pack(fill="x", padx=20, pady=(0, 8))
 
         if wins > loses:
-            verdict_txt = f"✅  Ce mount est meilleur — {100 * wins / N_SIMULATIONS:.0f}% de victoires."
+            verdict_txt = f"✅  This mount is better — {100 * wins / N_SIMULATIONS:.0f}% wins."
             verdict_col = C["win"]
             show_btn    = True
         elif loses > wins:
-            verdict_txt = "❌  Ce mount est moins bon. Gardez l'actuel."
+            verdict_txt = "❌  This mount is worse. Keep the current one."
             verdict_col = C["lose"]
             show_btn    = False
         else:
-            verdict_txt = "🤝  Égalité — les deux mounts se valent."
+            verdict_txt = "🤝  Tie — both mounts are equivalent."
             verdict_col = C["draw"]
             show_btn    = False
 
@@ -265,53 +265,53 @@ class MountView(ctk.CTkFrame):
 
         if show_btn:
             ctk.CTkButton(
-                card, text="💾  Appliquer ce mount",
+                card, text="💾  Apply this mount",
                 font=FONT_BODY, height=36, corner_radius=8,
                 fg_color=C["win"], hover_color=C["win_hv"],
                 text_color=C["bg"],
-                command=lambda m=nouveau_mount: self._appliquer_mount(m),
+                command=lambda m=new_mount: self._apply_mount(m),
             ).pack(padx=20, pady=(0, 16), fill="x")
 
-    def _appliquer_mount(self, mount: Dict) -> None:
-        if not confirmer(
-            self.app, "Confirmer le remplacement",
-            "Remplacer le mount actuel par ce nouveau mount ?",
-            ok_label="Remplacer", danger=False,
+    def _apply_mount(self, mount: Dict) -> None:
+        if not confirm(
+            self.app, "Confirm replacement",
+            "Replace the current mount with this new one?",
+            ok_label="Replace", danger=False,
         ):
             return
         self.controller.set_mount(mount)
-        self._lbl_status.configure(text="✅ Mount mis à jour !",
+        self._lbl_status.configure(text="✅ Mount updated!",
                                     text_color=C["win"])
         self.app.refresh_current()
 
-    def _enregistrer_direct(self) -> None:
-        texte = self._textbox.get("1.0", "end").strip()
-        if not texte:
+    def _save_direct(self) -> None:
+        text = self._textbox.get("1.0", "end").strip()
+        if not text:
             self._lbl_status.configure(
-                text="⚠ Collez d'abord les stats du mount.",
+                text="⚠ Paste the mount stats first.",
                 text_color=C["lose"])
             return
 
-        mount, statut, meta = self.controller.resoudre_mount(texte)
-        if statut == "no_name":
+        mount, status, meta = self.controller.resolve_mount(text)
+        if status == "no_name":
             self._lbl_status.configure(
-                text="⚠ Impossible de lire le nom du mount.",
+                text="⚠ Could not read the mount name.",
                 text_color=C["lose"])
             return
-        if statut == "unknown_not_lvl1":
-            nom = meta.get("name") if meta else "?"
+        if status == "unknown_not_lvl1":
+            name = meta.get("name") if meta else "?"
             self._lbl_status.configure(
-                text=f"⚠ « {nom} » n'est pas en bibliothèque. Importez-le d'abord en Lv.1.",
+                text=f"⚠ « {name} » is not in the library. Import it at Lv.1 first.",
                 text_color=C["lose"])
             return
 
-        if not confirmer(
-            self.app, "Enregistrer sans simuler",
-            "Enregistrer ce mount sans tester s'il est meilleur que l'actuel ?",
-            ok_label="Enregistrer", danger=False,
+        if not confirm(
+            self.app, "Save without simulating",
+            "Save this mount without testing if it's better than the current one?",
+            ok_label="Save", danger=False,
         ):
             return
         self.controller.set_mount(mount)
-        self._lbl_status.configure(text="✅ Mount enregistré !",
+        self._lbl_status.configure(text="✅ Mount saved!",
                                     text_color=C["win"])
         self.app.refresh_current()

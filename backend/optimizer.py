@@ -1,39 +1,53 @@
 """
 ============================================================
-  FORGE MASTER — Optimiseur génétique v6
-  Sélection par win rate + mutation locale contrainte
-  Population : 32 builds
-  Adversaire : profil actuel du joueur (fixe)
+  FORGE MASTER — Stat optimizer (marginal analysis)
+
+  For EACH stat in SUBSTATS_POOL, the optimizer runs two
+  tests:
+    1. profile_plus  = profile + Δ points in this stat
+    2. profile_minus = profile − Δ points in this stat
+  then simulates each one against the current profile and
+  measures the win rate.
+
+  Verdict drawn from the two results:
+    +Δ helps AND −Δ hurts        → KEEP      (stat at the right level)
+    +Δ helps AND −Δ doesn't hurt → INCREASE  (under-invested)
+    +Δ doesn't help AND −Δ hurts → KEEP      (capped but useful)
+    +Δ doesn't help AND −Δ doesn't hurt → DECREASE (wasted points)
+
+  Directly answers the question:
+  "Which stats should I increase, which can I decrease?"
 ============================================================
 """
 
-import math
-import random
+import logging
 from typing import Callable, Dict, List, Optional, Tuple
 
-from .simulation import simuler_100
-from .stats import stats_combat
+from .constants import COMPANION_MAX_DURATION
+from .simulation import simulate_batch
+from .stats import combat_stats
+
+log = logging.getLogger(__name__)
+
 
 # ════════════════════════════════════════════════════════════
-#  CONFIGURATION
+#  TESTED STATS DEFINITION
 # ════════════════════════════════════════════════════════════
+#
+# For each stat: (lo, hi) = range of one "draw point".
+# Lo<0 ⇒ "negative-is-better" stat (e.g. skill_cooldown).
+# Value of one point = mean |lo+hi|/2.
 
-N_BUILDS      = 32
-N_SUBSTATS    = 24      # points à distribuer par build
-SELECTION_PCT = 0.30    # garder top 30%
-N_SURVIVORS   = max(2, round(N_BUILDS * SELECTION_PCT))  # ≈ 10
-
-# Plages par point (valeur ajoutée à chaque tirage)
 SUBSTATS_POOL: Dict[str, Tuple[float, float]] = {
-    "taux_crit":       (0.0,  12.0),
-    "degat_crit":      (0.0, 100.0),
-    "vitesse_attaque": (0.0,  40.0),
+    "crit_chance":     (0.0,  12.0),
+    "crit_damage":     (0.0, 100.0),
+    "attack_speed":    (0.0,  40.0),
     "double_chance":   (0.0,  40.0),
     "damage_pct":      (0.0,  15.0),
     "skill_damage":    (0.0,  30.0),
     "ranged_pct":      (0.0,  15.0),
     "melee_pct":       (0.0,  50.0),
-    "chance_blocage":  (0.0,   5.0),
+    "block_chance":    (0.0,   5.0),
     "lifesteal":       (0.0,  20.0),
     "health_regen":    (0.0,   6.0),
     "skill_cooldown":  (-7.0,  0.0),
@@ -41,215 +55,212 @@ SUBSTATS_POOL: Dict[str, Tuple[float, float]] = {
 }
 
 SUBSTATS_LABELS = {
-    "taux_crit":       "Crit Chance",
-    "degat_crit":      "Crit Damage",
-    "vitesse_attaque": "Attack Speed",
+    "crit_chance":     "Crit Chance",
+    "crit_damage":     "Crit Damage",
+    "attack_speed":    "Attack Speed",
     "double_chance":   "Double Chance",
     "damage_pct":      "Damage %",
     "skill_damage":    "Skill Damage",
     "ranged_pct":      "Ranged Dmg",
     "melee_pct":       "Melee Dmg",
-    "chance_blocage":  "Block Chance",
+    "block_chance":    "Block Chance",
     "lifesteal":       "Lifesteal",
     "health_regen":    "Health Regen",
     "skill_cooldown":  "Skill Cooldown",
     "health_pct":      "Health %",
 }
 
-SUBSTATS_MOY_PAR_TIRAGE = {
+SUBSTATS_VALUE_PER_POINT: Dict[str, float] = {
     k: abs(lo + hi) / 2 if (lo + hi) != 0 else 1.0
     for k, (lo, hi) in SUBSTATS_POOL.items()
 }
 
-SUBSTATS_MAX_THEORIQUE = {
-    k: N_SUBSTATS * SUBSTATS_MOY_PAR_TIRAGE[k]
-    for k in SUBSTATS_POOL
-}
+
+# ════════════════════════════════════════════════════════════
+#  VERDICTS
+# ════════════════════════════════════════════════════════════
+
+VERDICT_INCREASE = "INCREASE"
+VERDICT_KEEP     = "KEEP"
+VERDICT_DECREASE = "DECREASE"
+VERDICT_NEUTRAL  = "NEUTRAL"
+
+# Thresholds (in win-rate points above/below 0.50)
+SIGNIFICANT_THRESHOLD = 0.03   # 3 pp = real effect
+NEUTRAL_THRESHOLD     = 0.015  # 1.5 pp = noise
 
 
 # ════════════════════════════════════════════════════════════
-#  GÉNÉRATION D'UN BUILD
+#  PROFILE HELPERS
 # ════════════════════════════════════════════════════════════
 
-def _build_depuis_substats(substats: Dict, hp_base: float, atk_base: float,
-                            type_attaque: str) -> Dict:
-    hp_total  = hp_base * (1 + substats["health_pct"] / 100)
-    bonus_atq = substats["damage_pct"] + (
-        substats["ranged_pct"] if type_attaque == "distance" else substats["melee_pct"])
-    atk_total = atk_base * (1 + bonus_atq / 100)
+def _recompute_totals(profile: Dict) -> None:
+    """Recompute hp_total and attack_total after a % stat change."""
+    profile["hp_total"] = profile["hp_base"] * (
+        1 + profile.get("health_pct", 0.0) / 100)
 
-    return {
-        **substats,
-        "hp_total":      hp_total,
-        "attaque_total": atk_total,
-        "hp_base":       hp_base,
-        "attaque_base":  atk_base,
-        "type_attaque":  type_attaque,
-    }
+    atk_type = profile.get("attack_type", "melee")
+    bonus = profile.get("damage_pct", 0.0) + (
+        profile.get("ranged_pct", 0.0) if atk_type == "ranged"
+        else profile.get("melee_pct", 0.0))
+    profile["attack_total"] = profile["attack_base"] * (1 + bonus / 100)
 
 
-def _substats_vides() -> Dict[str, float]:
-    return {k: 0.0 for k in SUBSTATS_POOL}
-
-
-def _distribuer_points(pool_actif: Dict[str, Tuple[float, float]]) -> Dict[str, float]:
-    """Distribue N_SUBSTATS points uniformément sur le pool actif."""
-    substats = _substats_vides()
-    keys = list(pool_actif.keys())
-    for _ in range(N_SUBSTATS):
-        k = random.choice(keys)
-        lo, hi = pool_actif[k]
-        substats[k] += round(random.uniform(lo, hi), 2)
-    return substats
-
-
-def build_aleatoire(hp_base: float, atk_base: float, type_attaque: str) -> Dict:
-    exclus   = "melee_pct" if type_attaque == "distance" else "ranged_pct"
-    pool     = {k: v for k, v in SUBSTATS_POOL.items() if k != exclus}
-    substats = _distribuer_points(pool)
-    return _build_depuis_substats(substats, hp_base, atk_base, type_attaque)
-
-
-# ════════════════════════════════════════════════════════════
-#  MUTATION LOCALE
-# ════════════════════════════════════════════════════════════
-
-def muter(build: Dict, hp_base: float, atk_base: float, type_attaque: str,
-          force: Optional[int] = None) -> Dict:
+def profile_with_delta(profile: Dict, stat: str,
+                       player_signed_delta: float) -> Dict:
     """
-    Déplace 1 à 3 points d'une stat vers une autre.
-    Contrainte : la somme des points reste N_SUBSTATS.
+    Returns a new profile with a Δ applied to `stat`,
+    where `player_signed_delta > 0` means "in the player's favor".
+
+    For negative-is-better stats (skill_cooldown), Δ>0 makes the
+    value more negative (= better for the player).
     """
-    exclus   = "melee_pct" if type_attaque == "distance" else "ranged_pct"
-    pool     = {k: v for k, v in SUBSTATS_POOL.items() if k != exclus}
-    keys     = list(pool.keys())
-    substats = {k: build.get(k, 0.0) for k in SUBSTATS_POOL}
+    lo, _ = SUBSTATS_POOL[stat]
+    new = dict(profile)
+    current = float(new.get(stat, 0.0))
 
-    if force is None:
-        force = 3 if random.random() < 0.10 else random.randint(1, 2)
+    if lo >= 0:
+        new[stat] = max(0.0, current + player_signed_delta)
+    else:
+        # 'negative-is-better' stat: player favor = more negative
+        new[stat] = min(0.0, current - player_signed_delta)
 
-    for _ in range(force):
-        sources = [k for k in keys if substats[k] != 0.0]
-        if not sources:
-            break
-        src = random.choice(sources)
-        lo_src, hi_src = pool[src]
-        retire = round(random.uniform(lo_src, hi_src), 2)
-        if lo_src >= 0:
-            substats[src] = max(0.0, substats[src] - retire)
-        else:
-            substats[src] = min(0.0, substats[src] + abs(retire))
-
-        cibles = [k for k in keys if k != src]
-        dst    = random.choice(cibles)
-        lo_dst, hi_dst = pool[dst]
-        ajoute = round(random.uniform(lo_dst, hi_dst), 2)
-        substats[dst] += ajoute
-
-    return _build_depuis_substats(substats, hp_base, atk_base, type_attaque)
+    _recompute_totals(new)
+    return new
 
 
 # ════════════════════════════════════════════════════════════
-#  ÉVALUATION
+#  CLASSIFICATION
 # ════════════════════════════════════════════════════════════
 
-def evaluer(build: Dict, adversaire: Dict, skills: List, n_sims: int) -> float:
-    wins, loses, draws = simuler_100(build, adversaire, skills, skills, n=n_sims)
-    total = wins + loses + draws
-    return wins / total if total > 0 else 0.0
-
-
-# ════════════════════════════════════════════════════════════
-#  ANALYSE : MOYENNE + VARIANCE
-# ════════════════════════════════════════════════════════════
-
-def analyser(builds: List[Dict], scores: List[float]) -> List[Tuple]:
+def _classify(wr_plus: float, wr_minus: float) -> str:
     """
-    Pour chaque substat, calcule dans le top 30% :
-      - pts_moy  : nombre de points investis en moyenne
-      - pts_var  : écart-type du nombre de points
-      - moyenne  : valeur brute moyenne
-      - variance : écart-type brut
-
-    Retourne [(pts_moy, pts_var, moyenne, variance, key, label), ...]
-    trié par pts_moy desc.
+    wr_plus  = win rate of boosted profile vs current profile
+               (>0.5 if adding helps)
+    wr_minus = win rate of weakened profile vs current profile
+               (<0.5 if removing hurts)
     """
-    n       = len(builds)
-    n_top   = max(1, round(n * SELECTION_PCT))
-    classes = sorted(range(n), key=lambda i: scores[i], reverse=True)
-    top     = [builds[i] for i in classes[:n_top]]
+    help_significant = (wr_plus  - 0.5) >  SIGNIFICANT_THRESHOLD
+    loss_significant = (0.5 - wr_minus) >  SIGNIFICANT_THRESHOLD
+    help_neutral     = abs(wr_plus  - 0.5) < NEUTRAL_THRESHOLD
+    loss_neutral     = abs(wr_minus - 0.5) < NEUTRAL_THRESHOLD
 
-    resultats = []
-    for k in SUBSTATS_POOL:
-        moy_tirage = SUBSTATS_MOY_PAR_TIRAGE[k]
-        vals       = [abs(b.get(k, 0.0)) for b in top]
-        moyenne    = sum(vals) / len(vals)
-        variance   = math.sqrt(
-            sum((v - moyenne) ** 2 for v in vals) / len(vals)
-        ) if len(vals) > 1 else 0.0
+    if help_significant and not loss_significant:
+        return VERDICT_INCREASE
+    if loss_significant and not help_significant:
+        return VERDICT_KEEP
+    if help_significant and loss_significant:
+        # +Δ helps AND −Δ hurts: useful stat, push it further
+        return VERDICT_INCREASE
+    if help_neutral and loss_neutral:
+        return VERDICT_DECREASE
+    return VERDICT_NEUTRAL
 
-        pts_moy = moyenne  / moy_tirage if moy_tirage else 0.0
-        pts_var = variance / moy_tirage if moy_tirage else 0.0
 
-        resultats.append((pts_moy, pts_var, moyenne, variance, k, SUBSTATS_LABELS.get(k, k)))
-
-    return sorted(resultats, key=lambda x: x[0], reverse=True)
+def _impact_score(wr_plus: float, wr_minus: float, verdict: str) -> float:
+    """Numerical score used to sort results by 'action priority'."""
+    if verdict == VERDICT_INCREASE:
+        return 1000 + (wr_plus - 0.5)   # bigger gain ranks higher
+    if verdict == VERDICT_DECREASE:
+        return 500  + (0.5 - wr_minus)  # safer to remove ranks higher
+    if verdict == VERDICT_KEEP:
+        return 100  + (0.5 - wr_minus)
+    return 0  # neutral at the bottom
 
 
 # ════════════════════════════════════════════════════════════
-#  BOUCLE PRINCIPALE
+#  MAIN ANALYSIS
 # ════════════════════════════════════════════════════════════
 
-def optimiser(
-    profil: Dict,
+def analyze_profile(
+    profile: Dict,
     skills: List,
-    n_generations: int = 8,
-    n_sims: int = 100,
-    generation_cb: Optional[Callable] = None,
-    progress_cb: Optional[Callable] = None,
+    n_points: int = 8,
+    n_sims: int = 200,
+    progress_cb: Optional[Callable[[int, int, str], None]] = None,
+    stat_cb:     Optional[Callable[[Dict], None]]          = None,
     stop_flag=None,
-) -> Tuple[List[Dict], List[Tuple]]:
-    hp_base      = profil["hp_base"]
-    atk_base     = profil["attaque_base"]
-    type_attaque = profil.get("type_attaque", "corps_a_corps")
+) -> List[Dict]:
+    """
+    Marginal stat-by-stat analysis. Returns a list sorted by
+    decreasing impact:
 
-    adversaire = stats_combat(profil)
+      [{
+        "key"       : "crit_chance",
+        "label"     : "Crit Chance",
+        "current"   : 35.0,
+        "delta"     : 36.0,          # size of the tested Δ (in stat value)
+        "wr_plus"   : 0.62,
+        "wr_minus"  : 0.41,
+        "verdict"   : "INCREASE",
+      }, ...]
 
-    builds = [build_aleatoire(hp_base, atk_base, type_attaque)
-              for _ in range(N_BUILDS)]
+    `progress_cb(i, total, label)` : called when each stat finishes
+    `stat_cb(result_dict)`         : called with the result as soon as
+                                     it is computed (UI streaming)
+    `stop_flag`                    : threading.Event, clean stop
+    """
+    base_stats  = combat_stats(profile)
+    attack_type = profile.get("attack_type", "melee")
+    excluded    = "melee_pct" if attack_type == "ranged" else "ranged_pct"
 
-    top_builds: List[Dict] = []
-    analyse: List[Tuple]   = []
+    keys = [k for k in SUBSTATS_POOL if k != excluded]
+    total = len(keys)
 
-    for gen in range(1, n_generations + 1):
-        if stop_flag and stop_flag.is_set():
+    results: List[Dict] = []
+
+    for idx, stat in enumerate(keys, start=1):
+        if stop_flag is not None and stop_flag.is_set():
             break
 
-        scores: List[float] = []
-        for i, b in enumerate(builds):
-            if stop_flag and stop_flag.is_set():
-                break
-            scores.append(evaluer(b, adversaire, skills, n_sims))
-            if progress_cb:
-                progress_cb(i + 1, len(builds), gen)
+        value_per_pt = SUBSTATS_VALUE_PER_POINT[stat]
+        delta_value  = n_points * value_per_pt
+        current      = float(profile.get(stat, 0.0))
 
-        if not scores:
-            break
+        profile_plus  = profile_with_delta(profile, stat, +delta_value)
+        profile_minus = profile_with_delta(profile, stat, -delta_value)
 
-        analyse    = analyser(builds, scores)
-        classes    = sorted(zip(scores, builds), key=lambda x: x[0], reverse=True)
-        top_scores = [s for s, _ in classes[:N_SURVIVORS]]
-        top_builds = [b for _, b in classes[:N_SURVIVORS]]
-        wr_moyen   = sum(top_scores) / len(top_scores)
+        # If the minus profile couldn't move down (already at 0), skip the
+        # negative test and mark −Δ as "unchanged" (wr_minus = 0.5).
+        if abs(profile_minus.get(stat, 0.0) - current) < 1e-9:
+            wr_minus = 0.5
+        else:
+            sj_minus = combat_stats(profile_minus)
+            w_m, l_m, d_m = simulate_batch(
+                sj_minus, base_stats, skills, skills,
+                n=n_sims, max_duration=COMPANION_MAX_DURATION)
+            tot_m = max(1, w_m + l_m + d_m)
+            wr_minus = w_m / tot_m
 
-        if generation_cb:
-            meilleur = top_builds[0]
-            generation_cb(gen, top_builds, analyse, top_scores, wr_moyen, meilleur)
+        sj_plus = combat_stats(profile_plus)
+        w_p, l_p, d_p = simulate_batch(
+            sj_plus, base_stats, skills, skills,
+            n=n_sims, max_duration=COMPANION_MAX_DURATION)
+        tot_p = max(1, w_p + l_p + d_p)
+        wr_plus = w_p / tot_p
 
-        nouveaux = list(top_builds)
-        while len(nouveaux) < N_BUILDS:
-            parent = random.choice(top_builds)
-            nouveaux.append(muter(parent, hp_base, atk_base, type_attaque))
-        builds = nouveaux
+        verdict = _classify(wr_plus, wr_minus)
 
-    return top_builds, analyse
+        result = {
+            "key":       stat,
+            "label":     SUBSTATS_LABELS.get(stat, stat),
+            "current":   current,
+            "delta":     delta_value,
+            "wr_plus":   wr_plus,
+            "wr_minus":  wr_minus,
+            "verdict":   verdict,
+            "impact":    _impact_score(wr_plus, wr_minus, verdict),
+        }
+        results.append(result)
+
+        if stat_cb is not None:
+            stat_cb(dict(result))
+        if progress_cb is not None:
+            progress_cb(idx, total, result["label"])
+
+    results.sort(key=lambda r: r["impact"], reverse=True)
+    return results
+
+
+# Back-compat alias
+analyser_profil = analyze_profile

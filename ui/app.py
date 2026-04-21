@@ -1,8 +1,8 @@
 """
 ============================================================
   FORGE MASTER UI — app.py
-  Fenêtre principale + navigation latérale.
-  Thème/couleurs/polices centralisés dans ui.theme.
+  Main window + side navigation.
+  Theme/colors/fonts centralized in ui.theme.
 ============================================================
 """
 
@@ -13,11 +13,11 @@ import customtkinter as ctk
 from game_controller import GameController
 from ui.theme import C, FONT_H1, FONT_NAV, FONT_SMALL
 from ui.views.dashboard    import DashboardView
-from ui.views.equipements  import EquipementsView
+from ui.views.equipment  import EquipmentView
 from ui.views.mount_view   import MountView
 from ui.views.optimizer_view import OptimizerView
 from ui.views.pets_view    import PetsView
-from ui.views.simulateur   import SimulateurView
+from ui.views.simulator  import SimulatorView
 from ui.views.skills_view  import SkillsView
 
 ctk.set_appearance_mode("dark")
@@ -27,17 +27,17 @@ log = logging.getLogger(__name__)
 
 _NAV_ITEMS = [
     ("dashboard",   "  📊  Dashboard",   DashboardView),
-    ("simulateur",  "  ⚔   Simulateur",  SimulateurView),
-    ("equipements", "  🛡   Équipements", EquipementsView),
-    ("skills",      "  ✨  Skills",       SkillsView),
-    ("pets",        "  🐾  Pets",         PetsView),
-    ("optimizer",   "  🧬  Optimiseur",   OptimizerView),
-    ("mount",       "  🐴  Mount",        MountView),
+    ("simulator",   "  ⚔   Simulator",   SimulatorView),
+    ("equipment",   "  🛡   Equipment",  EquipmentView),
+    ("skills",      "  ✨  Skills",      SkillsView),
+    ("pets",        "  🐾  Pets",        PetsView),
+    ("optimizer",   "  🧬  Optimizer",   OptimizerView),
+    ("mount",       "  🐴  Mount",       MountView),
 ]
 
 
 class ForgeMasterApp(ctk.CTk):
-    """Fenêtre principale Forge Master."""
+    """Forge Master main window."""
 
     def __init__(self):
         super().__init__()
@@ -109,7 +109,7 @@ class ForgeMasterApp(ctk.CTk):
     # ── Navigation ───────────────────────────────────────────
 
     def show_view(self, view_id: str) -> None:
-        """Affiche la vue `view_id` en détruisant l'ancienne."""
+        """Show the `view_id` view, destroying the previous one."""
         self._active_view_id = view_id
 
         for vid, btn in self._nav_buttons.items():
@@ -127,14 +127,14 @@ class ForgeMasterApp(ctk.CTk):
 
         ViewClass = self._view_map.get(view_id)
         if ViewClass is None:
-            log.warning("show_view: view_id inconnu %r", view_id)
+            log.warning("show_view: unknown view_id %r", view_id)
             return
 
         self._current_view = ViewClass(self.content_frame, self.controller, self)
         self._current_view.grid(row=0, column=0, sticky="nsew")
 
     def refresh_current(self) -> None:
-        """Recharge les données et recrée la vue active."""
+        """Reload data and rebuild the active view."""
         self.controller.reload()
         self.show_view(self._active_view_id)
 

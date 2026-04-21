@@ -1,6 +1,6 @@
 # ============================================================
-# FORGE MASTER — Bibliothèque des mounts (level 1)
-# Stats de référence au level 1, indexées par nom.
+# FORGE MASTER — Mounts library (level 1)
+# Reference stats at level 1, indexed by name.
 # ============================================================
 
 [Bike]

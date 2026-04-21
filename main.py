@@ -1,14 +1,14 @@
 """
 ============================================================
-  FORGE MASTER UI — Point d'entrée
-  Lancer : python main.py
+  FORGE MASTER UI — Entry point
+  Run : python main.py
 ============================================================
 """
 
 import sys
 import os
 
-# S'assurer que le dossier racine est dans le path Python
+# Ensure the root folder is in the Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def main():
@@ -16,8 +16,8 @@ def main():
         import customtkinter
     except ImportError:
         print("=" * 55)
-        print("  ERREUR : CustomTkinter n'est pas installé.")
-        print("  Installez-le avec la commande :")
+        print("  ERROR : CustomTkinter is not installed.")
+        print("  Install it with the following command :")
         print("    pip install customtkinter")
         print("=" * 55)
         sys.exit(1)

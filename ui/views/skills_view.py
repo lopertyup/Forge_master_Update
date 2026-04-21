@@ -1,8 +1,8 @@
 """
 ============================================================
   FORGE MASTER UI — Skills
-  Grille visuelle de tous les skills (groupés par rareté),
-  sélection max 3.
+  Visual grid of all skills (grouped by rarity),
+  max 3 selection.
 ============================================================
 """
 
@@ -19,7 +19,7 @@ from ui.theme import (
     FONT_TINY,
     FONT_TITLE,
     RARITY_ORDER,
-    fmt_nombre,
+    fmt_number,
     load_icon,
     rarity_color,
 )
@@ -38,7 +38,7 @@ class SkillsView(ctk.CTkFrame):
         self._build()
 
     def _build(self) -> None:
-        # En-tête (sur mesure : compte + bouton + status à droite)
+        # Header (custom: count + button + status on the right)
         header = ctk.CTkFrame(self, fg_color=C["surface"], corner_radius=0,
                                height=64)
         header.grid(row=0, column=0, sticky="ew")
@@ -50,38 +50,38 @@ class SkillsView(ctk.CTkFrame):
             side="left", padx=24, pady=16)
 
         self._lbl_count = ctk.CTkLabel(
-            header, text="0 / 3 sélectionnés",
+            header, text="0 / 3 selected",
             font=FONT_BODY, text_color=C["muted"])
         self._lbl_count.pack(side="left", padx=16)
 
         ctk.CTkButton(
-            header, text="💾  Sauvegarder la sélection",
+            header, text="💾  Save selection",
             font=FONT_BODY, height=36, corner_radius=8,
             fg_color=C["accent"], hover_color=C["accent_hv"],
-            command=self._sauvegarder,
+            command=self._save,
         ).pack(side="right", padx=24, pady=14)
 
         self._lbl_status = ctk.CTkLabel(
             header, text="", font=FONT_SMALL, text_color=C["lose"])
         self._lbl_status.pack(side="right", padx=8)
 
-        # Corps scrollable
+        # Scrollable body
         scroll = ctk.CTkScrollableFrame(self, fg_color=C["bg"],
                                          corner_radius=0)
         scroll.grid(row=1, column=0, sticky="nsew")
 
-        tous   = self.controller.get_tous_skills()
-        actifs = {c for c, _ in self.controller.get_skills_actifs()}
+        all_skills = self.controller.get_all_skills()
+        active     = {c for c, _ in self.controller.get_active_skills()}
 
-        # Groupement par rareté
-        par_rarete: Dict[str, list] = {}
-        for code, data in tous.items():
+        # Group by rarity
+        by_rarity: Dict[str, list] = {}
+        for code, data in all_skills.items():
             r = str(data.get("rarity", "common")).lower()
-            par_rarete.setdefault(r, []).append((code, data))
+            by_rarity.setdefault(r, []).append((code, data))
 
         row_idx = 0
         for rarity in RARITY_ORDER:
-            items = par_rarete.get(rarity, [])
+            items = by_rarity.get(rarity, [])
             if not items:
                 continue
 
@@ -102,7 +102,7 @@ class SkillsView(ctk.CTkFrame):
 
             cols = 3
             for i, (code, data) in enumerate(sorted(items, key=lambda x: x[0])):
-                var = ctk.BooleanVar(value=(code in actifs))
+                var = ctk.BooleanVar(value=(code in active))
                 self._selected[code] = var
                 card = self._make_skill_card(grid_f, code, data, color,
                                               row=i // cols, col=i % cols)
@@ -111,13 +111,13 @@ class SkillsView(ctk.CTkFrame):
 
             row_idx += 1
 
-        # Légende + compteur initial
+        # Legend + initial count
         ctk.CTkLabel(scroll,
-                     text="Cliquez sur un skill pour le sélectionner. Maximum 3 skills actifs.",
+                     text="Click on a skill to select it. Maximum 3 active skills.",
                      font=FONT_SMALL, text_color=C["muted"]).pack(pady=16)
 
         count = sum(1 for v in self._selected.values() if v.get())
-        self._lbl_count.configure(text=f"{count} / 3 sélectionnés")
+        self._lbl_count.configure(text=f"{count} / 3 selected")
 
     def _make_skill_card(self, parent: ctk.CTkFrame, code: str, data: Dict,
                           color: str, row: int, col: int) -> ctk.CTkFrame:
@@ -128,7 +128,7 @@ class SkillsView(ctk.CTkFrame):
         frame.grid(row=row, column=col, padx=6, pady=6, sticky="nsew")
         parent.grid_columnconfigure(col, weight=1)
 
-        # Rendre toute la carte cliquable (propagation au frame racine)
+        # Make the entire card clickable (propagate to root frame)
         def _bind_all(widget: ctk.CTkBaseClass) -> None:
             widget.bind("<Button-1>", lambda _e, c=code: self._toggle(c))
 
@@ -172,16 +172,16 @@ class SkillsView(ctk.CTkFrame):
         cooldown = data.get("cooldown", 0)
         hits     = int(data.get("hits", 0))
         damage   = data.get("damage", 0)
-        buff_atq = data.get("buff_atq", 0)
+        buff_atk = data.get("buff_atk", data.get("buff_atq", 0))
         buff_hp  = data.get("buff_hp", 0)
         buff_dur = data.get("buff_duration", 0)
 
         if sk_type == "damage":
-            info = f"DMG: {fmt_nombre(damage)} × {hits}  |  CD: {cooldown}s"
+            info = f"DMG: {fmt_number(damage)} × {hits}  |  CD: {cooldown}s"
         else:
             parts = []
-            if buff_atq: parts.append(f"+ATQ {fmt_nombre(buff_atq)}")
-            if buff_hp:  parts.append(f"+HP {fmt_nombre(buff_hp)}")
+            if buff_atk: parts.append(f"+ATK {fmt_number(buff_atk)}")
+            if buff_hp:  parts.append(f"+HP {fmt_number(buff_hp)}")
             info = f"Buff {buff_dur}s  —  " + ("  ".join(parts) if parts else "—")
 
         info_lbl = ctk.CTkLabel(frame, text=info, font=FONT_MONO_S,
@@ -197,7 +197,7 @@ class SkillsView(ctk.CTkFrame):
 
         if not var.get():
             if len(selected) >= 3:
-                self._lbl_status.configure(text="⚠ Maximum 3 skills actifs")
+                self._lbl_status.configure(text="⚠ Maximum 3 active skills")
                 return
             var.set(True)
         else:
@@ -206,7 +206,7 @@ class SkillsView(ctk.CTkFrame):
         self._lbl_status.configure(text="")
         self._update_card_style(code)
         count = sum(1 for v in self._selected.values() if v.get())
-        self._lbl_count.configure(text=f"{count} / 3 sélectionnés")
+        self._lbl_count.configure(text=f"{count} / 3 selected")
 
     def _update_card_style(self, code: str) -> None:
         frame = self._skill_frames.get(code)
@@ -219,14 +219,14 @@ class SkillsView(ctk.CTkFrame):
             frame.configure(fg_color=C["card"],
                             border_color=C["border"], border_width=1)
 
-    def _sauvegarder(self) -> None:
-        codes  = [c for c, v in self._selected.items() if v.get()]
-        skills = self.controller.get_skills_from_codes(codes)
-        profil = self.controller.get_profil()
-        if not profil:
-            self._lbl_status.configure(text="⚠ Aucun profil chargé")
+    def _save(self) -> None:
+        codes   = [c for c, v in self._selected.items() if v.get()]
+        skills  = self.controller.get_skills_from_codes(codes)
+        profile = self.controller.get_profile()
+        if not profile:
+            self._lbl_status.configure(text="⚠ No profile loaded")
             return
-        self.controller.set_profil(profil, skills)
-        self._lbl_status.configure(text=f"✅ {len(skills)} skill(s) sauvegardé(s)",
+        self.controller.set_profile(profile, skills)
+        self._lbl_status.configure(text=f"✅ {len(skills)} skill(s) saved",
                                     text_color=C["win"])
         self.app.refresh_current()

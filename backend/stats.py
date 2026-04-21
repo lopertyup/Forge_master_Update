@@ -1,8 +1,8 @@
 """
 ============================================================
-  FORGE MASTER — Math de stats (pure, sans I/O)
-  Transformations sur les dictionnaires de profil :
-  application d'équipements, de companions, finalisation, etc.
+  FORGE MASTER — Stats math (pure, no I/O)
+  Transformations on profile dictionaries: applying
+  equipment, companions, finalizing, etc.
 ============================================================
 """
 
@@ -11,83 +11,83 @@ from typing import Dict
 from .constants import PERCENT_STATS_KEYS
 
 
-def finaliser_bases(profil: Dict) -> Dict:
+def finalize_bases(profile: Dict) -> Dict:
     """
-    Calcule attaque_base à partir de attaque_total et des pourcentages.
-    Mute et retourne le profil.
+    Compute attack_base from attack_total and percentages.
+    Mutates and returns the profile.
     """
-    type_atq   = profil.get("type_attaque", "corps_a_corps")
-    damage_pct = profil.get("damage_pct", 0.0)
-    melee_pct  = profil.get("melee_pct", 0.0)
-    ranged_pct = profil.get("ranged_pct", 0.0)
+    atk_type   = profile.get("attack_type", "melee")
+    damage_pct = profile.get("damage_pct", 0.0)
+    melee_pct  = profile.get("melee_pct", 0.0)
+    ranged_pct = profile.get("ranged_pct", 0.0)
 
-    bonus = damage_pct + (ranged_pct if type_atq == "distance" else melee_pct)
-    total = profil.get("attaque_total", 0.0)
-    profil["attaque_base"] = total / (1 + bonus / 100) if bonus else total
-    return profil
+    bonus = damage_pct + (ranged_pct if atk_type == "ranged" else melee_pct)
+    total = profile.get("attack_total", 0.0)
+    profile["attack_base"] = total / (1 + bonus / 100) if bonus else total
+    return profile
 
 
-def stats_combat(profil: Dict) -> Dict:
-    """Extrait les stats nécessaires à la simulation de combat."""
+def combat_stats(profile: Dict) -> Dict:
+    """Extract the stats needed to simulate a fight."""
     return {
-        "hp":              profil["hp_total"],
-        "attaque":         profil["attaque_total"],
-        "taux_crit":       profil["taux_crit"],
-        "degat_crit":      profil["degat_crit"],
-        "health_regen":    profil["health_regen"],
-        "lifesteal":       profil["lifesteal"],
-        "double_chance":   profil["double_chance"],
-        "vitesse_attaque": profil["vitesse_attaque"],
-        "skill_damage":    profil["skill_damage"],
-        "skill_cooldown":  profil["skill_cooldown"],
-        "chance_blocage":  profil["chance_blocage"],
-        "type_attaque":    profil["type_attaque"],
+        "hp":              profile["hp_total"],
+        "attack":          profile["attack_total"],
+        "crit_chance":     profile["crit_chance"],
+        "crit_damage":     profile["crit_damage"],
+        "health_regen":    profile["health_regen"],
+        "lifesteal":       profile["lifesteal"],
+        "double_chance":   profile["double_chance"],
+        "attack_speed":    profile["attack_speed"],
+        "skill_damage":    profile["skill_damage"],
+        "skill_cooldown":  profile["skill_cooldown"],
+        "block_chance":    profile["block_chance"],
+        "attack_type":     profile["attack_type"],
     }
 
 
-def _recalculer_totaux(profil: Dict) -> None:
-    """Recalcule hp_total et attaque_total depuis les bases et pourcentages."""
-    profil["hp_total"] = profil["hp_base"] * (1 + profil["health_pct"] / 100)
+def _recompute_totals(profile: Dict) -> None:
+    """Recompute hp_total and attack_total from bases and percentages."""
+    profile["hp_total"] = profile["hp_base"] * (1 + profile["health_pct"] / 100)
 
-    type_atq = profil.get("type_attaque", "corps_a_corps")
-    bonus = profil["damage_pct"] + (
-        profil["ranged_pct"] if type_atq == "distance" else profil["melee_pct"])
-    profil["attaque_total"] = profil["attaque_base"] * (1 + bonus / 100)
-
-
-def appliquer_changement(profil: Dict, eq_ancien: Dict, eq_nouveau: Dict) -> Dict:
-    """Remplace un équipement par un autre. Retourne un nouveau dict."""
-    nouveau = dict(profil)
-
-    for k in PERCENT_STATS_KEYS:
-        nouveau[k] = round(
-            profil.get(k, 0.0) - eq_ancien.get(k, 0.0) + eq_nouveau.get(k, 0.0), 6)
-
-    if eq_nouveau.get("type_attaque") is not None:
-        nouveau["type_attaque"] = eq_nouveau["type_attaque"]
-
-    nouveau["hp_base"]      = profil["hp_base"]      - eq_ancien.get("hp_flat",     0) + eq_nouveau.get("hp_flat",     0)
-    nouveau["attaque_base"] = profil["attaque_base"] - eq_ancien.get("damage_flat", 0) + eq_nouveau.get("damage_flat", 0)
-
-    _recalculer_totaux(nouveau)
-    return nouveau
+    atk_type = profile.get("attack_type", "melee")
+    bonus = profile["damage_pct"] + (
+        profile["ranged_pct"] if atk_type == "ranged" else profile["melee_pct"])
+    profile["attack_total"] = profile["attack_base"] * (1 + bonus / 100)
 
 
-def appliquer_companion(profil: Dict, ancien: Dict, nouveau_c: Dict) -> Dict:
-    """Remplace un pet ou un mount par un autre. Retourne un nouveau dict."""
-    nouveau = dict(profil)
+def apply_change(profile: Dict, old_eq: Dict, new_eq: Dict) -> Dict:
+    """Replace one equipment piece with another. Returns a new dict."""
+    new = dict(profile)
 
     for k in PERCENT_STATS_KEYS:
-        nouveau[k] = round(
-            profil.get(k, 0.0) - ancien.get(k, 0.0) + nouveau_c.get(k, 0.0), 6)
+        new[k] = round(
+            profile.get(k, 0.0) - old_eq.get(k, 0.0) + new_eq.get(k, 0.0), 6)
 
-    nouveau["hp_base"]      = profil["hp_base"]      - ancien.get("hp_flat",     0) + nouveau_c.get("hp_flat",     0)
-    nouveau["attaque_base"] = profil["attaque_base"] - ancien.get("damage_flat", 0) + nouveau_c.get("damage_flat", 0)
+    if new_eq.get("attack_type") is not None:
+        new["attack_type"] = new_eq["attack_type"]
 
-    _recalculer_totaux(nouveau)
-    return nouveau
+    new["hp_base"]     = profile["hp_base"]     - old_eq.get("hp_flat",     0) + new_eq.get("hp_flat",     0)
+    new["attack_base"] = profile["attack_base"] - old_eq.get("damage_flat", 0) + new_eq.get("damage_flat", 0)
+
+    _recompute_totals(new)
+    return new
 
 
-# Alias rétrocompatibles
-appliquer_pet   = appliquer_companion
-appliquer_mount = appliquer_companion
+def apply_companion(profile: Dict, old: Dict, new_c: Dict) -> Dict:
+    """Replace a pet or mount with another. Returns a new dict."""
+    new = dict(profile)
+
+    for k in PERCENT_STATS_KEYS:
+        new[k] = round(
+            profile.get(k, 0.0) - old.get(k, 0.0) + new_c.get(k, 0.0), 6)
+
+    new["hp_base"]     = profile["hp_base"]     - old.get("hp_flat",     0) + new_c.get("hp_flat",     0)
+    new["attack_base"] = profile["attack_base"] - old.get("damage_flat", 0) + new_c.get("damage_flat", 0)
+
+    _recompute_totals(new)
+    return new
+
+
+# Back-compat aliases
+apply_pet   = apply_companion
+apply_mount = apply_companion

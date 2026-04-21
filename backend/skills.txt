@@ -1,11 +1,14 @@
 # ============================================================
 # FORGE MASTER — Skills
-# damage = degats par hit
-# cooldown = temps de recharge en secondes
-# hits = nombre d'instances de degats
-# buff_duration = duree du buff en secondes (buff uniquement)
-# buff_atq = bonus d'attaque du buff
-# buff_hp = bonus de HP du buff
+# IMPORTANT: all damage/buff values are for level 1.
+# Damage scales with the skill's level.
+#
+# damage        = damage per hit (total / hits)
+# cooldown      = cooldown in seconds
+# hits          = number of damage instances
+# buff_duration = buff duration in seconds (buff only)
+# buff_atk      = attack bonus granted by the buff
+# buff_hp       = HP bonus granted by the buff
 # ============================================================
 
 [c1]
@@ -16,40 +19,40 @@ damage        = 0
 cooldown      = 8.0
 hits          = 0
 buff_duration = 10.0
-buff_atq      = 0
-buff_hp       = 131
+buff_atk      = 0
+buff_hp       = 100
 
 [c2]
 name          = Arrow Rain
 rarity        = common
 type          = damage
-damage        = 84
-cooldown      = 6.8
+damage        = 67
+cooldown      = 7.0
 hits          = 3
 buff_duration = 0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0
 
 [c3]
 name          = Shout
 rarity        = common
 type          = damage
-damage        = 24
+damage        = 19
 cooldown      = 6.0
 hits          = 8
 buff_duration = 0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0
 
 [r1]
 name          = Shurikens
 rarity        = rare
 type          = damage
-damage        = 341
+damage        = 256
 cooldown      = 4.0
 hits          = 5
 buff_duration = 0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0
 
 [r2]
@@ -60,29 +63,29 @@ damage        = 0
 cooldown      = 8.0
 hits          = 0
 buff_duration = 10.0
-buff_atq      = 1700
+buff_atk      = 1280
 buff_hp       = 0
 
 [r3]
 name          = Cannon Barrage
 rarity        = rare
 type          = damage
-damage        = 549
+damage        = 427
 cooldown      = 5.0
 hits          = 3
 buff_duration = 0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0
 
 [e1]
 name          = Thorns
 rarity        = epic
 type          = damage
-damage        = 20600
+damage        = 6912
 cooldown      = 5.0
 hits          = 2
 buff_duration = 0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0
 
 [e2]
@@ -93,18 +96,18 @@ damage        = 0
 cooldown      = 8.0
 hits          = 0
 buff_duration = 10.0
-buff_atq      = 10100
-buff_hp       = 81300
+buff_atk      = 6750
+buff_hp       = 54000
 
 [e3]
-name          = Arrow Rain
+name          = Rain of Arrows
 rarity        = epic
 type          = damage
-damage        = 100000
+damage        = 6750
 cooldown      = 10.0
 hits          = 10
 buff_duration = 0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0
 
 [l1]
@@ -115,62 +118,62 @@ damage        = 0
 cooldown      = 8.0
 hits          = 0
 buff_duration = 10.0
-buff_atq      = 142000
-buff_hp       = 1130000
+buff_atk      = 128000
+buff_hp       = 1024000
 
 [l2]
 name          = Meteorite
 rarity        = legendary
 type          = damage
-damage        = 221000
-cooldown      = 10.0
+damage        = 200000
+cooldown      = 9.0
 hits          = 5
 buff_duration = 0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0
 
 [l3]
 name          = Bomb
 rarity        = legendary
 type          = damage
-damage        = 690000
+damage        = 600000
 cooldown      = 6.0
 hits          = 1
 buff_duration = 0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0
 
 [u1]
 name          = Stampede
 rarity        = ultimate
 type          = damage
-damage        = 2280000
+damage        = 540000
 cooldown      = 20.0
 hits          = 4
 buff_duration = 0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0
 
 [u2]
 name          = Worm
 rarity        = ultimate
 type          = damage
-damage        = 4530000
+damage        = 4320000
 cooldown      = 8.0
 hits          = 1
 buff_duration = 0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0
 
 [u3]
 name          = Lightning
 rarity        = ultimate
 type          = damage
-damage        = 453000
+damage        = 432000
 cooldown      = 3.0
 hits          = 5
 buff_duration = 0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0
 
 [m1]
@@ -178,30 +181,30 @@ name          = Higher Morale
 rarity        = mythic
 type          = buff
 damage        = 0
-cooldown      = 6.0
+cooldown      = 8.0
 hits          = 0
 buff_duration = 8.0
-buff_atq      = 9470000
-buff_hp       = 75700000
+buff_atk      = 15552000
+buff_hp       = 124416000
 
 [m2]
 name          = Strafe Run
 rarity        = mythic
 type          = damage
-damage        = 16100000
-cooldown      = 8.0
+damage        = 4608000
+cooldown      = 10.0
 hits          = 3
 buff_duration = 0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0
 
 [m3]
 name          = Drone
 rarity        = mythic
 type          = damage
-damage        = 22800000
-cooldown      = 6.0
+damage        = 2142857
+cooldown      = 8.0
 hits          = 7
 buff_duration = 8.0
-buff_atq      = 0
+buff_atk      = 0
 buff_hp       = 0

@@ -1,85 +1,85 @@
 """
 ============================================================
-  FORGE MASTER — Backend (shim de compatibilité)
+  FORGE MASTER — Backend (compatibility shim)
 
-  Le backend a été découpé en modules thématiques :
-    - backend/constants.py    : toutes les constantes
-    - backend/parser.py       : parsers (texte -> dict)
-    - backend/stats.py        : math pure sur les dicts de stats
-    - backend/persistence.py  : lecture/écriture des .txt
-    - backend/simulation.py   : moteur de combat
+  The backend has been split into thematic modules:
+    - backend/constants.py    : all constants
+    - backend/parser.py       : parsers (text -> dict)
+    - backend/stats.py        : pure math on stat dicts
+    - backend/persistence.py  : .txt read / write
+    - backend/simulation.py   : combat engine
+    - backend/optimizer.py    : marginal stat optimizer
 
-  Ce fichier re-exporte l'API publique pour conserver la
-  rétrocompatibilité avec le code existant. Les nouveaux
-  modules devraient importer directement depuis les sous-
-  modules ciblés.
+  This file re-exports the public API to keep backward
+  compatibility with existing code. New modules should
+  import directly from the targeted sub-modules.
 ============================================================
 """
 
-# Constantes ----------------------------------------------------
+# Constants -----------------------------------------------------
 from .constants import (  # noqa: F401
-    AVANCE_DISTANCE,
-    COMPANION_DUREE_MAX,
+    BASE_SPEED,
+    COMPANION_MAX_DURATION,
     COMPANION_STATS_KEYS,
-    DEFAULT_DUREE_MAX,
+    DEFAULT_MAX_DURATION,
     MOUNT_FILE,
     MOUNT_STATS_KEYS,
     N_SIMULATIONS,
     PERCENT_STATS_KEYS,
     PETS_FILE,
     PETS_STATS_KEYS,
-    PROFIL_FILE,
+    PROFILE_FILE,
+    RANGED_LEAD,
     SKILLS_FILE,
     STATS_KEYS,
     TICK,
-    VITESSE_BASE,
 )
 
 # Parser --------------------------------------------------------
 from .parser import (  # noqa: F401
-    extraire,
-    extraire_flat,
+    extract,
+    extract_flat,
+    parse_companion,
+    parse_equipment,
     parse_flat,
-    parser_companion,
-    parser_equipement,
-    parser_mount,
-    parser_pet,
-    parser_texte,
+    parse_mount,
+    parse_pet,
+    parse_profile_text,
 )
 
 # Stats math ----------------------------------------------------
 from .stats import (  # noqa: F401
-    appliquer_changement,
-    appliquer_companion,
-    appliquer_mount,
-    appliquer_pet,
-    finaliser_bases,
-    stats_combat,
+    apply_change,
+    apply_companion,
+    apply_mount,
+    apply_pet,
+    combat_stats,
+    finalize_bases,
 )
 
 # Persistence ---------------------------------------------------
 from .persistence import (  # noqa: F401
-    charger_mount,
-    charger_pets,
-    charger_profil,
-    charger_skills,
-    companion_vide,
+    empty_companion,
+    load_mount,
+    load_pets,
+    load_profile,
+    load_skills,
     mount_vide,
     pet_vide,
-    sauvegarder_mount,
-    sauvegarder_pets,
-    sauvegarder_profil,
+    save_mount,
+    save_pets,
+    save_profile,
 )
 
 # Simulation ----------------------------------------------------
 from .simulation import (  # noqa: F401
-    Combattant,
+    Fighter,
     SkillInstance,
-    simuler,
-    simuler_100,
+    simulate,
+    simulate_batch,
 )
 
-# Compat : certains callers lisaient fm.DUREE_MAX pour le patcher.
-# On expose la valeur mais les nouveaux callers doivent passer
-# duree_max en argument à simuler() / simuler_100().
-DUREE_MAX = DEFAULT_DUREE_MAX
+# Compat: some callers used to read fm.DUREE_MAX to patch it.
+# We expose the value but new callers must pass max_duration as
+# an argument to simulate() / simulate_batch().
+MAX_DURATION = DEFAULT_MAX_DURATION

@@ -1,8 +1,8 @@
 """
 ============================================================
-  FORGE MASTER UI — Widgets réutilisables
-  Petits composants assemblés à partir de customtkinter pour
-  remplacer les blocs dupliqués dans les vues.
+  FORGE MASTER UI — Reusable widgets
+  Small components built on top of customtkinter to replace
+  the duplicated blocks in the views.
 ============================================================
 """
 
@@ -22,19 +22,19 @@ from .theme import (
     FONT_SUB,
     FONT_TINY,
     STAT_LABELS,
-    fmt_nombre,
+    fmt_number,
     fmt_stat,
     rarity_color,
 )
 
 
 # ════════════════════════════════════════════════════════════
-#  EN-TÊTE DE VUE (bande du haut 64px)
+#  VIEW HEADER (top 64px band)
 # ════════════════════════════════════════════════════════════
 
 def build_header(parent: ctk.CTkBaseClass, title: str,
                  font=None, height: int = 64) -> ctk.CTkFrame:
-    """Construit l'en-tête standard d'une vue. Retourne le frame."""
+    """Build the standard view header. Returns the frame."""
     from .theme import FONT_TITLE
     header = ctk.CTkFrame(parent, fg_color=C["surface"], corner_radius=0, height=height)
     header.grid(row=0, column=0, sticky="ew")
@@ -47,13 +47,13 @@ def build_header(parent: ctk.CTkBaseClass, title: str,
 
 
 # ════════════════════════════════════════════════════════════
-#  LIGNE DE STAT (label à gauche, valeur à droite)
+#  STAT ROW (label on the left, value on the right)
 # ════════════════════════════════════════════════════════════
 
 def stat_row(parent: ctk.CTkBaseClass, key: str, value: float,
              row_index: int = 0, label: Optional[str] = None,
              is_flat: Optional[bool] = None) -> ctk.CTkFrame:
-    """Une ligne 'Label  ────  Valeur' en zébré alterné."""
+    """A 'Label  ────  Value' row with alternating zebra stripes."""
     bg = C["card_alt"] if row_index % 2 == 0 else C["card"]
     row = ctk.CTkFrame(parent, fg_color=bg, corner_radius=4)
     row.grid_columnconfigure(1, weight=1)
@@ -64,7 +64,7 @@ def stat_row(parent: ctk.CTkBaseClass, key: str, value: float,
 
     if is_flat is None:
         is_flat = key in FLAT_STAT_KEYS
-    val_txt = fmt_nombre(value) if is_flat else f"+{value}%"
+    val_txt = fmt_number(value) if is_flat else f"+{value}%"
     ctk.CTkLabel(row, text=val_txt, font=FONT_MONO,
                  text_color=C["text"], anchor="e").grid(
         row=0, column=1, padx=10, pady=4, sticky="e")
@@ -72,15 +72,15 @@ def stat_row(parent: ctk.CTkBaseClass, key: str, value: float,
 
 
 # ════════════════════════════════════════════════════════════
-#  BARRES WIN / LOSE / DRAW
+#  WIN / LOSE / DRAW BARS
 # ════════════════════════════════════════════════════════════
 
 def build_wld_bars(parent: ctk.CTkBaseClass, wins: int, loses: int, draws: int,
                    total: Optional[int] = None, bar_height: int = 10,
                    compact: bool = False) -> ctk.CTkFrame:
     """
-    Affiche 3 barres horizontales WIN / LOSE / DRAW.
-    `total` par défaut = wins + loses + draws.
+    Display 3 horizontal bars WIN / LOSE / DRAW.
+    `total` defaults to wins + loses + draws.
     """
     total = total or max(1, wins + loses + draws)
     frame = ctk.CTkFrame(parent, fg_color="transparent")
@@ -105,12 +105,12 @@ def build_wld_bars(parent: ctk.CTkBaseClass, wins: int, loses: int, draws: int,
 
 
 # ════════════════════════════════════════════════════════════
-#  GROS COMPTEUR "—" (utilisé par simulateur)
+#  BIG "—" COUNTER (used by the simulator)
 # ════════════════════════════════════════════════════════════
 
 def big_counter(parent: ctk.CTkBaseClass, label: str, color: str,
                 total_text: str = "/ 1000") -> ctk.CTkLabel:
-    """Encadré 'LABEL / chiffre / total'. Retourne le label du chiffre."""
+    """Boxed 'LABEL / number / total'. Returns the number's label."""
     frame = ctk.CTkFrame(parent, fg_color=C["card_alt"], corner_radius=10)
     ctk.CTkLabel(frame, text=label, font=FONT_SMALL,
                  text_color=C["muted"]).pack(pady=(10, 0))
@@ -118,12 +118,12 @@ def big_counter(parent: ctk.CTkBaseClass, label: str, color: str,
     value_lbl.pack()
     ctk.CTkLabel(frame, text=total_text, font=FONT_SMALL,
                  text_color=C["muted"]).pack(pady=(0, 10))
-    value_lbl._counter_frame = frame  # pour le caller qui veut .grid() le frame
+    value_lbl._counter_frame = frame  # for callers that want to .grid() the frame
     return value_lbl
 
 
 # ════════════════════════════════════════════════════════════
-#  CARTE "STAT HÉROS" (HP / ATQ dans le dashboard)
+#  "HERO STAT" CARD (HP / ATK in the dashboard)
 # ════════════════════════════════════════════════════════════
 
 def stat_hero_card(parent: ctk.CTkBaseClass, title: str, value: str,
@@ -139,21 +139,21 @@ def stat_hero_card(parent: ctk.CTkBaseClass, title: str, value: str,
 
 
 # ════════════════════════════════════════════════════════════
-#  DIALOGUE DE CONFIRMATION (oui / non)
+#  CONFIRMATION DIALOG (yes / no)
 # ════════════════════════════════════════════════════════════
 
 class ConfirmDialog(ctk.CTkToplevel):
     """
-    Dialogue modal simple. `result` contient True/False après destroy.
-    Utilisation :
-        dlg = ConfirmDialog(parent, "Titre", "Message long", "OK", "Annuler")
+    Simple modal dialog. `result` holds True/False after destroy.
+    Usage:
+        dlg = ConfirmDialog(parent, "Title", "Long message", "OK", "Cancel")
         parent.wait_window(dlg)
         if dlg.result:
             ...
     """
 
     def __init__(self, parent, title: str, message: str,
-                 ok_label: str = "Confirmer", cancel_label: str = "Annuler",
+                 ok_label: str = "Confirm", cancel_label: str = "Cancel",
                  danger: bool = True):
         super().__init__(parent)
         self.result = False
@@ -191,42 +191,46 @@ class ConfirmDialog(ctk.CTkToplevel):
         self.destroy()
 
 
-def confirmer(parent, title: str, message: str,
-              ok_label: str = "Confirmer",
-              cancel_label: str = "Annuler",
-              danger: bool = True) -> bool:
-    """Ouvre un ConfirmDialog et retourne True/False."""
+def confirm(parent, title: str, message: str,
+            ok_label: str = "Confirm",
+            cancel_label: str = "Cancel",
+            danger: bool = True) -> bool:
+    """Open a ConfirmDialog and return True/False."""
     dlg = ConfirmDialog(parent, title, message, ok_label, cancel_label, danger)
     parent.wait_window(dlg)
     return dlg.result
 
 
+# Back-compat alias
+confirmer = confirm
+
+
 # ════════════════════════════════════════════════════════════
-#  CARTE "STATS" (pet / mount / equipement résumé)
+#  "STATS" CARD (pet / mount / equipment summary)
 # ════════════════════════════════════════════════════════════
 
 def stats_card(parent: ctk.CTkBaseClass, title: str, stats: Dict[str, float],
-               empty_text: str = "(vide)",
+               empty_text: str = "(empty)",
                title_color: Optional[str] = None) -> ctk.CTkFrame:
     """
-    Carte avec un titre et des stat_rows pour chaque stat non nulle.
-    Affiche `empty_text` si toutes les stats sont nulles.
+    Card with a title and stat_rows for every non-zero stat.
+    Shows `empty_text` if every stat is zero.
     """
     card = ctk.CTkFrame(parent, fg_color=C["card"], corner_radius=12)
     ctk.CTkLabel(card, text=title, font=FONT_SUB,
                  text_color=title_color or C["text"]).pack(
         padx=16, pady=(14, 6), anchor="w")
 
-    non_nuls = [(k, v) for k, v in stats.items()
+    non_zero = [(k, v) for k, v in stats.items()
                 if not k.startswith("__") and v]
 
-    if not non_nuls:
+    if not non_zero:
         ctk.CTkLabel(card, text=empty_text, font=FONT_BODY,
                      text_color=C["muted"]).pack(padx=16, pady=20)
     else:
         inner = ctk.CTkFrame(card, fg_color="transparent")
         inner.pack(fill="x", padx=10, pady=(0, 10))
-        for i, (k, v) in enumerate(non_nuls):
+        for i, (k, v) in enumerate(non_zero):
             stat_row(inner, k, v, row_index=i).pack(fill="x", pady=1)
 
     ctk.CTkFrame(card, fg_color="transparent", height=6).pack()
@@ -234,27 +238,27 @@ def stats_card(parent: ctk.CTkBaseClass, title: str, stats: Dict[str, float],
 
 
 # ════════════════════════════════════════════════════════════
-#  CARTE "SLOT COMPANION" (pet équipé / mount équipé)
-#  En-tête avec icône + nom + badge rareté, puis stats.
+#  "COMPANION SLOT" CARD (equipped pet / equipped mount)
+#  Header with icon + name + rarity badge, then stats.
 # ════════════════════════════════════════════════════════════
 
 def companion_slot_card(parent: ctk.CTkBaseClass, slot_label: str,
                          name: Optional[str], rarity: Optional[str],
                          stats: Dict[str, float],
                          icon_image=None, fallback_emoji: str = "🐾",
-                         empty_text: str = "(vide)") -> ctk.CTkFrame:
+                         empty_text: str = "(empty)") -> ctk.CTkFrame:
     """
-    Carte d'un slot équipé : libellé du slot, icône + nom + rareté,
-    puis liste des stats non nulles. Si `name` est None → état "vide".
+    Card for an equipped slot: slot label, icon + name + rarity,
+    then list of non-zero stats. If `name` is None → "empty" state.
     """
     card = ctk.CTkFrame(parent, fg_color=C["card"], corner_radius=12)
 
-    # Bandeau du haut : libellé du slot (ex: "🐾 PET1" / "🐴 Mount actuel")
+    # Top band: slot label (e.g. "🐾 PET1" / "🐴 Current mount")
     ctk.CTkLabel(card, text=slot_label, font=FONT_SUB,
                  text_color=C["muted"]).pack(
         padx=16, pady=(12, 4), anchor="w")
 
-    # Bandeau identité : icône + nom + rareté
+    # Identity band: icon + name + rarity
     head = ctk.CTkFrame(card, fg_color="transparent")
     head.pack(fill="x", padx=12, pady=(0, 6))
 
@@ -279,20 +283,20 @@ def companion_slot_card(parent: ctk.CTkBaseClass, slot_label: str,
                          text_color=rarity_color(rar), anchor="w").pack(
                 anchor="w")
     else:
-        ctk.CTkLabel(info, text="— libre —", font=FONT_BODY,
+        ctk.CTkLabel(info, text="— free —", font=FONT_BODY,
                      text_color=C["muted"], anchor="w").pack(anchor="w")
 
-    # Stats (filtre les clés non numériques de l'identité)
-    non_nuls = [(k, v) for k, v in stats.items()
+    # Stats (filter out non-numeric identity keys)
+    non_zero = [(k, v) for k, v in stats.items()
                 if not k.startswith("__") and v]
 
-    if not non_nuls:
+    if not non_zero:
         ctk.CTkLabel(card, text=empty_text, font=FONT_BODY,
                      text_color=C["muted"]).pack(padx=16, pady=(4, 14))
     else:
         inner = ctk.CTkFrame(card, fg_color="transparent")
         inner.pack(fill="x", padx=10, pady=(0, 10))
-        for i, (k, v) in enumerate(non_nuls):
+        for i, (k, v) in enumerate(non_zero):
             stat_row(inner, k, v, row_index=i).pack(fill="x", pady=1)
 
     ctk.CTkFrame(card, fg_color="transparent", height=6).pack()
@@ -300,11 +304,11 @@ def companion_slot_card(parent: ctk.CTkBaseClass, slot_label: str,
 
 
 # ════════════════════════════════════════════════════════════
-#  ZONE D'IMPORT (textarea + boutons + status)
+#  IMPORT ZONE (textarea + buttons + status)
 # ════════════════════════════════════════════════════════════
 
 # ════════════════════════════════════════════════════════════
-#  GRILLE D'ICÔNES DE SKILLS (avec toggle)
+#  SKILL ICON GRID (with toggle)
 # ════════════════════════════════════════════════════════════
 
 def skill_icon_grid(parent: ctk.CTkBaseClass,
@@ -315,10 +319,10 @@ def skill_icon_grid(parent: ctk.CTkBaseClass,
                     on_toggle: Optional[Callable[[str], None]] = None
                     ) -> Tuple[ctk.CTkFrame, Dict]:
     """
-    Construit une grille cliquable d'icônes pour `all_skills`.
-    `selected` est un dict {code: BooleanVar} injecté par l'appelant.
-    Retourne (frame, widgets) où widgets = {code: (label, frame)} pour
-    que l'appelant puisse rafraîchir visuellement.
+    Build a clickable icon grid for `all_skills`.
+    `selected` is a {code: BooleanVar} dict injected by the caller.
+    Returns (frame, widgets) where widgets = {code: (label, frame)} so the
+    caller can refresh things visually.
     """
     from .theme import load_icon, rarity_color
 
@@ -366,7 +370,7 @@ def skill_icon_grid(parent: ctk.CTkBaseClass,
         lbl.bind("<Button-1>", _make_toggle(code))
         widgets[code] = (lbl, btn_frame)
 
-        # Tooltip au survol : remplace l'icône par le nom court
+        # Hover tooltip: replace the icon with the short name
         def _enter(_e, n=name, col=color, w=lbl) -> None:
             w.configure(text=n[:8], text_color=col, image=None)
 
@@ -392,8 +396,8 @@ def build_import_zone(parent: ctk.CTkBaseClass, title: str, hint: str,
                       textbox_height: int = 130
                       ) -> Tuple[ctk.CTkFrame, ctk.CTkTextbox, ctk.CTkLabel]:
     """
-    Construit une zone d'import : titre + hint + textarea + 1 ou 2 boutons
-    + label de status. Retourne (card, textbox, status_label).
+    Build an import zone: title + hint + textarea + 1 or 2 buttons + status
+    label. Returns (card, textbox, status_label).
     """
     card = ctk.CTkFrame(parent, fg_color=C["card"], corner_radius=12)
     card.grid_columnconfigure(0, weight=1)

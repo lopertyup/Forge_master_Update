@@ -1,5 +1,5 @@
 # ============================================================
-# FORGE MASTER — Mount actif (modifiable a la main)
+# FORGE MASTER — Active mount (editable by hand)
 # ============================================================
 
 [MOUNT]
@@ -11,12 +11,12 @@ health_pct           = 0.0
 damage_pct           = 0.0
 melee_pct            = 0.0
 ranged_pct           = 0.0
-taux_crit            = 0.0
-degat_crit           = 0.0
+crit_chance          = 0.0
+crit_damage          = 0.0
 health_regen         = 0.0
 lifesteal            = 0.0
 double_chance        = 0.0
-vitesse_attaque      = 36.4
+attack_speed         = 36.4
 skill_damage         = 0.0
 skill_cooldown       = 0.0
-chance_blocage       = 0.0
+block_chance         = 0.0
