@@ -174,7 +174,7 @@ Lv.1
 ### Simulateur de combat
 
 1. Va dans l'onglet **Simulateur**
-2. Entre les statistiques de ton adversaire (même méthode que pour ton profil)
+2. Entre les statistiques de ton adversaire (même méthode que pour ton profil) attention pense à indiquer ses skills et son type d'attauqe (distance/corp-a-corp).
 3. Clique sur **Simuler** — l'outil lance 1000 combats et affiche ton win rate
 
 ---
