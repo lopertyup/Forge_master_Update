@@ -106,6 +106,8 @@ Paste this text into the **Dashboard** section of the application.
 
 ---
 
+![Profile Update](screenshots/profile_update.png)
+
 ### Equipment Comparator
 
 In the game, open the comparison between your current equipment and the new one.  
@@ -138,6 +140,8 @@ Paste this text into the **Equipment** tab — the simulation launches automatic
 
 ### Pets Management
 
+![Pet Overview](screenshots/pet_overview.png)
+
 In the game, open your pet's page and capture its stats.  
 The text should look like this:
 
@@ -155,6 +159,8 @@ Lv.1
 > By bringing everything to level 1, two pets can be compared fairly regardless of their current level.  
 > The internal library knows the base stats at level 1 for each pet type.
 
+![Pet Simulation](screenshots/pet_replacement_simulation.png)
+
 ---
 
 ### Mounts Management
@@ -170,6 +176,8 @@ Lv.1
 ```
 
 > 💡 Same logic as pets: everything is compared at **level 1**.
+
+![Mount Simulation](screenshots/mount_replacement_simulation.png)
 
 ---
 
