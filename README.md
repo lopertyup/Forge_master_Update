@@ -74,7 +74,7 @@ L'application s'ouvre. 🎉
 L'outil fonctionne par **copier-coller de texte** depuis des captures d'écran.  
 Windows dispose d'un outil intégré qui permet de capturer une zone d'écran et d'en extraire le texte automatiquement.
 
-**Raccourci :** `Windows + Shift + S`  
+**Raccourci :** `Windows + Shift + T`  
 Sélectionne la zone voulue → clique sur la notification → utilise **"Copier le texte"** dans l'outil de capture.
 
 ---
