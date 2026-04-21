@@ -77,7 +77,7 @@ L'outil a besoin de tes statistiques de jeu. Pour les récupérer :
 
 1. Dans **Forge Master** (sur BlueStacks), ouvre ton profil de personnage
 2. Utilise l'**outil Capture d'écran de Windows** pour capturer l'écran
-   - Raccourci : `Windows + Shift + S`
+   - Raccourci : `Windows + Shift + S`ou boutton 'Impèc'
    - Sélectionne la zone avec tes stats
 3. L'outil de capture inclut une fonction **OCR** (reconnaissance de texte) — copie le texte détecté
 4. Colle ce texte dans la section **Dashboard** de l'application
