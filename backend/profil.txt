@@ -6,9 +6,9 @@
 hp_total             = 38900000.0
 attaque_total        = 5040000.0
 hp_base              = 34639358.860195905
-attaque_base         = 4390243.902439024
+attaque_base         = 3678832.1167883207
 health_pct           = 12.3
-damage_pct           = 0.0
+damage_pct           = 22.2
 melee_pct            = 16.1
 ranged_pct           = 14.8
 taux_crit            = 22.2

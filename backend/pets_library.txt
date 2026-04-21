@@ -5,111 +5,150 @@
 
 [Baby Dragon]
 rarity       = mythic
-hp_flat      = 0.0
-damage_flat  = 0.0
+hp_flat      = 12800000.0
+damage_flat  = 1600000.0
+skills       = 2
 
 [Bear]
 rarity       = rare
-hp_flat      = 0.0
-damage_flat  = 0.0
+hp_flat      = 6000.0
+damage_flat  = 250.0
+skills       = 1
 
 [Cat]
 rarity       = common
-hp_flat      = 0.0
-damage_flat  = 0.0
+hp_flat      = 800.0
+damage_flat  = 100.0
+skills       = 1
 
 [Cerberus]
 rarity       = legendary
-hp_flat      = 1360000.0
-damage_flat  = 171000.0
+hp_flat      = 1200000.0
+damage_flat  = 150000.0
+skills       = 2
+
+[Chicken]
+rarity       = common
+hp_flat      = 800.0
+damage_flat  = 100.0
+skills       = 1
 
 [Dog]
 rarity       = common
-hp_flat      = 0.0
-damage_flat  = 0.0
+hp_flat      = 400.0
+damage_flat  = 150.0
+skills       = 1
 
 [Electry]
 rarity       = ultimate
-hp_flat      = 0.0
-damage_flat  = 0.0
+hp_flat      = 3000000.0
+damage_flat  = 1125000.0
+skills       = 2
 
 [Enchanted Elk]
 rarity       = ultimate
-hp_flat      = 6840000.0
-damage_flat  = 855000.0
+hp_flat      = 6000000.0
+damage_flat  = 750000.0
+skills       = 2
 
 [Genie]
 rarity       = mythic
-hp_flat      = 0.0
-damage_flat  = 0.0
+hp_flat      = 19200000.0
+damage_flat  = 800000.0
+skills       = 2
 
 [Griffin]
 rarity       = epic
-hp_flat      = 0.0
-damage_flat  = 0.0
+hp_flat      = 84000.0
+damage_flat  = 3500.0
+skills       = 1
 
 [Hedgehog]
 rarity       = rare
 hp_flat      = 6000.0
 damage_flat  = 250.0
+skills       = 1
 
 [Kitsune]
 rarity       = legendary
-hp_flat      = 684000.0
-damage_flat  = 256000.0
+hp_flat      = 600000.0
+damage_flat  = 225000.0
+skills       = 2
+
+[Mouse]
+rarity       = common
+hp_flat      = 800.0
+damage_flat  = 100.0
+skills       = 1
 
 [Ostrich]
 rarity       = rare
 hp_flat      = 4000.0
 damage_flat  = 500.0
+skills       = 1
 
 [Panda]
 rarity       = epic
-hp_flat      = 95700.0
-damage_flat  = 3990.0
+hp_flat      = 84000.0
+damage_flat  = 3500.0
+skills       = 1
 
 [Saber Tooth]
 rarity       = epic
-hp_flat      = 31900.0
-damage_flat  = 11900.0
+hp_flat      = 28000.0
+damage_flat  = 10500.0
+skills       = 1
 
 [Scorpion]
 rarity       = rare
-hp_flat      = 0.0
-damage_flat  = 0.0
+hp_flat      = 2000.0
+damage_flat  = 750.0
+skills       = 1
 
 [Serpent]
 rarity       = legendary
-hp_flat      = 684000.0
-damage_flat  = 256000.0
+hp_flat      = 600000.0
+damage_flat  = 225000.0
+skills       = 2
+
+[Snail]
+rarity       = common
+hp_flat      = 1200.0
+damage_flat  = 50.0
+skills       = 1
 
 [Spectral Tiger]
 rarity       = mythic
-hp_flat      = 7420000.0
-damage_flat  = 2830000.0
+hp_flat      = 6400000.0
+damage_flat  = 2400000.0
+skills       = 2
 
 [Spider]
 rarity       = rare
-hp_flat      = 0.0
-damage_flat  = 0.0
+hp_flat      = 2000.0
+damage_flat  = 750.0
+skills       = 1
 
 [Tiger]
 rarity       = epic
-hp_flat      = 31900.0
-damage_flat  = 11900.0
+hp_flat      = 28000.0
+damage_flat  = 10500.0
+skills       = 1
 
 [Treant]
 rarity       = ultimate
-hp_flat      = 10200000.0
-damage_flat  = 427000.0
+hp_flat      = 9000000.0
+damage_flat  = 375000.0
+skills       = 2
 
 [Turtle]
 rarity       = common
 hp_flat      = 1200.0
 damage_flat  = 50.0
+skills       = 1
 
 [Unicorn]
 rarity       = epic
-hp_flat      = 0.0
-damage_flat  = 0.0
-
+hp_flat      = 56000.0
+damage_flat  = 7000.0
+skills       = 1
