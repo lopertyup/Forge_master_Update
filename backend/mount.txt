@@ -3,8 +3,10 @@
 # ============================================================
 
 [MOUNT]
-hp_flat              = 107000.0
-damage_flat          = 13400.0
+__name__             = Crab
+__rarity__           = rare
+hp_flat              = 83200.0
+damage_flat          = 10400.0
 health_pct           = 0.0
 damage_pct           = 0.0
 melee_pct            = 0.0

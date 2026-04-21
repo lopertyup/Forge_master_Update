@@ -10,10 +10,12 @@ import os
 
 # ── Chemins ──────────────────────────────────────────────────
 _DIR = os.path.dirname(os.path.abspath(__file__))
-PROFIL_FILE = os.path.join(_DIR, "profil.txt")
-SKILLS_FILE = os.path.join(_DIR, "skills.txt")
-PETS_FILE   = os.path.join(_DIR, "pets.txt")
-MOUNT_FILE  = os.path.join(_DIR, "mount.txt")
+PROFIL_FILE          = os.path.join(_DIR, "profil.txt")
+SKILLS_FILE          = os.path.join(_DIR, "skills.txt")
+PETS_FILE            = os.path.join(_DIR, "pets.txt")
+MOUNT_FILE           = os.path.join(_DIR, "mount.txt")
+PETS_LIBRARY_FILE    = os.path.join(_DIR, "pets_library.txt")
+MOUNT_LIBRARY_FILE   = os.path.join(_DIR, "mount_library.txt")
 
 # ── Paramètres de simulation ─────────────────────────────────
 TICK                = 0.01

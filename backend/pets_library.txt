@@ -1,0 +1,115 @@
+# ============================================================
+# FORGE MASTER — Bibliothèque des pets (level 1)
+# Stats de référence au level 1, indexées par nom.
+# ============================================================
+
+[Baby Dragon]
+rarity       = mythic
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Bear]
+rarity       = rare
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Cat]
+rarity       = common
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Cerberus]
+rarity       = legendary
+hp_flat      = 1360000.0
+damage_flat  = 171000.0
+
+[Dog]
+rarity       = common
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Electry]
+rarity       = ultimate
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Enchanted Elk]
+rarity       = ultimate
+hp_flat      = 6840000.0
+damage_flat  = 855000.0
+
+[Genie]
+rarity       = mythic
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Griffin]
+rarity       = epic
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Hedgehog]
+rarity       = rare
+hp_flat      = 6000.0
+damage_flat  = 250.0
+
+[Kitsune]
+rarity       = legendary
+hp_flat      = 684000.0
+damage_flat  = 256000.0
+
+[Ostrich]
+rarity       = rare
+hp_flat      = 4000.0
+damage_flat  = 500.0
+
+[Panda]
+rarity       = epic
+hp_flat      = 95700.0
+damage_flat  = 3990.0
+
+[Saber Tooth]
+rarity       = epic
+hp_flat      = 31900.0
+damage_flat  = 11900.0
+
+[Scorpion]
+rarity       = rare
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Serpent]
+rarity       = legendary
+hp_flat      = 684000.0
+damage_flat  = 256000.0
+
+[Spectral Tiger]
+rarity       = mythic
+hp_flat      = 7420000.0
+damage_flat  = 2830000.0
+
+[Spider]
+rarity       = rare
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Tiger]
+rarity       = epic
+hp_flat      = 31900.0
+damage_flat  = 11900.0
+
+[Treant]
+rarity       = ultimate
+hp_flat      = 10200000.0
+damage_flat  = 427000.0
+
+[Turtle]
+rarity       = common
+hp_flat      = 1200.0
+damage_flat  = 50.0
+
+[Unicorn]
+rarity       = epic
+hp_flat      = 0.0
+damage_flat  = 0.0
+

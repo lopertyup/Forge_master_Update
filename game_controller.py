@@ -25,6 +25,7 @@ from backend.constants import (
     PETS_STATS_KEYS,
 )
 from backend.parser import (
+    parser_companion_meta,
     parser_equipement,
     parser_mount,
     parser_pet,
@@ -32,11 +33,15 @@ from backend.parser import (
 )
 from backend.persistence import (
     charger_mount,
+    charger_mount_library,
     charger_pets,
+    charger_pets_library,
     charger_profil,
     charger_skills,
     sauvegarder_mount,
+    sauvegarder_mount_library,
     sauvegarder_pets,
+    sauvegarder_pets_library,
     sauvegarder_profil,
 )
 from backend.simulation import simuler_100
@@ -57,12 +62,14 @@ class GameController:
     # ── Init / chargement ───────────────────────────────────
 
     def __init__(self) -> None:
-        self._profil: Optional[Dict]      = None
-        self._skills: List                 = []
-        self._pets:   Dict[str, Dict]      = {}
-        self._mount:  Dict                 = {}
-        self._tous_skills: Dict[str, Dict] = {}
-        self._tk_root                      = None  # pour after() thread-safe
+        self._profil: Optional[Dict]       = None
+        self._skills: List                  = []
+        self._pets:   Dict[str, Dict]       = {}
+        self._mount:  Dict                  = {}
+        self._tous_skills:    Dict[str, Dict] = {}
+        self._pets_library:   Dict[str, Dict] = {}
+        self._mount_library:  Dict[str, Dict] = {}
+        self._tk_root                       = None  # pour after() thread-safe
         self.reload()
 
     def set_tk_root(self, root) -> None:
@@ -70,14 +77,17 @@ class GameController:
         self._tk_root = root
 
     def reload(self) -> None:
-        """Recharge profil + pets + mount + skills depuis le disque."""
+        """Recharge profil + pets + mount + skills + bibliothèques depuis le disque."""
         self._profil, self._skills = charger_profil()
         self._pets                 = charger_pets()
         self._mount                = charger_mount()
         self._tous_skills          = charger_skills()
-        log.info("GameController.reload : profil=%s, pets=%d, skills=%d",
+        self._pets_library         = charger_pets_library()
+        self._mount_library        = charger_mount_library()
+        log.info("GameController.reload : profil=%s, pets=%d, skills=%d, lib_pets=%d, lib_mount=%d",
                  "OK" if self._profil else "-",
-                 len(self._pets), len(self._tous_skills))
+                 len(self._pets), len(self._tous_skills),
+                 len(self._pets_library), len(self._mount_library))
 
     # ── Profil ──────────────────────────────────────────────
 
@@ -190,6 +200,27 @@ class GameController:
     def importer_texte_pet(self, texte: str) -> Dict:
         return parser_pet(texte)
 
+    def resoudre_pet(self, texte: str) -> Tuple[Optional[Dict], str, Optional[Dict]]:
+        """
+        Résout un texte de pet en (pet_normalisé, statut, meta).
+
+        statut ∈ {"ok", "added", "unknown_not_lvl1", "no_name"}
+          - "ok"               : nom trouvé en biblio, flat stats remplacées par lvl1
+          - "added"            : nom inconnu mais Lv.1 → ajouté auto, puis "ok"
+          - "unknown_not_lvl1" : nom inconnu et pas Lv.1 → pet_normalisé = None
+          - "no_name"          : impossible d'extraire un nom du texte → None
+        meta = dict {name, rarity, level, stats} (debug/affichage UI)
+        """
+        return self._resoudre_companion(
+            texte, self._pets_library, sauvegarder_pets_library)
+
+    def get_pets_library(self) -> Dict[str, Dict]:
+        return {k: dict(v) for k, v in self._pets_library.items()}
+
+    def supprimer_pet_library(self, nom: str) -> bool:
+        return self._supprimer_library(nom, self._pets_library,
+                                       sauvegarder_pets_library)
+
     def set_pet(self, nom: str, pet: Dict) -> None:
         self._pets[nom] = pet
         sauvegarder_pets(self._pets)
@@ -238,6 +269,18 @@ class GameController:
     def importer_texte_mount(self, texte: str) -> Dict:
         return parser_mount(texte)
 
+    def resoudre_mount(self, texte: str) -> Tuple[Optional[Dict], str, Optional[Dict]]:
+        """Idem resoudre_pet mais pour la bibliothèque des mounts."""
+        return self._resoudre_companion(
+            texte, self._mount_library, sauvegarder_mount_library)
+
+    def get_mount_library(self) -> Dict[str, Dict]:
+        return {k: dict(v) for k, v in self._mount_library.items()}
+
+    def supprimer_mount_library(self, nom: str) -> bool:
+        return self._supprimer_library(nom, self._mount_library,
+                                       sauvegarder_mount_library)
+
     def set_mount(self, mount: Dict) -> None:
         self._mount = mount
         sauvegarder_mount(mount)
@@ -271,6 +314,104 @@ class GameController:
             self._dispatch(callback, w, l, d)
 
         threading.Thread(target=_run, daemon=True).start()
+
+    # ── Helpers bibliothèque ─────────────────────────────────
+
+    @staticmethod
+    def _find_library_key(library: Dict[str, Dict], nom: str) -> Optional[str]:
+        """Cherche `nom` dans la library en ignorant la casse. Retourne la clé exacte ou None."""
+        nom_lc = nom.lower()
+        for key in library:
+            if key.lower() == nom_lc:
+                return key
+        return None
+
+    def _resoudre_companion(
+        self,
+        texte: str,
+        library: Dict[str, Dict],
+        sauver: Callable[[Dict[str, Dict]], None],
+    ) -> Tuple[Optional[Dict], str, Optional[Dict]]:
+        """
+        Logique commune pets/mount :
+          1. parse texte → meta (name/rarity/level) + stats
+          2. si nom inconnu :
+               - si Lv.1 → on l'ajoute (statut "added")
+               - sinon  → on refuse (statut "unknown_not_lvl1")
+          3. si nom connu : on remplace hp_flat / damage_flat par les valeurs
+             du level 1 stockées dans la biblio (statut "ok").
+        Le dict retourné est un companion COMPLET (mêmes clés que parser_pet),
+        prêt à être passé à appliquer_pet/appliquer_mount.
+        """
+        meta   = parser_companion_meta(texte)
+        nom    = meta.get("name")
+        level  = meta.get("level")
+        stats  = dict(meta.get("stats") or {})
+
+        if not nom:
+            return None, "no_name", meta
+
+        key = self._find_library_key(library, nom)
+
+        if key is None:
+            # Nom inconnu — auto-add si Lv.1, sinon refus
+            if level == 1:
+                library[nom] = {
+                    "rarity":      meta.get("rarity") or "common",
+                    "hp_flat":     stats.get("hp_flat", 0.0),
+                    "damage_flat": stats.get("damage_flat", 0.0),
+                }
+                sauver(library)
+                log.info("Library: '%s' ajouté automatiquement (Lv.1)", nom)
+                statut = "added"
+                key    = nom
+            else:
+                return None, "unknown_not_lvl1", meta
+
+        else:
+            # Entrée existante — si placeholder vide (0/0) et qu'on importe
+            # un Lv.1 avec de vraies stats, on complète la bibliothèque.
+            ref_existant = library[key]
+            placeholder = (
+                float(ref_existant.get("hp_flat", 0.0)) == 0.0
+                and float(ref_existant.get("damage_flat", 0.0)) == 0.0
+            )
+            has_real_stats = (
+                stats.get("hp_flat", 0.0) or stats.get("damage_flat", 0.0))
+            if level == 1 and placeholder and has_real_stats:
+                ref_existant["hp_flat"]     = stats.get("hp_flat", 0.0)
+                ref_existant["damage_flat"] = stats.get("damage_flat", 0.0)
+                if meta.get("rarity"):
+                    ref_existant["rarity"] = meta["rarity"]
+                sauver(library)
+                log.info("Library: '%s' complété avec les stats Lv.1", key)
+                statut = "added"
+            else:
+                statut = "ok"
+
+        # Override des flat stats par les valeurs library (level 1)
+        ref = library[key]
+        stats["hp_flat"]     = float(ref.get("hp_flat", 0.0))
+        stats["damage_flat"] = float(ref.get("damage_flat", 0.0))
+
+        # Annoter le companion résolu avec son identité (utilisé par l'UI
+        # pour afficher nom + icône des pets/mount équipés)
+        stats["__name__"]   = key
+        stats["__rarity__"] = str(ref.get("rarity", "common")).lower()
+        return stats, statut, meta
+
+    @staticmethod
+    def _supprimer_library(
+        nom: str,
+        library: Dict[str, Dict],
+        sauver: Callable[[Dict[str, Dict]], None],
+    ) -> bool:
+        key = GameController._find_library_key(library, nom)
+        if key is None:
+            return False
+        del library[key]
+        sauver(library)
+        return True
 
     # ── Helper interne : NOUVEAU_MOI vs ANCIEN_MOI ───────────
 

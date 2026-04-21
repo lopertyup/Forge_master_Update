@@ -19,9 +19,11 @@ from PIL import Image
 log = logging.getLogger(__name__)
 
 # ── Chemin des icônes (relatif à ui/theme.py) ────────────────
-_UI_DIR   = os.path.dirname(os.path.abspath(__file__))
-_ROOT_DIR = os.path.dirname(_UI_DIR)
-ICONS_DIR = os.path.join(_ROOT_DIR, "skill_icons")
+_UI_DIR         = os.path.dirname(os.path.abspath(__file__))
+_ROOT_DIR       = os.path.dirname(_UI_DIR)
+ICONS_DIR       = os.path.join(_ROOT_DIR, "skill_icons")
+PET_ICONS_DIR   = os.path.join(_ROOT_DIR, "pet_icons")
+MOUNT_ICONS_DIR = os.path.join(_ROOT_DIR, "mount_icons")
 
 
 # ── Palette ──────────────────────────────────────────────────
@@ -115,21 +117,33 @@ MOUNT_ICON  = "🐴"
 
 # ── Chargement d'icônes (cache) ──────────────────────────────
 
-@lru_cache(maxsize=256)
-def load_icon(code: str, size: int = 48) -> Optional[ctk.CTkImage]:
-    """
-    Charge et met en cache une icône depuis skill_icons/.
-    Retourne None si l'icône n'existe pas.
-    """
-    path = os.path.join(ICONS_DIR, f"{code}.png")
+@lru_cache(maxsize=512)
+def _load_icon_from(directory: str, code: str, size: int) -> Optional[ctk.CTkImage]:
+    """Helper interne générique — cache par (directory, code, size)."""
+    path = os.path.join(directory, f"{code}.png")
     if not os.path.isfile(path):
         return None
     try:
         img = Image.open(path).convert("RGBA").resize((size, size), Image.LANCZOS)
         return ctk.CTkImage(light_image=img, dark_image=img, size=(size, size))
     except Exception as e:
-        log.warning("load_icon(%r, %d) a échoué : %s", code, size, e)
+        log.warning("load_icon(%r, %r, %d) a échoué : %s", directory, code, size, e)
         return None
+
+
+def load_icon(code: str, size: int = 48) -> Optional[ctk.CTkImage]:
+    """Charge une icône de skill depuis skill_icons/. None si absente."""
+    return _load_icon_from(ICONS_DIR, code, size)
+
+
+def load_pet_icon(name: str, size: int = 48) -> Optional[ctk.CTkImage]:
+    """Charge une icône de pet depuis pet_icons/<Name>.png. None si absente."""
+    return _load_icon_from(PET_ICONS_DIR, name, size)
+
+
+def load_mount_icon(name: str, size: int = 48) -> Optional[ctk.CTkImage]:
+    """Charge une icône de mount depuis mount_icons/<Name>.png. None si absente."""
+    return _load_icon_from(MOUNT_ICONS_DIR, name, size)
 
 
 # ── Helpers de formatage ─────────────────────────────────────

@@ -12,7 +12,9 @@ from typing import Dict, List, Optional, Tuple
 from .constants import (
     COMPANION_STATS_KEYS,
     MOUNT_FILE,
+    MOUNT_LIBRARY_FILE,
     PETS_FILE,
+    PETS_LIBRARY_FILE,
     PROFIL_FILE,
     SKILLS_FILE,
     STATS_KEYS,
@@ -155,10 +157,13 @@ def charger_pets() -> Dict[str, Dict[str, float]]:
         elif current and "=" in ligne:
             cle, val = ligne.split("=", 1)
             cle, val = cle.strip(), val.strip()
-            try:
-                pets[current][cle] = float(val)
-            except ValueError:
-                log.warning("pets.txt: valeur invalide pour %s.%s = %r", current, cle, val)
+            if cle in ("__name__", "__rarity__"):
+                pets[current][cle] = val
+            else:
+                try:
+                    pets[current][cle] = float(val)
+                except ValueError:
+                    log.warning("pets.txt: valeur invalide pour %s.%s = %r", current, cle, val)
     return pets
 
 
@@ -170,6 +175,11 @@ def sauvegarder_pets(pets: Dict[str, Dict[str, float]]) -> None:
         for nom in ("PET1", "PET2", "PET3"):
             pet = pets.get(nom, companion_vide())
             f.write(f"[{nom}]\n")
+            # Identité (nom/rareté) en tête de section si renseignée
+            if pet.get("__name__"):
+                f.write(f"{'__name__':20s} = {pet['__name__']}\n")
+            if pet.get("__rarity__"):
+                f.write(f"{'__rarity__':20s} = {pet['__rarity__']}\n")
             for k in COMPANION_STATS_KEYS:
                 f.write(f"{k:20s} = {pet.get(k, 0.0)}\n")
             f.write("\n")
@@ -194,10 +204,13 @@ def charger_mount() -> Dict[str, float]:
         if "=" in ligne:
             cle, val = ligne.split("=", 1)
             cle, val = cle.strip(), val.strip()
-            try:
-                mount[cle] = float(val)
-            except ValueError:
-                log.warning("mount.txt: valeur invalide pour %s = %r", cle, val)
+            if cle in ("__name__", "__rarity__"):
+                mount[cle] = val
+            else:
+                try:
+                    mount[cle] = float(val)
+                except ValueError:
+                    log.warning("mount.txt: valeur invalide pour %s = %r", cle, val)
     return mount
 
 
@@ -207,5 +220,99 @@ def sauvegarder_mount(mount: Dict[str, float]) -> None:
         f.write("# FORGE MASTER — Mount actif (modifiable a la main)\n")
         f.write("# ============================================================\n\n")
         f.write("[MOUNT]\n")
+        if mount.get("__name__"):
+            f.write(f"{'__name__':20s} = {mount['__name__']}\n")
+        if mount.get("__rarity__"):
+            f.write(f"{'__rarity__':20s} = {mount['__rarity__']}\n")
         for k in COMPANION_STATS_KEYS:
             f.write(f"{k:20s} = {mount.get(k, 0.0)}\n")
+
+
+# ════════════════════════════════════════════════════════════
+#  BIBLIOTHÈQUES (pets + mount au level 1)
+# ════════════════════════════════════════════════════════════
+#
+#  Format identique pour les deux fichiers :
+#
+#      # commentaire
+#      [Treant]
+#      rarity      = ultimate
+#      hp_flat     = 10200000.0
+#      damage_flat = 427000.0
+#
+#      [Phoenix]
+#      rarity      = legendary
+#      hp_flat     = 8500000.0
+#      damage_flat = 380000.0
+#
+#  La clé d'index (ex. "Treant") est sensible à la casse côté disque
+#  mais comparée en lowercase par le controller.
+# ════════════════════════════════════════════════════════════
+
+_LIBRARY_KEYS = ("rarity", "hp_flat", "damage_flat")
+
+
+def _charger_library(path: str) -> Dict[str, Dict]:
+    if not os.path.isfile(path):
+        return {}
+
+    library: Dict[str, Dict] = {}
+    current_name: Optional[str] = None
+    current: Dict = {}
+
+    with open(path, "r", encoding="utf-8") as f:
+        for ligne in f:
+            ligne = ligne.strip()
+            if not ligne or ligne.startswith("#"):
+                continue
+            if ligne.startswith("[") and ligne.endswith("]"):
+                if current_name:
+                    library[current_name] = current
+                current_name = ligne[1:-1].strip()
+                current = {"rarity": "common", "hp_flat": 0.0, "damage_flat": 0.0}
+            elif current_name and "=" in ligne:
+                cle, val = ligne.split("=", 1)
+                cle, val = cle.strip(), val.strip()
+                if cle == "rarity":
+                    current[cle] = val.lower()
+                elif cle in ("hp_flat", "damage_flat"):
+                    try:
+                        current[cle] = float(val)
+                    except ValueError:
+                        log.warning("%s: valeur invalide pour [%s].%s = %r",
+                                    path, current_name, cle, val)
+        if current_name:
+            library[current_name] = current
+    return library
+
+
+def _sauvegarder_library(path: str, library: Dict[str, Dict], titre: str) -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("# ============================================================\n")
+        f.write(f"# FORGE MASTER — {titre}\n")
+        f.write("# Stats de référence au level 1, indexées par nom.\n")
+        f.write("# ============================================================\n\n")
+        for nom in sorted(library.keys(), key=str.lower):
+            entry = library[nom]
+            f.write(f"[{nom}]\n")
+            f.write(f"{'rarity':12s} = {entry.get('rarity', 'common')}\n")
+            f.write(f"{'hp_flat':12s} = {entry.get('hp_flat', 0.0)}\n")
+            f.write(f"{'damage_flat':12s} = {entry.get('damage_flat', 0.0)}\n\n")
+
+
+def charger_pets_library() -> Dict[str, Dict]:
+    return _charger_library(PETS_LIBRARY_FILE)
+
+
+def sauvegarder_pets_library(library: Dict[str, Dict]) -> None:
+    _sauvegarder_library(PETS_LIBRARY_FILE, library,
+                         "Bibliothèque des pets (level 1)")
+
+
+def charger_mount_library() -> Dict[str, Dict]:
+    return _charger_library(MOUNT_LIBRARY_FILE)
+
+
+def sauvegarder_mount_library(library: Dict[str, Dict]) -> None:
+    _sauvegarder_library(MOUNT_LIBRARY_FILE, library,
+                         "Bibliothèque des mounts (level 1)")

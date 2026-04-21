@@ -13,17 +13,22 @@ import customtkinter as ctk
 from ui.theme import (
     C,
     FONT_BODY,
+    FONT_MONO_S,
     FONT_SMALL,
     FONT_SUB,
     FONT_TINY,
     PET_ICONS,
+    RARITY_ORDER,
+    fmt_nombre,
+    load_pet_icon,
+    rarity_color,
 )
 from ui.widgets import (
     build_header,
     build_import_zone,
     build_wld_bars,
+    companion_slot_card,
     confirmer,
-    stats_card,
 )
 from backend.constants import N_SIMULATIONS
 
@@ -53,6 +58,7 @@ class PetsView(ctk.CTkFrame):
         self._build_pets_cards()
         self._build_import()
         self._build_result_zone()
+        self._build_library()
 
     def _build_pets_cards(self) -> None:
         pets_frame = ctk.CTkFrame(self._scroll, fg_color="transparent")
@@ -60,11 +66,22 @@ class PetsView(ctk.CTkFrame):
         pets_frame.grid_columnconfigure((0, 1, 2), weight=1)
 
         pets = self.controller.get_pets()
-        for col, nom in enumerate(_SLOTS):
-            icon = PET_ICONS.get(nom, "🐾")
-            card = stats_card(pets_frame,
-                              title=f"{icon}  {nom}",
-                              stats=pets.get(nom, {}))
+        for col, slot in enumerate(_SLOTS):
+            pet  = pets.get(slot, {}) or {}
+            nom  = pet.get("__name__")
+            rar  = pet.get("__rarity__")
+            icon = load_pet_icon(nom, size=44) if nom else None
+
+            card = companion_slot_card(
+                pets_frame,
+                slot_label=f"{PET_ICONS.get(slot, '🐾')}  {slot}",
+                name=nom,
+                rarity=rar,
+                stats=pet,
+                icon_image=icon,
+                fallback_emoji="🐾",
+                empty_text="(slot vide)",
+            )
             card.grid(row=0, column=col, padx=6, pady=0, sticky="nsew")
 
     def _build_import(self) -> None:
@@ -85,6 +102,95 @@ class PetsView(ctk.CTkFrame):
                                 sticky="ew")
         self._result_outer.grid_columnconfigure(0, weight=1)
 
+    def _build_library(self) -> None:
+        """Section 'Bibliothèque' : liste des pets connus (stats Lv.1)."""
+        card = ctk.CTkFrame(self._scroll, fg_color=C["card"], corner_radius=12)
+        card.grid(row=3, column=0, padx=16, pady=(0, 16), sticky="ew")
+        card.grid_columnconfigure(0, weight=1)
+
+        header = ctk.CTkFrame(card, fg_color="transparent")
+        header.grid(row=0, column=0, sticky="ew", padx=20, pady=(16, 4))
+        header.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(header, text="📚  Bibliothèque des pets",
+                     font=FONT_SUB, text_color=C["text"]).grid(
+            row=0, column=0, sticky="w")
+        ctk.CTkLabel(header,
+                     text="Les stats flat (HP/Damage) au Lv.1 sont utilisées pour toutes les comparaisons, quel que soit le niveau du pet importé.",
+                     font=FONT_SMALL, text_color=C["muted"],
+                     wraplength=700, justify="left").grid(
+            row=1, column=0, sticky="w", pady=(2, 0))
+
+        library = self.controller.get_pets_library()
+
+        if not library:
+            ctk.CTkLabel(
+                card,
+                text="Aucun pet en bibliothèque. Collez un pet Lv.1 dans la zone ci-dessus puis cliquez sur « Simuler » — il sera ajouté automatiquement.",
+                font=FONT_SMALL, text_color=C["muted"],
+                wraplength=700, justify="left").grid(
+                row=1, column=0, padx=20, pady=(0, 16), sticky="w")
+            return
+
+        lst = ctk.CTkFrame(card, fg_color="transparent")
+        lst.grid(row=1, column=0, padx=10, pady=(4, 12), sticky="ew")
+        lst.grid_columnconfigure(1, weight=1)
+
+        def _sort_key(n: str):
+            rar = str(library[n].get("rarity", "common")).lower()
+            idx = RARITY_ORDER.index(rar) if rar in RARITY_ORDER else 0
+            return (idx, n.lower())
+
+        for i, nom in enumerate(sorted(library.keys(), key=_sort_key)):
+            entry = library[nom]
+            bg = C["card_alt"] if i % 2 == 0 else C["card"]
+            row = ctk.CTkFrame(lst, fg_color=bg, corner_radius=6)
+            row.grid(row=i, column=0, columnspan=5, sticky="ew", padx=4, pady=2)
+            row.grid_columnconfigure(2, weight=1)
+
+            # Icône (ou emoji fallback)
+            icon_img = load_pet_icon(nom, size=40)
+            if icon_img:
+                ctk.CTkLabel(row, image=icon_img, text="",
+                             fg_color="transparent").grid(
+                    row=0, column=0, padx=(8, 2), pady=4)
+            else:
+                ctk.CTkLabel(row, text="🐾", font=("Segoe UI", 24),
+                             width=48).grid(
+                    row=0, column=0, padx=(8, 2), pady=4)
+
+            rar = str(entry.get("rarity", "common")).lower()
+            ctk.CTkLabel(row, text=rar.upper(),
+                         font=FONT_TINY, text_color=rarity_color(rar),
+                         width=80).grid(row=0, column=1, padx=(6, 6), pady=6)
+            ctk.CTkLabel(row, text=nom, font=FONT_BODY,
+                         text_color=C["text"], anchor="w").grid(
+                row=0, column=2, padx=6, pady=6, sticky="w")
+
+            stats_txt = (f"⚔ {fmt_nombre(entry.get('damage_flat', 0))}   "
+                         f"❤ {fmt_nombre(entry.get('hp_flat', 0))}")
+            ctk.CTkLabel(row, text=stats_txt, font=FONT_MONO_S,
+                         text_color=C["muted"]).grid(
+                row=0, column=3, padx=6, pady=6)
+
+            ctk.CTkButton(
+                row, text="🗑", width=32, height=26,
+                font=FONT_SMALL, corner_radius=6,
+                fg_color="transparent", hover_color=C["lose"],
+                text_color=C["muted"],
+                command=lambda n=nom: self._supprimer_library(n),
+            ).grid(row=0, column=4, padx=(4, 10), pady=4)
+
+    def _supprimer_library(self, nom: str) -> None:
+        if not confirmer(
+            self.app, "Supprimer de la bibliothèque",
+            f"Supprimer « {nom} » de la bibliothèque des pets ?\n"
+            "Les futurs imports de ce nom devront être refaits en Lv.1.",
+            ok_label="Supprimer", danger=True,
+        ):
+            return
+        if self.controller.supprimer_pet_library(nom):
+            self.app.refresh_current()
+
     # ── Actions ──────────────────────────────────────────────
 
     def _tester_pet(self) -> None:
@@ -100,19 +206,52 @@ class PetsView(ctk.CTkFrame):
                                         text_color=C["lose"])
             return
 
-        nouveau_pet = self.controller.importer_texte_pet(texte)
+        nouveau_pet, statut, meta = self.controller.resoudre_pet(texte)
+
+        if statut == "no_name":
+            self._lbl_status.configure(
+                text="⚠ Impossible de lire le nom du pet (attendu : « [Rareté] Nom »).",
+                text_color=C["lose"])
+            return
+
+        if statut == "unknown_not_lvl1":
+            nom = meta.get("name") if meta else "?"
+            self._lbl_status.configure(
+                text=f"⚠ « {nom} » n'est pas en bibliothèque. Importez-le d'abord en Lv.1 pour enregistrer ses stats de référence.",
+                text_color=C["lose"])
+            return
+
+        # statut ∈ {"ok", "added"}
         for w in self._result_outer.winfo_children():
             w.destroy()
 
-        self._lbl_status.configure(text="⏳ Simulation en cours…",
-                                    text_color=C["muted"])
-        self.update_idletasks()
+        if statut == "added":
+            nom = meta.get("name") if meta else ""
+            self._lbl_status.configure(
+                text=f"✅ « {nom} » ajouté à la bibliothèque (Lv.1) — simulation en cours…",
+                text_color=C["win"])
+            self.update_idletasks()
+            # rebuild library section to show the new entry afterwards
+            self.app.after(50, self._refresh_library_only)
+        else:
+            self._lbl_status.configure(text="⏳ Simulation en cours…",
+                                        text_color=C["muted"])
+            self.update_idletasks()
 
         def on_result(resultats: Dict[str, Tuple[int, int, int]]) -> None:
             self._lbl_status.configure(text="", text_color=C["muted"])
             self._afficher_resultats(resultats, nouveau_pet)
 
         self.controller.tester_pet(nouveau_pet, on_result)
+
+    def _refresh_library_only(self) -> None:
+        """Rafraîchit juste la section bibliothèque sans recréer toute la vue."""
+        # Trouve la card library (row=3) et la détruit/recrée
+        for child in self._scroll.winfo_children():
+            info = child.grid_info()
+            if info.get("row") == 3:
+                child.destroy()
+        self._build_library()
 
     def _afficher_resultats(self, resultats: Dict[str, Tuple[int, int, int]],
                              nouveau_pet: Dict) -> None:
@@ -234,7 +373,21 @@ class PetsView(ctk.CTkFrame):
                 text="⚠ Collez d'abord les stats du pet.",
                 text_color=C["lose"])
             return
-        ModifyPetDialog(self, self.controller, self.app, texte)
+
+        pet, statut, meta = self.controller.resoudre_pet(texte)
+        if statut == "no_name":
+            self._lbl_status.configure(
+                text="⚠ Impossible de lire le nom du pet.",
+                text_color=C["lose"])
+            return
+        if statut == "unknown_not_lvl1":
+            nom = meta.get("name") if meta else "?"
+            self._lbl_status.configure(
+                text=f"⚠ « {nom} » n'est pas en bibliothèque. Importez-le d'abord en Lv.1.",
+                text_color=C["lose"])
+            return
+
+        ModifyPetDialog(self, self.controller, self.app, pet)
 
 
 # ════════════════════════════════════════════════════════════
@@ -243,11 +396,11 @@ class PetsView(ctk.CTkFrame):
 
 class ModifyPetDialog(ctk.CTkToplevel):
 
-    def __init__(self, parent, controller, app, texte: str):
+    def __init__(self, parent, controller, app, pet: Dict):
         super().__init__(parent)
         self.controller = controller
         self.app        = app
-        self.texte      = texte
+        self.pet        = pet
         self.title("Modifier un slot pet")
         self.geometry("400x280")
         self.resizable(False, False)
@@ -283,8 +436,7 @@ class ModifyPetDialog(ctk.CTkToplevel):
                       command=self._save).pack(side="right")
 
     def _save(self) -> None:
-        nom     = self.slot_var.get()
-        nouveau = self.controller.importer_texte_pet(self.texte)
-        self.controller.set_pet(nom, nouveau)
+        nom = self.slot_var.get()
+        self.controller.set_pet(nom, self.pet)
         self.destroy()
         self.app.refresh_current()

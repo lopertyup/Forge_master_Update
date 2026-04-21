@@ -20,9 +20,11 @@ from .theme import (
     FONT_MONO_S,
     FONT_SMALL,
     FONT_SUB,
+    FONT_TINY,
     STAT_LABELS,
     fmt_nombre,
     fmt_stat,
+    rarity_color,
 )
 
 
@@ -215,11 +217,78 @@ def stats_card(parent: ctk.CTkBaseClass, title: str, stats: Dict[str, float],
                  text_color=title_color or C["text"]).pack(
         padx=16, pady=(14, 6), anchor="w")
 
-    non_nuls = [(k, v) for k, v in stats.items() if v]
+    non_nuls = [(k, v) for k, v in stats.items()
+                if not k.startswith("__") and v]
 
     if not non_nuls:
         ctk.CTkLabel(card, text=empty_text, font=FONT_BODY,
                      text_color=C["muted"]).pack(padx=16, pady=20)
+    else:
+        inner = ctk.CTkFrame(card, fg_color="transparent")
+        inner.pack(fill="x", padx=10, pady=(0, 10))
+        for i, (k, v) in enumerate(non_nuls):
+            stat_row(inner, k, v, row_index=i).pack(fill="x", pady=1)
+
+    ctk.CTkFrame(card, fg_color="transparent", height=6).pack()
+    return card
+
+
+# ════════════════════════════════════════════════════════════
+#  CARTE "SLOT COMPANION" (pet équipé / mount équipé)
+#  En-tête avec icône + nom + badge rareté, puis stats.
+# ════════════════════════════════════════════════════════════
+
+def companion_slot_card(parent: ctk.CTkBaseClass, slot_label: str,
+                         name: Optional[str], rarity: Optional[str],
+                         stats: Dict[str, float],
+                         icon_image=None, fallback_emoji: str = "🐾",
+                         empty_text: str = "(vide)") -> ctk.CTkFrame:
+    """
+    Carte d'un slot équipé : libellé du slot, icône + nom + rareté,
+    puis liste des stats non nulles. Si `name` est None → état "vide".
+    """
+    card = ctk.CTkFrame(parent, fg_color=C["card"], corner_radius=12)
+
+    # Bandeau du haut : libellé du slot (ex: "🐾 PET1" / "🐴 Mount actuel")
+    ctk.CTkLabel(card, text=slot_label, font=FONT_SUB,
+                 text_color=C["muted"]).pack(
+        padx=16, pady=(12, 4), anchor="w")
+
+    # Bandeau identité : icône + nom + rareté
+    head = ctk.CTkFrame(card, fg_color="transparent")
+    head.pack(fill="x", padx=12, pady=(0, 6))
+
+    if icon_image is not None:
+        ctk.CTkLabel(head, image=icon_image, text="",
+                     fg_color="transparent", width=48).pack(side="left",
+                                                             padx=(2, 8))
+    else:
+        ctk.CTkLabel(head, text=fallback_emoji,
+                     font=("Segoe UI", 26), width=48).pack(side="left",
+                                                            padx=(2, 8))
+
+    info = ctk.CTkFrame(head, fg_color="transparent")
+    info.pack(side="left", fill="x", expand=True)
+
+    if name:
+        ctk.CTkLabel(info, text=name, font=FONT_SUB,
+                     text_color=C["text"], anchor="w").pack(anchor="w")
+        if rarity:
+            rar = str(rarity).lower()
+            ctk.CTkLabel(info, text=rar.upper(), font=FONT_TINY,
+                         text_color=rarity_color(rar), anchor="w").pack(
+                anchor="w")
+    else:
+        ctk.CTkLabel(info, text="— libre —", font=FONT_BODY,
+                     text_color=C["muted"], anchor="w").pack(anchor="w")
+
+    # Stats (filtre les clés non numériques de l'identité)
+    non_nuls = [(k, v) for k, v in stats.items()
+                if not k.startswith("__") and v]
+
+    if not non_nuls:
+        ctk.CTkLabel(card, text=empty_text, font=FONT_BODY,
+                     text_color=C["muted"]).pack(padx=16, pady=(4, 14))
     else:
         inner = ctk.CTkFrame(card, fg_color="transparent")
         inner.pack(fill="x", padx=10, pady=(0, 10))

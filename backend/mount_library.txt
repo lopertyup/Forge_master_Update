@@ -1,0 +1,70 @@
+# ============================================================
+# FORGE MASTER — Bibliothèque des mounts (level 1)
+# Stats de référence au level 1, indexées par nom.
+# ============================================================
+
+[Bike]
+rarity       = legendary
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Brown Horse]
+rarity       = rare
+hp_flat      = 83200.0
+damage_flat  = 10400.0
+
+[Brown Leaf]
+rarity       = common
+hp_flat      = 2490.0
+damage_flat  = 312.0
+
+[Crab]
+rarity       = rare
+hp_flat      = 83200.0
+damage_flat  = 10400.0
+
+[Dino]
+rarity       = rare
+hp_flat      = 83200.0
+damage_flat  = 10400.0
+
+[Droid]
+rarity       = ultimate
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Giant Bee]
+rarity       = legendary
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Goat]
+rarity       = epic
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Lily Leaf]
+rarity       = common
+hp_flat      = 2490.0
+damage_flat  = 312.0
+
+[Lily Pad]
+rarity       = common
+hp_flat      = 2490.0
+damage_flat  = 312.0
+
+[Mini Dragon]
+rarity       = ultimate
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Pig]
+rarity       = epic
+hp_flat      = 0.0
+damage_flat  = 0.0
+
+[Turtle]
+rarity       = rare
+hp_flat      = 83200.0
+damage_flat  = 10400.0
+

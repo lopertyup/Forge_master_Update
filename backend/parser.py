@@ -174,6 +174,47 @@ def parser_companion(texte: str) -> Dict[str, float]:
     return c
 
 
+# ════════════════════════════════════════════════════════════
+#  MÉTADONNÉES COMPANION (nom / rareté / level)
+# ════════════════════════════════════════════════════════════
+
+_RE_LEVEL       = re.compile(r'Lv\.?\s*(\d+)', re.IGNORECASE)
+_RE_NAME_RARITY = re.compile(
+    r'\[\s*([A-Za-z]+)\s*\]\s*([^\r\n\[\]]+?)\s*(?:\n|$)',
+    re.IGNORECASE,
+)
+
+
+def parser_companion_meta(texte: str) -> Dict:
+    """
+    Extrait les métadonnées d'un bloc pet/mount :
+      - name  : str ou None
+      - rarity: str (lowercase) ou None
+      - level : int ou None
+      - stats : dict complet (résultat de parser_companion)
+    """
+    m_lv = _RE_LEVEL.search(texte)
+    level = int(m_lv.group(1)) if m_lv else None
+
+    m_nr = _RE_NAME_RARITY.search(texte)
+    if m_nr:
+        rarity = m_nr.group(1).strip().lower()
+        name   = m_nr.group(2).strip()
+        # Rejeter les captures "vides" ou qui ressemblent à des mots-clés parasites
+        if not name:
+            name = None
+    else:
+        rarity = None
+        name   = None
+
+    return {
+        "name":   name,
+        "rarity": rarity,
+        "level":  level,
+        "stats":  parser_companion(texte),
+    }
+
+
 # Alias rétrocompatibles
 parser_pet   = parser_companion
 parser_mount = parser_companion
