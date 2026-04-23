@@ -21,15 +21,166 @@
 
       fix_ocr(text: str, context: Optional[str] = None) -> str
 
-  Context values: "profile", "opponent", "item", "pet",
-  "mount", "skill", or None (generic passthrough).
+  Context values: "profile", "opponent", "item" / "equipment",
+  "pet", "mount", "skill", or None (generic passthrough).
 ============================================================
 """
 
 from __future__ import annotations
 
+import difflib
 import re
-from typing import Dict, List, NamedTuple, Optional
+from typing import Any, Dict, List, NamedTuple, Optional
+
+
+# ════════════════════════════════════════════════════════════
+#  Image pre-processing — UI label re-colouring
+# ════════════════════════════════════════════════════════════
+# Forge Master renders rarity/epoch labels in a palette of
+# saturated colours (red, cyan, green, yellow, purple, teal,
+# brown, orange). PaddleOCR reads the darker colours fine but
+# fails on the brightly-saturated glyphs because their luminance
+# against the light UI backgrounds is too low for its default
+# thresholds.
+#
+# Before OCR we therefore re-paint every pixel belonging to one
+# of these label colours (including its anti-aliased halo) with
+# LABEL_REPLACEMENT_COLOR (a dark blue #2B17D2). The text then
+# becomes high-contrast and uniformly coloured — OCR reads it
+# cleanly regardless of which tier/epoch the label originally
+# belonged to.
+#
+# We paint to dark blue rather than pure black because black
+# pixels blend with the soft UI borders/shadows around the
+# equipment rows, thickening the anti-aliased halos into
+# continuous dark blobs that break character boundaries. A
+# distinctive blue has the same luminance contrast as black
+# against light backgrounds but keeps glyph edges clean.
+
+LABEL_REPLACEMENT_COLOR = (0x2B, 0x17, 0xD2)  # dark blue (#2B17D2)
+
+# Forge Master UI label palette.
+#
+# ⚠ Light grey #E0E0E0 is intentionally EXCLUDED. It matches the
+#   UI panel background of the second item card ("NEW!" row), so
+#   enabling it repaints the entire panel blue and hides the real
+#   text. Grey labels would need a glyph-vs-background detector
+#   (e.g. anti-alias edge detection) to be safe — not worth the
+#   complexity unless the game actually ships a grey-label tier.
+UI_LABEL_COLORS = (
+    (0xFF, 0x1C, 0x1C),  # red        — [Space]
+    (0x1C, 0xAF, 0xFF),  # cyan       — [Medieval]
+    (0x1C, 0xFF, 0x41),  # green      — [Early-Modern]
+    (0xF8, 0xFF, 0x1C),  # yellow     — [Modern]
+    (0xAA, 0x1C, 0xFF),  # purple     — [Interstellar]
+    (0x2D, 0xFF, 0xDA),  # teal       — [Multiverse]
+    (0x6F, 0x30, 0x31),  # brown      — [Underworld]
+    (0xFF, 0x57, 0x01),  # orange     — [Divine]
+)
+
+# Tunables for the hue matcher used by `recolour_ui_labels`.
+# We use chroma = max(R,G,B) − min(R,G,B) as the "colourfulness"
+# measure rather than distance-from-white. This is critical
+# because the palette includes a desaturated colour (brown
+# #6F3031) whose vector toward white is (144,207,206), almost
+# parallel to a pure-grey pixel's (215,215,215). Using chroma
+# instead — brown has chroma=63, every grey has chroma=0 —
+# cleanly separates them.
+_HUE_MIN_CHROMA = 20.0   # min (max−min) for a pixel to have "enough colour"
+_HUE_COS_SIM    = 0.92   # min cosine similarity between pixel hue and target hue
+
+
+def _build_match_mask(arr: Any, target: tuple) -> Any:
+    """Boolean mask of pixels that match `target` colour (including halo).
+
+    Detection is chroma-based: we compute each pixel's chroma vector
+    `(R-min, G-min, B-min)` (normalised by chroma = max-min) and compare
+    its direction against the target's by cosine similarity. A pixel
+    matches iff:
+
+        chroma ≥ _HUE_MIN_CHROMA   (rules out near-grey pixels)
+        cos_sim ≥ _HUE_COS_SIM     (same hue as target)
+
+    Why chroma and not distance-from-white? Because our palette mixes
+    highly-saturated colours (red, cyan…) with a desaturated one
+    (brown #6F3031). Brown's distance-from-white is (144, 207, 206) —
+    almost parallel to a pure-grey pixel's (215, 215, 215). Using
+    chroma avoids this: brown's chroma is 63, every grey's is 0.
+
+    Halo-on-white handling: a blend `C*α + 255*(1-α)` has chroma
+    `chroma(C)*α` — smaller magnitude, same direction. Halos within
+    the `_HUE_MIN_CHROMA` band of colour thus match; halos fading
+    further toward white drop below the threshold (and are visually
+    near-white anyway, so OCR wouldn't have read them as glyph
+    pixels).
+    """
+    import numpy as np
+
+    tR, tG, tB = (float(c) for c in target)
+    t_min = min(tR, tG, tB)
+    t_chroma = max(tR, tG, tB) - t_min
+    if t_chroma < 1.0:
+        # Achromatic target (pure grey/white/black). Not supported by the
+        # hue matcher — the caller should exclude these from the palette.
+        return np.zeros(arr.shape[:2], dtype=bool)
+
+    # Target's normalised chroma vector (one component = 1, others in [0,1]).
+    dtR = (tR - t_min) / t_chroma
+    dtG = (tG - t_min) / t_chroma
+    dtB = (tB - t_min) / t_chroma
+    t_mag = float(np.sqrt(dtR * dtR + dtG * dtG + dtB * dtB))
+
+    R = arr[:, :, 0].astype(np.float32)
+    G = arr[:, :, 1].astype(np.float32)
+    B = arr[:, :, 2].astype(np.float32)
+
+    p_min = np.minimum(np.minimum(R, G), B)
+    p_max = np.maximum(np.maximum(R, G), B)
+    p_chroma = p_max - p_min
+
+    # Normalise by chroma, guarding against the fully-neutral case.
+    safe = np.maximum(p_chroma, 1e-6)
+    dpR = (R - p_min) / safe
+    dpG = (G - p_min) / safe
+    dpB = (B - p_min) / safe
+    p_mag = np.sqrt(dpR * dpR + dpG * dpG + dpB * dpB)
+
+    cos_sim = (dpR * dtR + dpG * dtG + dpB * dtB) / (p_mag * t_mag + 1e-6)
+
+    return (p_chroma >= _HUE_MIN_CHROMA) & (cos_sim >= _HUE_COS_SIM)
+
+
+def recolour_ui_labels(img: Any) -> Any:
+    """Re-paint every UI-label pixel with LABEL_REPLACEMENT_COLOR.
+
+    Walks every target in `UI_LABEL_COLORS`, builds a boolean mask of
+    matching pixels (via `_build_match_mask`), then paints the union of
+    those masks with the replacement colour. Returns a new PIL image;
+    the original is not modified. If no pixel matches (e.g. capture
+    contains no coloured labels at all), returns the original image
+    unchanged.
+
+    Falls back silently to returning the input unchanged if numpy / PIL
+    happen to be missing (should never happen at runtime since the OCR
+    engine pulls them in anyway).
+    """
+    try:
+        import numpy as np
+        from PIL import Image
+    except Exception:
+        return img
+
+    arr = np.array(img.convert("RGB"))
+
+    mask = np.zeros(arr.shape[:2], dtype=bool)
+    for target in UI_LABEL_COLORS:
+        mask |= _build_match_mask(arr, target)
+
+    if not mask.any():
+        return img
+
+    arr[mask] = LABEL_REPLACEMENT_COLOR
+    return Image.fromarray(arr.astype("uint8"))
 
 
 # ── Known stats (closed list) ────────────────────────────────
@@ -92,6 +243,77 @@ _OCR_TYPOS = {
 
 
 # ════════════════════════════════════════════════════════════
+#  Known bracket labels — epochs + tier rarities
+# ════════════════════════════════════════════════════════════
+# Items in the game carry an "epoch" tag inside brackets
+# (e.g. [Space] Saber, [Quantum] Black Gun). Skills / pets /
+# mounts use the 6 tier rarities instead (e.g. [Ultimate]
+# Stampede). Both share the same [Label] syntax, so we keep a
+# single canonical list for OCR-typo correction.
+#
+# PaddleOCR is prone to mis-reading individual letters in these
+# short labels (c→o, I→l, m→n …). `_fuzzy_bracket_label` below
+# maps an OCR'd label back to its canonical spelling using a
+# closest-match lookup against this list.
+
+_KNOWN_EPOCHS = (
+    "Primitive", "Medieval", "Early-Modern", "Modern",
+    "Space", "Interstellar", "Multiverse", "Quantum",
+    "Underworld", "Divine",
+)
+_KNOWN_TIERS = ("Common", "Rare", "Epic", "Legendary", "Ultimate", "Mythic")
+_KNOWN_BRACKET_LABELS = _KNOWN_EPOCHS + _KNOWN_TIERS
+
+
+def _bracket_norm(s: str) -> str:
+    """Normalised form used for fuzzy matching: lowercase, no
+    separators — so 'Early-Modern', 'Early Modern', 'early_modern'
+    and 'earlymodern' all collapse to 'earlymodern'."""
+    return re.sub(r"[\s\-_]", "", s).lower()
+
+
+_KNOWN_BRACKET_NORM = {_bracket_norm(s): s for s in _KNOWN_BRACKET_LABELS}
+
+
+def _fuzzy_bracket_label(name: str) -> str:
+    """Best-effort correction of OCR typos inside a [Label] bracket.
+
+    Returns the canonical spelling when the input is close enough to a
+    known epoch / tier rarity (ratio ≥ 0.75). Otherwise returns the
+    input unchanged, so unrelated bracket contents (e.g. pet names in
+    library files) pass through intact.
+    """
+    norm = _bracket_norm(name)
+    if not norm:
+        return name
+    if norm in _KNOWN_BRACKET_NORM:
+        return _KNOWN_BRACKET_NORM[norm]
+    matches = difflib.get_close_matches(
+        norm, list(_KNOWN_BRACKET_NORM.keys()), n=1, cutoff=0.6)
+    if matches:
+        return _KNOWN_BRACKET_NORM[matches[0]]
+    return name
+
+
+def _fuzzy_bracket_label_strict(name: str) -> Optional[str]:
+    """Same as _fuzzy_bracket_label but only returns a canonical label when
+    the match is strong (ratio ≥ 0.8). Used by the "missing brackets"
+    fallback below — we must NOT wrap arbitrary item words like 'Solar'
+    or 'Saber' into [Space]/[Rare] by accident.
+    """
+    norm = _bracket_norm(name)
+    if not norm:
+        return None
+    if norm in _KNOWN_BRACKET_NORM:
+        return _KNOWN_BRACKET_NORM[norm]
+    matches = difflib.get_close_matches(
+        norm, list(_KNOWN_BRACKET_NORM.keys()), n=1, cutoff=0.8)
+    if matches:
+        return _KNOWN_BRACKET_NORM[matches[0]]
+    return None
+
+
+# ════════════════════════════════════════════════════════════
 #  Step 1 — Low-level normalisation
 # ════════════════════════════════════════════════════════════
 
@@ -106,12 +328,63 @@ def _normalize_line(line: str) -> str:
     # 2. Level prefix variants → "Lv. NN".
     line = re.sub(r"\b[Ll][Vv][.:\']?\s*(\d+)", r"Lv. \1", line)
 
+    # 2bis. OCR 'o'/'O' mis-read as '0' inside a numeric token.
+    #       Accepts a digit OR a decimal point on EITHER side so that
+    #       both integer and fractional positions are covered:
+    #         '23okDamage' → '230kDamage'
+    #         '7.o4m'       → '7.04m'   (decimal-fraction zero)
+    #         '1o.5'        → '10.5'    (units zero just before '.')
+    #         '3ook'        → '300k'
+    #         '1o2'         → '102'
+    #       The neighbour character must be part of a numeric token
+    #       (digit, '.', or k/m/b unit) so ordinary words like "Moo"
+    #       or "foo" are never touched.
+    line = re.sub(
+        r"([\d.])([oO]+)(?=[\d.kmbKMB])",
+        lambda m: m.group(1) + "0" * len(m.group(2)),
+        line,
+    )
+
     # 3. Rarity bracket casing: [interstellar] → [Interstellar].
     line = re.sub(
         r"\[([a-z])([A-Za-z]*)\]",
         lambda m: "[" + m.group(1).upper() + m.group(2) + "]",
         line,
     )
+
+    # 3bis. Fuzzy-correct OCR typos inside [Label] brackets:
+    #       [Spaoe] → [Space], [lnterstellar] → [Interstellar],
+    #       [Quantun] → [Quantum], [Early Modern] → [Early-Modern].
+    #       Unknown labels (pet names, skill names) pass through
+    #       unchanged thanks to the 0.6 similarity cutoff.
+    line = re.sub(
+        r"\[\s*([A-Za-z][A-Za-z\s\-_]*?)\s*\]",
+        lambda m: "[" + _fuzzy_bracket_label(m.group(1)) + "]",
+        line,
+    )
+
+    # 3ter. Bracket-LESS rarity fallback. PaddleOCR occasionally swallows
+    #       the '[' and ']' glyphs entirely when the label is rendered
+    #       in red on red-ish backgrounds (even after red→black). In
+    #       that case the line arrives as 'Space Solarius Ring' or
+    #       'Quantum Black Gun' — no brackets at all — and the parser
+    #       drops it because it does not match _RE_RARITY.
+    #
+    #       If a line does NOT already contain '[' AND starts with a
+    #       single word that is a STRONG (≥0.8) match for a known
+    #       epoch or tier, we rebuild it as '[Epoch] Rest'. The strict
+    #       cutoff prevents false positives on item names like
+    #       'Solar Ring' or 'Diamond Saber' — only true misreads get
+    #       promoted.
+    if "[" not in line and "]" not in line:
+        m = re.match(r"^([A-Za-z][A-Za-z\-]*)\s+(.+?)\s*$", line)
+        if m:
+            head_canon = _fuzzy_bracket_label_strict(m.group(1))
+            rest = m.group(2).strip()
+            # Only promote if the rest looks like an item / pet name
+            # (starts with a capital letter), not a stat or number.
+            if head_canon and rest and rest[0].isalpha() and rest[0].isupper():
+                line = f"[{head_canon}] {rest}"
 
     # 4. Space after bracket glued to a word: "]Higgs" → "] Higgs".
     line = re.sub(r"\](\w)", r"] \1", line)
@@ -138,8 +411,9 @@ def _normalize_line(line: str) -> str:
     for joined, spaced in _STAT_CAMEL_MAP.items():
         line = re.sub(r"\b" + joined + r"\b", spaced, line)
 
-    # 9. Split passives glued by "+": "Damage+347k" → "Damage +347k".
-    line = re.sub(r"([A-Za-z])\+", r"\1 +", line)
+    # 9. Split passives glued by '+' or '-': "Damage+347k" → "Damage +347k",
+    #    "Lifesteal-1.56%" → "Lifesteal -1.56%".
+    line = re.sub(r"([A-Za-z])([+\-])(?=\d)", r"\1 \2", line)
 
     # 10. Generic CamelCase split for item / skill names.
     line = re.sub(r"([a-z])([A-Z])", r"\1 \2", line)
@@ -154,11 +428,12 @@ def _normalize_line(line: str) -> str:
 
 
 def _split_glued_stats(line: str) -> List[str]:
-    """Split on internal '<space>+<digit>' to separate glued stat pairs
-    like '+43.4k Base Damage +347k Base Health' into two sub-lines."""
+    """Split on internal '<space>[+-]<digit>' to separate glued stat
+    pairs like '+43.4k Base Damage +347k Base Health' or
+    '+15.5% Lifesteal -1.56% Skill Cooldown' into two sub-lines."""
     if not line:
         return []
-    parts = re.split(r"\s+(?=\+\d)", line)
+    parts = re.split(r"\s+(?=[+\-]\d)", line)
     return [p.strip() for p in parts if p.strip()]
 
 
@@ -186,7 +461,7 @@ _RE_DEALING   = re.compile(r"^dealing\s+([\d.]+)\s*([kmb]?)\s+Damage\s*(?:to\b.*
 _RE_BASE_DMG  = re.compile(r"^\+\s*([\d.]+)\s*([kmb]?)\s+Base\s+Damage\s*$", re.IGNORECASE)
 _RE_BASE_HP   = re.compile(r"^\+\s*([\d.]+)\s*([kmb]?)\s+Base\s+Health\s*$", re.IGNORECASE)
 _RE_SLASH     = re.compile(r"^(\d+)\s*/\s*(\d+)\s*$")
-_RE_SUBSTAT   = re.compile(r"^\+\s*([\d.]+)\s*%\s*(.+?)\s*$")
+_RE_SUBSTAT   = re.compile(r"^([+\-])\s*([\d.]+)\s*%\s*(.+?)\s*$")
 _RE_PASSIVE   = re.compile(r"^Passive\s*:\s*$", re.IGNORECASE)
 _RE_NEW       = re.compile(r"^NEW\s*!\s*$", re.IGNORECASE)
 
@@ -320,13 +595,15 @@ def _extract_tokens(lines: List[str], context: Optional[str]) -> List[Token]:
         if m:
             continue
 
-        # Priority 8: "+NN.N% <known stat>".
+        # Priority 8: "+NN.N% <known stat>"  or  "-NN.N% <known stat>".
         m = _RE_SUBSTAT.match(line)
         if m:
-            stat = _match_known_stat(m.group(2))
+            sign  = m.group(1)
+            value = m.group(2)
+            stat  = _match_known_stat(m.group(3))
             if stat:
-                tokens.append(Token("substat", f"+{m.group(1)}% {stat}",
-                                    {"stat": stat, "value": m.group(1)}))
+                tokens.append(Token("substat", f"{sign}{value}% {stat}",
+                                    {"stat": stat, "value": value, "sign": sign}))
             continue  # unknown stat tail → dropped silently
 
         # Priority 16: free skill text (skill context, before Passive:).
@@ -410,10 +687,9 @@ def _post_companion(tokens: List[Token], default_lv: int = 1) -> List[str]:
 # -- skill --------------------------------------------------------------
 
 def _post_skill(tokens: List[Token]) -> List[str]:
-    """skill layout:
+    """skill layout (strict — narrative/flavor text is dropped):
         Lv. NN
         [Rarity] Name
-        <free description lines>
         dealing NN.N[kmb] Damage
         Passive:
         +Base Damage +Base Health   (combined on one line)
@@ -428,9 +704,8 @@ def _post_skill(tokens: List[Token]) -> List[str]:
     if rarity:
         out.append(rarity.text)
 
-    for t in tokens:
-        if t.kind == "skill_text":
-            out.append(t.text)
+    # Narrative "skill_text" tokens are intentionally NOT emitted.
+    # The simulator only needs the structural lines below.
 
     for t in tokens:
         if t.kind == "dealing":
@@ -505,9 +780,12 @@ def fix_ocr(text: str, context: Optional[str] = None) -> str:
     tokens = _extract_tokens(normalised, context)
 
     # Step 3: context-specific post-processing.
+    # Note: "equipment" is the zone-key used everywhere else in the
+    # codebase (see ZONE_DEFAULTS in constants.py); it maps to the
+    # same item-shaped output as "item".
     if context in ("profile", "opponent"):
         out_lines = _post_profile(tokens)
-    elif context == "item":
+    elif context in ("item", "equipment"):
         out_lines = _post_item(tokens)
     elif context in ("pet", "mount"):
         out_lines = _post_companion(tokens, default_lv=1)

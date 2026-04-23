@@ -20,11 +20,6 @@ SKILLS_LIBRARY_FILE  = os.path.join(_DIR, "skills_library.txt")
 ZONES_FILE           = os.path.join(_DIR, "zones.json")
 WINDOW_STATE_FILE    = os.path.join(_DIR, "window.json")
 
-# ── OCR ─────────────────────────────────────────────────────
-# Default install path on Windows. If missing, ocr.py falls back
-# to `shutil.which("tesseract")` so Linux/Mac dev boxes still work.
-TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-
 # Default zones used if zones.json is missing or incomplete.
 # `captures` = number of successive screen grabs the user performs
 # for this zone (2 means they scroll between clicks). All bboxes

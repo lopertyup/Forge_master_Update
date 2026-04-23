@@ -61,20 +61,27 @@ def finalize_bases(profile: Dict) -> Dict:
 
 
 def combat_stats(profile: Dict) -> Dict:
-    """Extract the stats needed to simulate a fight."""
+    """Extract the stats needed to simulate a fight.
+
+    Uses `.get()` with zero defaults for numeric fields so a partially-
+    filled profile (e.g. a fresh install where OCR has only captured
+    some stats yet) does not KeyError halfway through a background
+    simulation thread — the simulator will simply treat missing stats
+    as zero.
+    """
     return {
-        "hp_total":        profile["hp_total"],
-        "attack_total":    profile["attack_total"],
-        "crit_chance":     profile["crit_chance"],
-        "crit_damage":     profile["crit_damage"],
-        "health_regen":    profile["health_regen"],
-        "lifesteal":       profile["lifesteal"],
-        "double_chance":   profile["double_chance"],
-        "attack_speed":    profile["attack_speed"],
-        "skill_damage":    profile["skill_damage"],
-        "skill_cooldown":  profile["skill_cooldown"],
-        "block_chance":    profile["block_chance"],
-        "attack_type":     profile["attack_type"],
+        "hp_total":        profile.get("hp_total",       0.0),
+        "attack_total":    profile.get("attack_total",   0.0),
+        "crit_chance":     profile.get("crit_chance",    0.0),
+        "crit_damage":     profile.get("crit_damage",    0.0),
+        "health_regen":    profile.get("health_regen",   0.0),
+        "lifesteal":       profile.get("lifesteal",      0.0),
+        "double_chance":   profile.get("double_chance",  0.0),
+        "attack_speed":    profile.get("attack_speed",   0.0),
+        "skill_damage":    profile.get("skill_damage",   0.0),
+        "skill_cooldown":  profile.get("skill_cooldown", 0.0),
+        "block_chance":    profile.get("block_chance",   0.0),
+        "attack_type":     profile.get("attack_type",    "melee"),
     }
 
 

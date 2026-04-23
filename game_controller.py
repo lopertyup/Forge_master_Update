@@ -171,7 +171,7 @@ class GameController:
         else:
             callback(*args)
 
-    # ── OCR scan (screen capture + Tesseract) ───────────────
+    # ── OCR scan (screen capture + PaddleOCR) ───────────────
     #
     #  Zones live in zones.json (one entry per semantic target:
     #  profile, opponent, equipment, pet, mount, skill). A zone
@@ -185,7 +185,8 @@ class GameController:
     #    "ok"                 — non-empty text captured
     #    "empty"              — OCR ran but returned no text
     #    "zone_not_configured" — all bboxes are zero, or unknown key
-    #    "ocr_unavailable"     — Pillow/pytesseract/binary missing
+    #    "ocr_unavailable"     — Pillow or a PaddleOCR backend missing
+    #    "ocr_error"           — engine crashed mid-run (logged)
 
     def get_zone_captures(self, zone_key: str) -> int:
         """Number of successive clicks the user has to perform for this zone."""
@@ -247,20 +248,32 @@ class GameController:
             if not ocr.is_available():
                 self._dispatch(callback, "", "ocr_unavailable")
                 return
+            # --- Engine run: a crash here means PaddleOCR itself failed
+            #     (bad image, model file missing, etc.). Distinct from the
+            #     "engine not installed" branch above.
             try:
                 raw_text = ocr.run_ocr(bboxes)
             except Exception:
-                log.exception("scan(%r, step=%r) raised", zone_key, step)
-                self._dispatch(callback, "", "ocr_unavailable")
+                log.exception("scan(%r, step=%r): OCR engine crashed", zone_key, step)
+                self._dispatch(callback, "", "ocr_error")
                 return
-            # Normalize the raw OCR output BEFORE handing it to the UI:
+            # --- Normalize the raw OCR output BEFORE handing it to the UI:
             # fixes brackets, Lv. prefixes, spacing, stat names, and drops
             # UI artifacts (player-name blobs, timers, [-FR-] tags, etc.).
             # `zone_key` is forwarded as context so profile/opponent get
             # extra cleanup (dedup of the two captures, drop of standalone
             # "Lv. XX" badges, drop of corrupt stats, canonical ordering).
             # The transform is idempotent so pasting clean text later stays safe.
-            text = fix_ocr(raw_text, context=zone_key)
+            #
+            # A bug in the normalizer would otherwise silently kill this
+            # daemon thread; instead we log it and fall back to the raw
+            # text so the user still sees something they can hand-edit.
+            try:
+                text = fix_ocr(raw_text, context=zone_key)
+            except Exception:
+                log.exception("scan(%r, step=%r): fix_ocr crashed — using raw text",
+                              zone_key, step)
+                text = raw_text
             status = "ok" if text.strip() else "empty"
             self._dispatch(callback, text, status)
 

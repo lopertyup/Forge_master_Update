@@ -1,36 +1,47 @@
 # ⚔️ Forge Master UI
 
-Analysis and simulation tool for the mobile game **Forge Master**.  
-Predict win/loss outcomes, compare equipment and optimize your substats — directly from your PC.
+Analysis and simulation tool for the mobile game **Forge Master**.
+It reads your stats directly off the BlueStacks window with built-in
+OCR, predicts win/loss outcomes against any opponent, compares new
+equipment instantly, and finds the best distribution of your substat
+points — all running locally on your PC.
 
 ---
 
 ## 📋 Features
 
-- **Combat Simulator** — predicts your win rate against a given opponent
-- **Equipment Comparator** — automatically analyzes whether new equipment is better
-- **Substat Optimizer** — finds the best distribution of your substat points
-- **Pets and Mounts management**
+- **Built-in OCR** — one click captures your profile, opponent, equipment,
+  pets, mount or skill straight from BlueStacks. No need to copy-paste text.
+- **Combat Simulator** — 1000 fights per click, returns your win rate.
+- **Equipment Comparator** — auto-simulates "keep vs. swap" for every drop.
+- **Substat Optimizer** — genetic search over thousands of substat builds.
+- **Pets, Mounts and Skills management** — library-backed, always compared
+  at level 1 for a fair match-up.
 
 ---
 
 ## 🛠️ Installation
 
-### 1. Install Bluestacks
+### 1. Install BlueStacks and Forge Master
 
-Forge Master is a mobile game. To play it on PC, you need **BlueStacks** (Android emulator).
+Forge Master is a mobile game. To play it on PC you need **BlueStacks**
+(Android emulator).
 
 👉 Download BlueStacks: https://www.bluestacks.com/index.html
 
-Launch BlueStacks, sign in to the Google Play Store and install **Forge Master**.
+Launch BlueStacks, sign in to the Google Play Store and install
+**Forge Master**.
+
+> 💡 The UI assumes a 1920×1080 screen with BlueStacks anchored to the
+> right side (570 px wide). Move/resize BlueStacks accordingly, or
+> re-trace the capture zones from the **Zones** tab once the app is open.
 
 ---
 
 ### 2. Download the code
 
-On the GitHub project page, click the green **Code** button then **Download ZIP**.
-
-Extract the folder wherever you want on your PC.
+On the GitHub project page, click the green **Code** button then
+**Download ZIP**. Extract the folder wherever you want on your PC.
 
 ---
 
@@ -38,28 +49,40 @@ Extract the folder wherever you want on your PC.
 
 👉 Download Python: https://www.python.org/downloads/
 
-> ⚠️ **Important**: during installation, make sure to check **"Add Python to PATH"** before clicking Install.
+> ⚠️ **Important**: during installation, check **"Add Python to PATH"**
+> before clicking Install.
 
 ---
 
 ### 4. Install dependencies
 
-Open the **terminal** in the project folder:
-- On Windows: right-click in the folder → **Open in Terminal**
-
-Then type the following command and press Enter:
+Open a terminal in the project folder (right-click in the folder →
+**Open in Terminal** on Windows), then run:
 
 ```
-pip install customtkinter pillow
+pip install customtkinter pillow rapidocr_onnxruntime
 ```
 
-Wait for the installation to complete.
+What each package does:
+
+- `customtkinter` — modern look-and-feel for the desktop UI.
+- `pillow` — screen capture + image pre-processing.
+- `rapidocr_onnxruntime` — the OCR engine. Ships the PP-OCR model as a
+  lightweight ONNX runtime (~20 MB, pure CPU, no GPU needed).
+
+> 💡 **Alternative OCR backend.** If `rapidocr_onnxruntime` doesn't
+> install on your system, you can use the heavier `paddleocr` fallback
+> instead: `pip install paddleocr paddlepaddle`. The app auto-detects
+> whichever is available.
+
+If `pip install` complains about "externally-managed environment", add
+`--break-system-packages` at the end.
 
 ---
 
 ### 5. Launch the application
 
-In the same terminal, type:
+From the same terminal:
 
 ```
 python main.py
@@ -69,22 +92,52 @@ The application opens. 🎉
 
 ---
 
-## 📸 How to get text from the game
+## 🔭 Calibrating the capture zones
 
-The tool works by **copy-pasting text** from screenshots.  
-Windows has a built-in tool that lets you capture a screen area and automatically extract the text.
+The OCR needs to know **where on your screen** each kind of panel lives
+in BlueStacks. This is a one-time setup (stored in `backend/zones.json`).
 
-**Shortcut:** `Windows + Shift + T`  
-Select the desired area — the text is automatically copied to your clipboard.
+1. In the app, open the **📐 Zones** tab.
+2. The table lists six zones:
+
+   | Zone        | What to trace                                |
+   | :---------- | :------------------------------------------- |
+   | Profile     | Your own stat panel (scrollable)             |
+   | Opponent    | The opponent's stat panel (also scrollable)  |
+   | Equipment   | The equipment comparison popup (with NEW!)   |
+   | Skill       | A skill's description panel                  |
+   | Pet         | The active pet's stat panel                  |
+   | Mount       | The mount's stat panel                       |
+
+3. Click **Set zone** on a row. The Forge Master window stays where it
+   is, and a translucent red overlay covers only BlueStacks.
+4. Drag a rectangle around the panel. Release the mouse to save, or
+   press **Esc** to cancel.
+5. Some zones (profile, opponent) ask for **two captures** — the panels
+   scroll, so you capture once at the top and once after scrolling.
+   Just follow the on-screen hint between each drag.
+
+Once a zone is green, you can forget about it — a single click on the
+**📷 Scan** button of any tab will replay that exact capture.
 
 ---
 
-## 🎮 How to use the tool
+## 🎮 Using the tool
 
-### Import your profile
+Every scan button follows the same pattern:
 
-In **Forge Master**, open your character profile and capture the stats area.  
-The text should look like this:
+1. In BlueStacks, open the matching screen in Forge Master.
+2. In the Forge Master UI tab, click **📷 Scan**.
+3. Under the hood: the zone is captured → the image is passed through a
+   color-normalization pre-processor → OCR runs → the text is parsed →
+   the form is filled in automatically.
+4. Tweak the parsed values by hand if something looks off, then save.
+
+### Dashboard — your profile
+
+Open your character profile in the game, click **📷 Scan** on the
+**Dashboard** tab's "Update profile" dialog, and the full stat block is
+extracted:
 
 ```
 Lv. 23 Forge
@@ -102,17 +155,12 @@ Lv. 23 Forge
 +12.3% Health
 ```
 
-Paste this text into the **Dashboard** section of the application.
-
----
-
 ![Profile Update](screenshots/profile_update.png)
 
 ### Equipment Comparator
 
-In the game, open the comparison between your current equipment and the new one.  
-Capture the full area containing **both items** with the **NEW!** tag.  
-The text should look like this:
+In the game, tap a new equipment drop so the side-by-side popup
+(Equipped vs. NEW!) shows up. On the **Equipment** tab, click **📷 Scan**.
 
 ```
 Equipped
@@ -130,20 +178,18 @@ NEW!
 +4.34% Double Chance
 ```
 
-> ⚠️ The text must contain **NEW!** to be recognized.
+The UI runs the simulation immediately and tells you whether the new
+piece is an upgrade.
 
-Paste this text into the **Equipment** tab — the simulation launches automatically and tells you whether the new equipment is better.
+> ⚠️ The screenshot **must contain the NEW! tag** — that's how the tool
+> knows which of the two items is the candidate.
 
 ![Equipment Comparator](screenshots/equipment_comparator.png)
 
----
+### Pets
 
-### Pets Management
-
-![Pet Overview](screenshots/pet_overview.png)
-
-In the game, open your pet's page and capture its stats.  
-The text should look like this:
+In the game, open the pet's page. On the **Pets** tab in the UI, click
+**📷 Scan**:
 
 ```
 Lv.1
@@ -154,18 +200,18 @@ Lv.1
 +5.59% Ranged Damage
 ```
 
-> 💡 **Important**: the tool always compares pets at **level 1**.  
-> Why? Because main stats (Damage and Health) scale with level, but substats (%, bonuses) remain identical.  
-> By bringing everything to level 1, two pets can be compared fairly regardless of their current level.  
-> The internal library knows the base stats at level 1 for each pet type.
+![Pet Overview](screenshots/pet_overview.png)
+
+> 💡 **Everything is compared at level 1.** Main stats (Damage, Health)
+> scale with level but substats (percentages) don't — so the app
+> internally normalizes to level 1 using a built-in library of base
+> stats. Two pets of different levels get a fair head-to-head.
 
 ![Pet Simulation](screenshots/pet_replacement_simulation.png)
 
----
+### Mount
 
-### Mounts Management
-
-Same principle as pets. Capture your mount's stats:
+Same flow as pets — on the **Mount** tab, click **📷 Scan**:
 
 ```
 Lv.1
@@ -175,53 +221,140 @@ Lv.1
 +6.95% Health
 ```
 
-> 💡 Same logic as pets: everything is compared at **level 1**.
-
 ![Mount Simulation](screenshots/mount_replacement_simulation.png)
 
----
+### Skills
+
+On the **Skills** tab, click **📷 Scan** while a skill's description
+panel is open in the game. The parser fills in the skill name, rarity,
+level, damage/hits/cooldown and buff fields automatically. The always-on
+**passive** portion (passive damage, passive HP) feeds directly into the
+character profile; the **active** portion is consumed at fight time by
+the simulator.
 
 ### Combat Simulator
 
-1. Go to the **Simulator** tab
-2. Enter your opponent's statistics (same method as for your profile) — don't forget to specify their skills and attack type (melee/ranged)
-3. Click **Simulate** — the tool runs 1000 fights and displays your win rate
-
----
+1. Open the **Simulator** tab.
+2. Click **📷 Scan** with the opponent's profile visible in BlueStacks
+   (don't forget their skills — use the Skills scan for each one), or
+   key in the stats by hand.
+3. Click **Simulate** — 1000 fights are played, and the tool reports
+   your win / loss / draw rate.
 
 ### Substat Optimizer
 
-1. Go to the **Optimizer** tab
-2. Choose the number of generations and simulations
-3. Click **Launch** — the tool tests thousands of substat combinations
-4. At the end, it shows you:
-   - The most important stats for your profile
-   - The best build found compared to your current build
-   - The stats to prioritize
+1. Open the **Optimizer** tab.
+2. Choose the number of generations and simulations per candidate.
+3. Click **Launch**. A genetic algorithm explores thousands of substat
+   distributions.
+4. Results:
+   - The substats that matter most for your current build.
+   - The best build found vs. your current one.
+   - Concrete re-allocation suggestions.
+
+---
+
+## 🧠 How the OCR handles coloured labels
+
+Forge Master uses a *lot* of coloured text — the rarity bracket and
+epoch bracket on every piece of equipment, pet, mount and skill. Each
+colour also carries a dark anti-aliased halo that trips up generic OCR.
+
+The app ships a pre-processor, `backend/fix_ocr.recolour_ui_labels`,
+that knows the exact palette:
+
+| Colour | Hex       | Used for           |
+| :----- | :-------- | :----------------- |
+| red    | `#FF1C1C` | Space epoch        |
+| cyan   | `#1CAFFF` | Medieval epoch     |
+| green  | `#1CFF41` | Early-Modern epoch |
+| yellow | `#F8FF1C` | Modern epoch       |
+| purple | `#AA1CFF` | Interstellar epoch |
+| teal   | `#2DFFDA` | Multiverse epoch   |
+| brown  | `#6F3031` | Underworld epoch   |
+| orange | `#FF5701` | Divine epoch       |
+
+Every pixel matching any of these colours (or a halo pixel blended with
+a dark background) is repainted a uniform dark blue before OCR. Result:
+PaddleOCR reads bracket labels with the same contrast regardless of
+rarity. If you add a new epoch with a new colour, just extend
+`UI_LABEL_COLORS` in `backend/fix_ocr.py` and you're done.
+
+A second safety net — **fuzzy bracket matching** — handles the residual
+OCR typos. When the parser sees something like `[Quanturm]`, it uses
+`difflib.get_close_matches` against the known rarity/epoch vocabulary
+and corrects it back to `[Quantum]`.
+
+---
+
+## 📂 Project layout
+
+```
+forge_master_UI/
+├─ main.py                    Entry point
+├─ game_controller.py         Thin facade between UI and backend
+├─ ui/
+│  ├─ app.py                  Main window + side navigation
+│  ├─ theme.py                Colours & fonts
+│  ├─ widgets.py              Reusable scan buttons, status labels, etc.
+│  ├─ zone_picker.py          Fullscreen overlay for zone calibration
+│  └─ views/                  One file per tab (dashboard, equipment, ...)
+└─ backend/
+   ├─ ocr.py                  PaddleOCR / RapidOCR wrapper + screen capture
+   ├─ fix_ocr.py              Image pre-processor + text normalizer
+   ├─ parser.py               Raw OCR text → structured dicts
+   ├─ stats.py                Pure stat math (applying gear, companions, …)
+   ├─ simulation.py           Fight engine (1v1 deterministic + batches)
+   ├─ optimizer.py            Genetic substat search
+   ├─ persistence.py          Read / write profile.txt, pets.txt, …
+   ├─ zone_store.py           Read / write zones.json
+   ├─ constants.py            All the magic numbers and stat keys
+   ├─ zones.json              Capture rectangles (one-time calibration)
+   └─ *.txt                   Your saved profile, pets, mount, skills, libraries
+```
+
+Everything runs locally. No data is sent anywhere.
 
 ---
 
 ## ❓ Common issues
 
-**`python` is not recognized in the terminal**  
-→ Reinstall Python making sure to check **"Add Python to PATH"**
+**`python` is not recognized in the terminal**
+→ Reinstall Python with **"Add Python to PATH"** checked.
 
-**`pip install` fails**  
-→ Try: `pip install customtkinter pillow --break-system-packages`
+**`pip install` fails with an "externally-managed environment" error**
+→ Re-run with `--break-system-packages` at the end.
 
-**The application doesn't open**  
-→ Make sure you are in the correct folder in the terminal before typing `python main.py`
+**The app starts but "📷 Scan" says `OCR unavailable`**
+→ The OCR backend isn't installed. Run:
+`pip install rapidocr_onnxruntime`
+(or fall back to `pip install paddleocr paddlepaddle`).
 
-**The text is not recognized**  
-→ Make sure the screenshot is clear and the text is copied without extra characters
+**Scan says `Zone not configured`**
+→ Open the **Zones** tab and trace the matching rectangle.
+
+**Scan works, but parses nothing (`OCR found nothing`)**
+→ The capture zone is probably off. Re-trace it in the **Zones** tab.
+Make sure the game panel is fully in-frame when you click Scan.
+
+**A bracket label is read wrong (e.g. `[Quartum]` instead of `[Quantum]`)**
+→ The fuzzy matcher usually catches this. If not, just edit the field by
+hand — your change persists.
+
+**The window opens but geometry looks weird**
+→ The UI assumes 1920×1080. Resize the main window once; its geometry
+is remembered in `backend/window.json`.
 
 ---
 
 ## 📌 Notes
 
-- The tool runs entirely locally on your PC, no data is sent anywhere
-- Simulations are based on the statistics you enter — the more accurate they are, the more reliable the results
-- The optimizer may take a few minutes depending on the chosen parameters
+- Runs entirely locally — no network access after `pip install`.
+- The simulator's accuracy depends on the accuracy of the stats you feed
+  it. Using the integrated OCR is usually more reliable than typing by
+  hand, provided the zones are calibrated correctly.
+- The optimizer can take a few minutes depending on the generations /
+  simulations you pick.
 
 ---
 

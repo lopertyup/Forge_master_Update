@@ -514,9 +514,9 @@ def attach_scan_button(parent_btn_frame: ctk.CTkBaseClass,
     """Create and pack a 📷 scan button that drives the OCR FSM.
 
     The button appends onto `parent_btn_frame` with side="left". All
-    OCR errors (ocr_unavailable / zone_not_configured / empty) are
-    surfaced in `status_lbl`. On success, the textbox is populated
-    and `on_scan_ready` is called.
+    OCR errors (ocr_unavailable / ocr_error / zone_not_configured /
+    empty) are surfaced in `status_lbl`. On success, the textbox is
+    populated and `on_scan_ready` is called.
     """
     total = 1
     if captures_fn is not None:
@@ -545,9 +545,16 @@ def attach_scan_button(parent_btn_frame: ctk.CTkBaseClass,
         # Callback arrives on the Tk thread (dispatched by the controller).
         if status == "ocr_unavailable":
             status_lbl.configure(
-                text="⚠ OCR unavailable — install Tesseract + Pillow.",
+                text=("⚠ OCR unavailable — install `rapidocr_onnxruntime` "
+                      "(recommended) or `paddleocr paddlepaddle`."),
                 text_color=C["lose"])
             btn.configure(state="disabled")
+            return
+        if status == "ocr_error":
+            status_lbl.configure(
+                text="⚠ OCR engine crashed — check the logs and retry.",
+                text_color=C["lose"])
+            _reset()
             return
         if status == "zone_not_configured":
             status_lbl.configure(

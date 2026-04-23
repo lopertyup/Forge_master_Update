@@ -29,6 +29,19 @@ from .constants import (
 log = logging.getLogger(__name__)
 
 
+def _ensure_parent_dir(path: str) -> None:
+    """Create the parent directory of `path` if it doesn't exist.
+
+    A no-op when the parent is the current working directory (i.e.
+    `os.path.dirname(path) == ""`). Called before every write so a
+    fresh install with no `config/` or `data/` folders yet doesn't
+    crash on first save.
+    """
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+
+
 # ════════════════════════════════════════════════════════════
 #  PROFILE + ACTIVE SKILLS
 # ════════════════════════════════════════════════════════════
@@ -44,6 +57,7 @@ def save_profile(player: Dict, skills: Optional[List[Tuple[str, Dict]]] = None) 
     `skills` is accepted for back-compat but no longer written: equipped
     skills are persisted by save_skills() into skills.txt.
     """
+    _ensure_parent_dir(PROFILE_FILE)
     with open(PROFILE_FILE, "w", encoding="utf-8") as f:
         f.write("# ============================================================\n")
         f.write("# FORGE MASTER — Player profile (editable by hand)\n")
@@ -201,6 +215,7 @@ def load_skill_slots() -> Dict[str, Dict]:
 
 def save_skills(skills_by_slot: Dict[str, Dict]) -> None:
     """Persist the 3 skill slots to skills.txt."""
+    _ensure_parent_dir(SKILLS_FILE)
     with open(SKILLS_FILE, "w", encoding="utf-8") as f:
         f.write("# ============================================================\n")
         f.write("# FORGE MASTER — Active skills (3 slots, editable by hand)\n")
@@ -268,6 +283,7 @@ def load_pets() -> Dict[str, Dict[str, float]]:
 
 
 def save_pets(pets: Dict[str, Dict[str, float]]) -> None:
+    _ensure_parent_dir(PETS_FILE)
     with open(PETS_FILE, "w", encoding="utf-8") as f:
         f.write("# ============================================================\n")
         f.write("# FORGE MASTER — Active pets (editable by hand)\n")
@@ -322,6 +338,7 @@ def load_mount() -> Dict[str, float]:
 
 
 def save_mount(mount: Dict[str, float]) -> None:
+    _ensure_parent_dir(MOUNT_FILE)
     with open(MOUNT_FILE, "w", encoding="utf-8") as f:
         f.write("# ============================================================\n")
         f.write("# FORGE MASTER — Active mount (editable by hand)\n")
@@ -396,6 +413,7 @@ def _load_library(path: str) -> Dict[str, Dict]:
 
 
 def _save_library(path: str, library: Dict[str, Dict], title: str) -> None:
+    _ensure_parent_dir(path)
     with open(path, "w", encoding="utf-8") as f:
         f.write("# ============================================================\n")
         f.write(f"# FORGE MASTER — {title}\n")
@@ -475,6 +493,7 @@ def load_skills_library() -> Dict[str, Dict]:
 
 def save_skills_library(library: Dict[str, Dict]) -> None:
     """Persist skills_library.txt, sorted alphabetically (case-insensitive)."""
+    _ensure_parent_dir(SKILLS_LIBRARY_FILE)
     with open(SKILLS_LIBRARY_FILE, "w", encoding="utf-8") as f:
         f.write("# ============================================================\n")
         f.write("# FORGE MASTER — Skills library (level 1)\n")
@@ -552,6 +571,7 @@ def load_zones() -> Dict[str, Dict]:
 
 def save_zones(zones: Dict[str, Dict]) -> None:
     """Persist the full zones dict back to zones.json."""
+    _ensure_parent_dir(ZONES_FILE)
     with open(ZONES_FILE, "w", encoding="utf-8") as f:
         json.dump(zones, f, indent=2)
         f.write("\n")
@@ -588,6 +608,7 @@ def load_window_state() -> Dict[str, str]:
 def save_window_state(state: Dict[str, str]) -> None:
     """Persist the window geometry dict to window.json."""
     try:
+        _ensure_parent_dir(WINDOW_STATE_FILE)
         with open(WINDOW_STATE_FILE, "w", encoding="utf-8") as f:
             json.dump(state, f, indent=2)
             f.write("\n")
