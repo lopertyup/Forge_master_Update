@@ -65,6 +65,12 @@ from backend.stats import (
 
 log = logging.getLogger(__name__)
 
+# ── Debug OCR flag ───────────────────────────────────────────
+# Mettre à True pour activer les dumps d'images et de texte OCR.
+# Mettre à False pour désactiver complètement (aucun import debug_scan).
+DEBUG_OCR: bool = False
+# ────────────────────────────────────────────────────────────
+
 
 class GameController:
     """Bridge between the CTk views and the backend (stats, persistence, sim)."""
@@ -243,15 +249,22 @@ class GameController:
             return
 
         def _run() -> None:
-            from backend import ocr  # lazy import — Pillow only loaded on first scan
+            from backend import ocr          # lazy import — Pillow only loaded on first scan
             from backend.fix_ocr import fix_ocr  # normalize OCR artifacts
+
             if not ocr.is_available():
                 self._dispatch(callback, "", "ocr_unavailable")
                 return
-            # One timestamp identifies every artefact produced by THIS scan
-            # call (images per bbox + the two text files). Guarded so a
-            # debug_scan bug can never break the real scan pipeline.
+
+            # Stamp + debug_scan uniquement si DEBUG_OCR est actif.
             stamp = None
+            if DEBUG_OCR:
+                from backend import debug_scan
+                try:
+                    stamp = debug_scan.new_stamp()
+                except Exception:
+                    log.debug("debug_scan: new_stamp() failed", exc_info=True)
+
             # --- Engine run: a crash here means PaddleOCR itself failed
             #     (bad image, model file missing, etc.). Distinct from the
             #     "engine not installed" branch above.
@@ -265,8 +278,14 @@ class GameController:
                 log.exception("scan(%r, step=%r): OCR engine crashed", zone_key, step)
                 self._dispatch(callback, "", "ocr_error")
                 return
+
             # Dump the raw OCR output — what the engine actually returned
             # before fix_ocr normalisation. Failure is non-fatal.
+            if DEBUG_OCR and stamp is not None:
+                try:
+                    debug_scan.save_text(raw_text, stamp, zone_key, "ocr_raw")
+                except Exception:
+                    log.debug("debug_scan: ocr_raw dump skipped", exc_info=True)
 
             # --- Normalize the raw OCR output BEFORE handing it to the UI:
             # fixes brackets, Lv. prefixes, spacing, stat names, and drops
@@ -285,8 +304,15 @@ class GameController:
                 log.exception("scan(%r, step=%r): fix_ocr crashed — using raw text",
                               zone_key, step)
                 text = raw_text
+
             # Dump the POST fix_ocr text — side-by-side with ocr_raw this
             # makes it trivial to see what the normaliser changed.
+            if DEBUG_OCR and stamp is not None:
+                try:
+                    debug_scan.save_text(text, stamp, zone_key, "ocr_fixed")
+                except Exception:
+                    log.debug("debug_scan: ocr_fixed dump skipped", exc_info=True)
+
             status = "ok" if text.strip() else "empty"
             self._dispatch(callback, text, status)
 

@@ -1,33 +1,23 @@
 """
 ============================================================
-  FORGE MASTER — OCR module (PaddleOCR-based)
+  FORGE MASTER — OCR module (RapidOCR-based)
 
-  Single place that knows about Pillow + the deep-learning
-  OCR engine. Everything else talks to this module via four
-  functions:
+  Single place that knows about Pillow + RapidOCR.
+  Everything else talks to this module via four functions:
 
       is_available()       -> bool
       capture_region(bbox) -> PIL.Image | None
       ocr_image(img)       -> str
       run_ocr(bboxes)      -> str   # concat "\\n\\n"
 
-  Engine: PaddleOCR family. Two install flavours are
-  supported, auto-selected at first call:
+  Engine: rapidocr_onnxruntime (PP-OCR model via ONNX Runtime).
 
-    1. rapidocr_onnxruntime  (preferred: ~20 MB, pure CPU,
-                              ships the same PP-OCR model as
-                              PaddleOCR via ONNX Runtime)
-    2. paddleocr             (fallback: heavier, pulls the
-                              full paddlepaddle framework,
-                              same model, same accuracy)
-
-  Install one of:
-      pip install rapidocr_onnxruntime pillow
-      pip install paddleocr paddlepaddle pillow
+  Install:
+      pip install rapidocr-onnxruntime pillow
 
   All imports are LAZY: an app booted without OCR deps pays
   no cost and never crashes at boot; is_available() simply
-  reports False until a backend is found.
+  reports False until the backend is found.
 ============================================================
 """
 
@@ -42,27 +32,24 @@ Bbox = Tuple[int, int, int, int]
 
 # Lazy cache. `_available` is tri-state:
 #   None  = not yet checked
-#   True  = OCR stack ready (Pillow + a DL backend loaded)
-#   False = OCR unavailable (missing Pillow or no backend)
+#   True  = OCR stack ready (Pillow + RapidOCR loaded)
+#   False = OCR unavailable (missing Pillow or RapidOCR)
 _available:   Optional[bool] = None
-_ImageGrab               = None     # PIL.ImageGrab
-_PIL_Image               = None     # PIL.Image
-_engine_name: Optional[str] = None  # "rapidocr" | "paddleocr"
-_engine:                 object = None  # the instantiated engine
+_ImageGrab               = None
+_PIL_Image               = None
+_engine:                 object = None
 
 
 def _init() -> bool:
-    """Locate an available PaddleOCR-family backend and initialise it.
+    """Locate RapidOCR and initialise it.
 
-    Tries rapidocr_onnxruntime first (lighter), then paddleocr.
-    Both are imported lazily so a boot without DL deps costs nothing.
+    Imported lazily so a boot without DL deps costs nothing.
     Returns True on success, False otherwise (with a warning log).
     """
-    global _available, _ImageGrab, _PIL_Image, _engine, _engine_name
+    global _available, _ImageGrab, _PIL_Image, _engine
     if _available is not None:
         return _available
 
-    # PIL is required for screen capture either way.
     try:
         from PIL import ImageGrab as _IG
         from PIL import Image as _Im
@@ -71,11 +58,9 @@ def _init() -> bool:
         _available = False
         return False
 
-    # --- Backend #1: rapidocr_onnxruntime (preferred) ---
     try:
         from rapidocr_onnxruntime import RapidOCR  # type: ignore
         _engine = RapidOCR()
-        _engine_name = "rapidocr"
         _ImageGrab = _IG
         _PIL_Image = _Im
         _available = True
@@ -84,22 +69,8 @@ def _init() -> bool:
     except Exception as e:
         log.debug("rapidocr_onnxruntime unavailable: %s", e)
 
-    # --- Backend #2: paddleocr (fallback) ---
-    try:
-        from paddleocr import PaddleOCR  # type: ignore
-        _engine = PaddleOCR(use_angle_cls=False, lang="en", show_log=False)
-        _engine_name = "paddleocr"
-        _ImageGrab = _IG
-        _PIL_Image = _Im
-        _available = True
-        log.info("OCR ready — engine: paddleocr")
-        return True
-    except Exception as e:
-        log.debug("paddleocr unavailable: %s", e)
-
     log.warning(
-        "OCR disabled: install `rapidocr_onnxruntime` (recommended) "
-        "or `paddleocr paddlepaddle` to enable it."
+        "OCR disabled: install `rapidocr-onnxruntime pillow` to enable it."
     )
     _available = False
     return False
@@ -108,12 +79,6 @@ def _init() -> bool:
 def is_available() -> bool:
     """Public flag: True if capture + OCR will work."""
     return _init()
-
-
-def engine_name() -> Optional[str]:
-    """Return the name of the selected backend, or None if unavailable."""
-    _init()
-    return _engine_name
 
 
 def capture_region(bbox: Bbox):
@@ -128,11 +93,8 @@ def capture_region(bbox: Bbox):
 
 
 def _to_numpy(img):
-    """Convert a PIL image to an RGB numpy array (both engines want np).
-
-    Imported lazily so numpy is only required at the first OCR call.
-    """
-    import numpy as np  # local import
+    """Convert a PIL image to an RGB numpy array."""
+    import numpy as np
     return np.array(img.convert("RGB"))
 
 
@@ -151,42 +113,22 @@ def _lines_from_rapidocr(result) -> List[str]:
     return out
 
 
-def _lines_from_paddleocr(result) -> List[str]:
-    # PaddleOCR returns [[box, (text, conf)], ...] wrapped in an outer
-    # list (one entry per image).
-    if not result:
-        return []
-    out: List[str] = []
-    inner = result[0] if result and isinstance(result[0], list) else result
-    for item in inner or []:
-        try:
-            text = item[1][0].strip()
-        except Exception:
-            continue
-        if text:
-            out.append(text)
-    return out
-
-
 def ocr_image(
     img,
     debug_stamp: Optional[str] = None,
     debug_zone:  Optional[str] = None,
     debug_step:  Optional[int] = None,
 ) -> str:
-    """OCR a PIL image via the selected backend.
+    """OCR a PIL image via RapidOCR.
 
     The image goes through `fix_ocr.recolour_ui_labels()` first, which
     re-paints every pixel belonging to the game's rarity/epoch label
-    palette (red, cyan, green, yellow, purple, teal, brown, orange) —
-    including their anti-aliased halos — with a uniform dark blue so
-    PaddleOCR reads them at consistent contrast. No-op on captures
-    that contain no coloured labels, so it's safe to call always.
+    palette with a uniform replacement colour so RapidOCR reads them
+    at consistent contrast.
 
     When `debug_stamp` and `debug_zone` are provided, both the raw
     input image AND the recoloured image are saved under
-    <project_root>/debug_scan/ — see backend.debug_scan for the file
-    naming scheme.
+    <project_root>/debug_scan/.
 
     Returns a `\\n`-joined string, one line per detected text box,
     top-to-bottom as returned by the engine. '' on failure.
@@ -194,7 +136,6 @@ def ocr_image(
     if img is None or not _init():
         return ""
     try:
-        # Optional debug dump: the RAW capture, before pre-processing.
         if debug_stamp is not None and debug_zone is not None:
             try:
                 from . import debug_scan
@@ -202,12 +143,9 @@ def ocr_image(
             except Exception:
                 log.debug("debug_scan raw dump skipped", exc_info=True)
 
-        # Image-level pre-processing (lives in fix_ocr for logical
-        # grouping: every OCR-quality improvement is in that module).
         from .fix_ocr import recolour_ui_labels
         img = recolour_ui_labels(img)
 
-        # Optional debug dump: the PROCESSED image, what the engine sees.
         if debug_stamp is not None and debug_zone is not None:
             try:
                 from . import debug_scan
@@ -216,17 +154,11 @@ def ocr_image(
                 log.debug("debug_scan processed dump skipped", exc_info=True)
 
         arr = _to_numpy(img)
-        if _engine_name == "rapidocr":
-            result, _elapsed = _engine(arr)                 # type: ignore[misc]
-            lines = _lines_from_rapidocr(result)
-        elif _engine_name == "paddleocr":
-            result = _engine.ocr(arr, cls=False)            # type: ignore[attr-defined]
-            lines = _lines_from_paddleocr(result)
-        else:
-            return ""
+        result, _elapsed = _engine(arr)  # type: ignore[misc]
+        lines = _lines_from_rapidocr(result)
         return "\n".join(lines)
     except Exception as e:
-        log.warning("ocr_image() failed (%s): %s", _engine_name, e)
+        log.warning("ocr_image() failed: %s", e)
         return ""
 
 
@@ -237,8 +169,7 @@ def run_ocr(
 ) -> str:
     """Capture + OCR each bbox, join results with blank lines.
 
-    Empty / failed bboxes are silently skipped — the caller can detect
-    'totally empty output' by checking the return string itself.
+    Empty / failed bboxes are silently skipped.
 
     When `debug_stamp` and `debug_zone` are supplied, each bbox's raw
     capture and its recoloured variant are written to debug_scan/

@@ -57,7 +57,7 @@ from typing import Any, Dict, List, NamedTuple, Optional
 # distinctive blue has the same luminance contrast as black
 # against light backgrounds but keeps glyph edges clean.
 
-LABEL_REPLACEMENT_COLOR = (0x2B, 0x17, 0xD2)  # dark blue (#2B17D2)
+LABEL_REPLACEMENT_COLOR = (0x1C, 0xAF, 0xFF)  # cyan           (#1CAFF)
 
 # Forge Master UI label palette.
 #
@@ -74,6 +74,7 @@ UI_LABEL_COLORS = (
     (0xF8, 0xFF, 0x1C),  # yellow     — [Modern]
     (0xAA, 0x1C, 0xFF),  # purple     — [Interstellar]
     (0x2D, 0xFF, 0xDA),  # teal       — [Multiverse]
+    (0x3B, 0x17, 0xD2),  # dark blue  — [Quantum]
     (0x6F, 0x30, 0x31),  # brown      — [Underworld]
     (0xFF, 0x57, 0x01),  # orange     — [Divine]
 )
@@ -345,10 +346,21 @@ def _normalize_line(line: str) -> str:
         line,
     )
 
+    # 2ter. Parenthèses OCR → crochets : (Quantum] ou (Quantum) → [Quantum]
+    line = re.sub(r"[\(\[]([A-Za-z][A-Za-z\s\-_]*?)[\)\]]", r"[\1]", line)
+
     # 3. Rarity bracket casing: [interstellar] → [Interstellar].
     line = re.sub(
         r"\[([a-z])([A-Za-z]*)\]",
         lambda m: "[" + m.group(1).upper() + m.group(2) + "]",
+        line,
+    )
+
+    # 2quater. 'T' en début de mot suivi d'un label connu → crochet
+    # TUltimate] → [Ultimate], TMedieval] → [Medieval]
+    line = re.sub(
+        r"(?<!\w)T([A-Za-z][A-Za-z\s\-_]*?\])",
+        lambda m: "[" + _fuzzy_bracket_label(m.group(1).rstrip("]")) + "]",
         line,
     )
 
@@ -418,10 +430,12 @@ def _normalize_line(line: str) -> str:
     # 10. Generic CamelCase split for item / skill names.
     line = re.sub(r"([a-z])([A-Z])", r"\1 \2", line)
 
-    # 11bis. Strip single parasitic letter glued after a known stat name.
-    # e.g. "1.84m Health A" → "1.84m Health", "247k Damage B" → "247k Damage"
+    # 11bis. Strip tout caractère parasite collé après une stat flat connue.
+    # "1.84m Health A" → "1.84m Health"
+    # "228k Damage/"   → "228k Damage"
+    # "183k Damage V"  → "183k Damage"
     line = re.sub(
-        r"(\b(?:Health|Damage))\s+[A-Z]\b(?!\w)",
+        r"(\b(?:Health|Damage))\s*[^%\d\+\-\n\r]*$",
         r"\1",
         line,
     )

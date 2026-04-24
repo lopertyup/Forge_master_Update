@@ -7,88 +7,79 @@
 rarity       = legendary
 hp_flat      = 8000000.0
 damage_flat  = 1000000.0
-skills       = 2
 
 [Brown Horse]
 rarity       = rare
 hp_flat      = 80000.0
 damage_flat  = 10000.0
-skills       = 1
 
 [Brown Leaf]
 rarity       = common
 hp_flat      = 2400.0
 damage_flat  = 300.0
-skills       = 1
+
+[Cino]
+rarity       = rare
+hp_flat      = 83200.0
+damage_flat  = 10400.0
 
 [Crab]
 rarity       = rare
 hp_flat      = 80000.0
 damage_flat  = 10000.0
-skills       = 1
 
 [Dino]
 rarity       = rare
 hp_flat      = 80000.0
 damage_flat  = 10000.0
-skills       = 1
 
 [Giant Bee]
 rarity       = legendary
 hp_flat      = 8000000.0
 damage_flat  = 1000000.0
-skills       = 2
 
 [Goat]
 rarity       = epic
 hp_flat      = 1600000.0
 damage_flat  = 200000.0
-skills       = 1
 
 [HoverBoard]
 rarity       = mythic
 hp_flat      = 64000000.0
 damage_flat  = 8000000.0
-skills       = 2
 
 [HoverDisk]
 rarity       = mythic
 hp_flat      = 64000000.0
 damage_flat  = 8000000.0
-skills       = 2
 
 [Lily Leaf]
 rarity       = common
 hp_flat      = 2400.0
 damage_flat  = 300.0
-skills       = 1
 
 [Lily Pad]
 rarity       = common
 hp_flat      = 2400.0
 damage_flat  = 300.0
-skills       = 1
 
 [Mini Dragon]
 rarity       = ultimate
 hp_flat      = 28000000.0
 damage_flat  = 3500000.0
-skills       = 2
 
 [OneWheel Droid]
 rarity       = ultimate
 hp_flat      = 28000000.0
 damage_flat  = 3500000.0
-skills       = 2
 
 [Pig]
 rarity       = epic
 hp_flat      = 1600000.0
 damage_flat  = 200000.0
-skills       = 1
 
 [Turtle]
 rarity       = rare
 hp_flat      = 80000.0
 damage_flat  = 10000.0
-skills       = 1
+
