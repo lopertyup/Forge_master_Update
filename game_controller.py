@@ -245,17 +245,13 @@ class GameController:
         def _run() -> None:
             from backend import ocr  # lazy import — Pillow only loaded on first scan
             from backend.fix_ocr import fix_ocr  # normalize OCR artifacts
-            from backend import debug_scan      # dumps raw/processed images + text
             if not ocr.is_available():
                 self._dispatch(callback, "", "ocr_unavailable")
                 return
             # One timestamp identifies every artefact produced by THIS scan
             # call (images per bbox + the two text files). Guarded so a
             # debug_scan bug can never break the real scan pipeline.
-            try:
-                stamp = debug_scan.new_stamp()
-            except Exception:
-                stamp = None
+            stamp = None
             # --- Engine run: a crash here means PaddleOCR itself failed
             #     (bad image, model file missing, etc.). Distinct from the
             #     "engine not installed" branch above.
@@ -271,11 +267,7 @@ class GameController:
                 return
             # Dump the raw OCR output — what the engine actually returned
             # before fix_ocr normalisation. Failure is non-fatal.
-            if stamp is not None:
-                try:
-                    debug_scan.save_text(raw_text, stamp, zone_key, "ocr_raw")
-                except Exception:
-                    log.debug("debug_scan: ocr_raw dump skipped", exc_info=True)
+
             # --- Normalize the raw OCR output BEFORE handing it to the UI:
             # fixes brackets, Lv. prefixes, spacing, stat names, and drops
             # UI artifacts (player-name blobs, timers, [-FR-] tags, etc.).
@@ -295,11 +287,6 @@ class GameController:
                 text = raw_text
             # Dump the POST fix_ocr text — side-by-side with ocr_raw this
             # makes it trivial to see what the normaliser changed.
-            if stamp is not None:
-                try:
-                    debug_scan.save_text(text, stamp, zone_key, "ocr_fixed")
-                except Exception:
-                    log.debug("debug_scan: ocr_fixed dump skipped", exc_info=True)
             status = "ok" if text.strip() else "empty"
             self._dispatch(callback, text, status)
 
