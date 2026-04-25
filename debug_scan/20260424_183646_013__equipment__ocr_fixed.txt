@@ -1,3 +1,0 @@
-[Quantum] Energy Helmet
-1.78m Health
-+12.1% Lifesteal

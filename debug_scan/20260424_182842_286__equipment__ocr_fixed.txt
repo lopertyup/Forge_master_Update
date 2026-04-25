@@ -1,4 +1,0 @@
-[Divine] Divinity Ring
-9.33b Damage
-+20.4% Critical Damage
-+24.4% Attack Speed

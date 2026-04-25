@@ -1,4 +1,0 @@
-[Divine] staff
-13.8b Damage
-+11.8% Critical Chance
-+8.13% Lifesteal

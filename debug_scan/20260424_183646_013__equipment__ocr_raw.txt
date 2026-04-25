@@ -1,5 +1,0 @@
-Equipped
-(Quantum] Energy Helmet
-1.78mHealth
-LV:98
-+12.1%LiFesteal
