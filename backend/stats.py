@@ -14,7 +14,11 @@ from typing import Dict, Optional
 from .constants import (
     ATTACK_INTERVAL,
     PERCENT_STATS_KEYS,
+    PVP_HP_BASE_MULTIPLIER,
+    PVP_HP_MOUNT_MULTIPLIER,
     PVP_HP_MULTIPLIER,
+    PVP_HP_PET_MULTIPLIER,
+    PVP_HP_SKILL_MULTIPLIER,
 )
 
 
@@ -102,17 +106,18 @@ def swing_time_double(
 ) -> float:
     """Double-attack cycle: single cycle + a stepped 0.25 s gap.
 
-    The second hit is fired sequentially after a 0.25 s window
-    that is also subject to the 0.1 s tick. The fixed 0.2 s
-    post-attack delay is added a second time after the second
-    hit.
+    Confirmed against the in-game UI: a double swing is one full
+    single cycle (windup + recovery + 0.2 s post) plus a stepped
+    0.25 s sequential gap to the second hit. The 0.2 s post-attack
+    window is *not* paid a second time -- the next swing starts
+    immediately after the second projectile is fired.
     """
     mult = speed_mult(attack_speed_pct)
     if mult <= 0:
         mult = 1.0
     base = swing_time_discrete(windup, recovery, attack_speed_pct)
     gap  = _step_down(DOUBLE_ATTACK_GAP / mult)
-    return base + gap + POST_ATTACK_FIXED
+    return base + gap
 
 
 def swing_time(
@@ -188,12 +193,77 @@ def combat_stats(profile: Dict) -> Dict:
         "attack_type":     profile.get("attack_type",    "melee"),
         "weapon_windup":   profile.get("weapon_windup"),
         "weapon_recovery": profile.get("weapon_recovery"),
+        # Per-source HP sub-totals AFTER health_pct is applied.
+        # Optional -- when absent the simulator falls back to the
+        # legacy single-multiplier path on hp_total. The controller
+        # injects them via compute_hp_buckets() so the PvP engine
+        # can apply 1.0 / 0.5 / 0.5 / 2.0 to equip / pet / skill /
+        # mount independently.
+        "hp_equip":          profile.get("hp_equip"),
+        "hp_pet":            profile.get("hp_pet"),
+        "hp_mount":          profile.get("hp_mount"),
+        "hp_skill_passive":  profile.get("hp_skill_passive"),
         # Travel time of the weapon's projectile in seconds. 0.0 for
         # melee or unknown weapons; > 0 for ranged. The simulator
         # queues a deferred impact when this is > 0 so a slow
         # projectile (Tomahawk, Rock) doesn't deal damage on the
         # same tick the swing was released.
         "projectile_travel_time": profile.get("projectile_travel_time", 0.0),
+    }
+
+
+def compute_hp_buckets(
+    profile: Dict,
+    pets:    Optional[Dict[str, Dict]] = None,
+    mount:   Optional[Dict] = None,
+    skills:  Optional[list] = None,
+) -> Dict[str, float]:
+    """Decompose ``profile.hp_total`` into 4 source buckets.
+
+    Pets, mount and skill passives store their HP contributions
+    individually (``hp_flat`` for companions, ``passive_hp`` for
+    skills), so we sum them here and treat the rest of ``hp_base``
+    as the equipment bucket (which also includes the 80 HP player
+    base). Each bucket is then scaled by ``(1 + health_pct/100)``
+    -- the same global multiplier the game applies on the in-game
+    Total HP display -- so the four returned values sum back to
+    ``hp_total`` exactly.
+
+    Returns ``{"hp_equip", "hp_pet", "hp_mount", "hp_skill_passive"}``,
+    every value in absolute (post-percentage) HP units. Caller may
+    inject this dict directly into the combat stats dict; the
+    simulator picks them up and applies the per-source PvP
+    weighting.
+    """
+    hp_base = float(profile.get("hp_base", 0.0) or 0.0)
+
+    pet_pre = 0.0
+    if isinstance(pets, dict):
+        for entry in pets.values():
+            if isinstance(entry, dict):
+                pet_pre += float(entry.get("hp_flat", 0.0) or 0.0)
+
+    mount_pre = 0.0
+    if isinstance(mount, dict):
+        mount_pre = float(mount.get("hp_flat", 0.0) or 0.0)
+
+    skill_pre = 0.0
+    if skills:
+        for item in skills:
+            data = item[1] if isinstance(item, tuple) else item
+            if isinstance(data, dict):
+                skill_pre += float(data.get("passive_hp", 0.0) or 0.0)
+
+    equip_pre = hp_base - pet_pre - mount_pre - skill_pre
+    if equip_pre < 0.0:
+        equip_pre = 0.0
+
+    mult = 1.0 + float(profile.get("health_pct", 0.0) or 0.0) / 100.0
+    return {
+        "hp_equip":         equip_pre  * mult,
+        "hp_pet":           pet_pre    * mult,
+        "hp_mount":         mount_pre  * mult,
+        "hp_skill_passive": skill_pre  * mult,
     }
 
 
@@ -248,7 +318,7 @@ def apply_skill(profile: Dict, old: Dict, new_s: Dict) -> Dict:
     """
     Replace one equipped skill with another. Only the always-on
     PASSIVE part (passive_damage / passive_hp) feeds into the
-    profile — the active part (damage/hits/cooldown/buff_*) is
+    profile -- the active part (damage/hits/cooldown/buff_*) is
     consumed at simulation time by SkillInstance.
     """
     new = dict(profile)
@@ -268,22 +338,48 @@ apply_mount = apply_companion
 # ════════════════════════════════════════════════════════════
 
 def pvp_hp_total(stats: Dict) -> float:
-    """Final HP pool used as the fighter's hp_max: ``hp_total × 5``."""
-    return float(stats.get("hp_total", 0.0) or 0.0) * PVP_HP_MULTIPLIER
+    """Final HP pool used as the fighter's hp_max.
+
+    Two paths:
+      * Per-source weighted sum (preferred). When the combat
+        stats dict carries the four sub-totals -- hp_equip,
+        hp_pet, hp_mount, hp_skill_passive -- the pool is:
+
+            equip * PVP_HP_BASE_MULTIPLIER
+          + pet   * PVP_HP_PET_MULTIPLIER
+          + skill * PVP_HP_SKILL_MULTIPLIER
+          + mount * PVP_HP_MOUNT_MULTIPLIER
+
+        which mirrors data/PvpBaseConfig.json (1.0 / 0.5 / 0.5 /
+        2.0). The controller fills these via compute_hp_buckets
+        before each simulate(); the enemy pipeline fills them in
+        EnemyComputedStats.
+
+      * Legacy fallback. When none of the four keys are present,
+        the function falls back to hp_total * PVP_HP_MULTIPLIER
+        with the historical 5.0 factor (back-compat for tests
+        and partial profiles).
+    """
+    eq = stats.get("hp_equip")
+    pe = stats.get("hp_pet")
+    mo = stats.get("hp_mount")
+    sk = stats.get("hp_skill_passive")
+    if eq is None and pe is None and mo is None and sk is None:
+        return float(stats.get("hp_total", 0.0) or 0.0) * PVP_HP_MULTIPLIER
+    eq = float(eq or 0.0)
+    pe = float(pe or 0.0)
+    mo = float(mo or 0.0)
+    sk = float(sk or 0.0)
+    return (eq * PVP_HP_BASE_MULTIPLIER
+            + pe * PVP_HP_PET_MULTIPLIER
+            + sk * PVP_HP_SKILL_MULTIPLIER
+            + mo * PVP_HP_MOUNT_MULTIPLIER)
 
 
 def pvp_regen_per_second(stats: Dict) -> float:
     """
     Regen amount per second. Computed on the PRE-PvP HP (hp_total),
-    not on the ×5 pool, so it's weaker in relative terms. Only kicks
-    in while the fighter is below its current hp_max (handled by the
-    simulator).
-    """
-    hp_total  = float(stats.get("hp_total",     0.0) or 0.0)
-    regen_pct = float(stats.get("health_regen", 0.0) or 0.0)
-    return hp_total * regen_pct / 100.0
- amount per second. Computed on the PRE-PvP HP (hp_total),
-    not on the ×5 pool, so it's weaker in relative terms. Only kicks
+    not on the x5 pool, so it's weaker in relative terms. Only kicks
     in while the fighter is below its current hp_max (handled by the
     simulator).
     """

@@ -45,8 +45,25 @@ COMPANION_MAX_DURATION  = 60.0    # same cap for swap-comparison fights
 N_SIMULATIONS           = 1000    # number of fights per test
 
 # ── PvP model ───────────────────────────────────────────────
-# HP pool = hp_total × PVP_HP_MULTIPLIER, same scaling for both sides.
-# Regen is computed on hp_total (pre-PvP), not on the ×5 pool.
+# Per-source HP pool weighting -- mirrors data/PvpBaseConfig.json
+# (PvpHpBaseMultiplier / PvpHpPetMultiplier / PvpHpSkillMultiplier
+# / PvpHpMountMultiplier). When the controller injects the per-
+# bucket sub-totals into the combat stats dict, Fighter.__init__
+# uses:
+#     hp_pool = hp_equip          * PVP_HP_BASE_MULTIPLIER
+#             + hp_pet            * PVP_HP_PET_MULTIPLIER
+#             + hp_skill_passive  * PVP_HP_SKILL_MULTIPLIER
+#             + hp_mount          * PVP_HP_MOUNT_MULTIPLIER
+# Regen stays computed on hp_total (pre-PvP), not on the pool, so
+# it scales proportionally weaker in PvP.
+PVP_HP_BASE_MULTIPLIER   = 1.0
+PVP_HP_PET_MULTIPLIER    = 0.5
+PVP_HP_SKILL_MULTIPLIER  = 0.5
+PVP_HP_MOUNT_MULTIPLIER  = 2.0
+
+# Legacy global multiplier -- still used by pvp_hp_total() when
+# the per-bucket sub-totals are absent (back-compat fallback for
+# tests / partial profiles).
 PVP_HP_MULTIPLIER        = 5.0
 PVP_RESOLUTION_EPSILON   = 1e-5   # HP% tie threshold at timeout
 
@@ -59,7 +76,19 @@ ATTACK_INTERVAL          = 0.25
 # Fixed base delay before a skill's FIRST cast (same for all
 # skills). The skill_cooldown stat does NOT reduce this delay —
 # it only scales the library cooldown between subsequent casts.
-INITIAL_SKILL_DELAY      = 3.8
+# Measured at 2.87 s in real combat: combat starts at 2:29, the
+# first Lightning cast is observed ~2.95 s later (≈ first hit
+# minus the ~0.1 s cast/hit interval). Range of confidence:
+# 2.5 s – 3.1 s.
+INITIAL_SKILL_DELAY      = 2.87
+
+# Time the two fighters spend running toward each other before the
+# first basic-attack swing can start. Both sides cover the same
+# distance so the delay is symmetric and applied to both Fighters.
+# Real-combat measurement: combat begins at 2:29, fighters stop
+# moving and start their wind-up at 3:81 -> 1.52 s of run-up.
+# Range of confidence: 1.3 s – 1.7 s.
+COMBAT_START_DELAY       = 1.52
 
 # Multi-hit "pure damage" skills release all their hits within
 # this window (seconds) after the cast starts. Exception:
@@ -111,7 +140,7 @@ SKILL_IDENTITY_KEYS = ("__name__", "__rarity__", "__level__")
 SKILL_TYPE_DAMAGE = "damage"
 SKILL_TYPE_BUFF   = "buff"
 
-# Lv.1 always-on passives, keyed by rarity tier (×8 per tier).
+# Lv.1 always-on passives, keyed by rarity tier (x8 per tier).
 # +10 / +80 at Common up to +328k / +2.62M at Mythic.
 SKILL_PASSIVE_LV1 = {
     "common":    {"passive_damage":      10.0, "passive_hp":         80.0},

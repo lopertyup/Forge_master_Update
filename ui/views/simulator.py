@@ -313,23 +313,36 @@ class SimulatorView(ctk.CTkFrame):
             ad = float(recomputed.weapon_attack_duration)
             opp_combat["weapon_windup"]   = wu
             opp_combat["weapon_recovery"] = max(ad - wu, 0.0)
-            # Projectile travel time: 0 for melee, range/speed for
-            # ranged. The simulator queues a deferred impact when
-            # this is > 0 so a slow projectile (e.g. Tomahawk ~0.47s)
-            # doesn't apply damage instantly like a melee weapon.
+            # Projectile travel time: 0 for melee, PVP_COMBAT_DISTANCE
+            # / speed for ranged. We use the PvP-specific distance
+            # (~1.5 units) instead of the weapon's nominal range
+            # (7.0) -- in PvP both fighters close in before firing,
+            # so the actual gap a projectile crosses is far below
+            # AttackRange. Real-combat measurement: Speed-20 weapons
+            # land impacts at ~0.075 s, not 0.35 s.
+            from backend.weapon_projectiles import PVP_COMBAT_DISTANCE
             travel = 0.0
             if recomputed.is_ranged_weapon:
                 speed = float(recomputed.projectile_speed or 0.0)
-                rng = float(recomputed.weapon_attack_range or 0.0)
-                if speed > 0.0 and rng > 0.0:
-                    travel = rng / speed
+                if speed > 0.0:
+                    travel = PVP_COMBAT_DISTANCE / speed
             opp_combat["projectile_travel_time"] = travel
+            # Per-source HP sub-totals -- the simulator picks them
+            # up to apply 1.0/0.5/0.5/2.0 weighting per
+            # PvpBaseConfig.json instead of the legacy global x5.
+            opp_combat["hp_equip"]         = float(recomputed.equip_health)
+            opp_combat["hp_pet"]           = float(recomputed.pet_health)
+            opp_combat["hp_mount"]         = float(recomputed.mount_health)
+            opp_combat["hp_skill_passive"] = float(recomputed.skill_passive_health)
             log.info(
                 "simulator: using recomputed enemy stats — "
                 "HP=%.0f Dmg=%.0f (text-OCR overridden); "
-                "weapon W=%.2fs R=%.2fs travel=%.3fs",
+                "weapon W=%.2fs R=%.2fs travel=%.3fs; "
+                "HP buckets equip=%.0f pet=%.0f mount=%.0f skill=%.0f",
                 recomputed.total_health, recomputed.total_damage,
                 wu, max(ad - wu, 0.0), travel,
+                recomputed.equip_health, recomputed.pet_health,
+                recomputed.mount_health, recomputed.skill_passive_health,
             )
         opp_skills = self.controller.get_skills_from_codes(opp_selected)
 

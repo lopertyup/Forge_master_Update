@@ -90,19 +90,26 @@ def test_discrete_matches_club_at_zero_speed():
 #  swing_time_double
 # ============================================================
 
-def test_double_adds_stepped_gap_and_post():
-    """W=R=0.5, 0% -> 1.2 + floor(2.5)/10 + 0.2 = 1.6 s."""
+def test_double_adds_stepped_gap_only():
+    """Confirmed in real combat (PATCH P4): a double swing is one
+    full single cycle (windup + recovery + 0.2 s post) plus a
+    stepped 0.25 s gap. The 0.2 s post-attack window is NOT paid a
+    second time. W=R=0.5 at 0%: 1.2 + floor(2.5)/10 = 1.4 s.
+    """
     single = swing_time_discrete(0.5, 0.5, 0.0)
     double = swing_time_double  (0.5, 0.5, 0.0)
     expected_gap = math.floor(DOUBLE_ATTACK_GAP * 10) / 10
-    assert double == pytest.approx(single + expected_gap + POST_ATTACK_FIXED)
+    assert double == pytest.approx(single + expected_gap)
 
 
 def test_double_gap_shrinks_with_speed():
-    """At high enough attack speed the 0.25 s gap floors to 0.0 s."""
+    """At high enough attack speed the 0.25 s gap floors to 0.0 s,
+    so swing_time_double collapses to swing_time_discrete (no extra
+    post-attack window after PATCH P4).
+    """
     fast = swing_time_double  (0.5, 0.5, 1000.0)
     base = swing_time_discrete(0.5, 0.5, 1000.0)
-    assert fast == pytest.approx(base + 0.0 + POST_ATTACK_FIXED)
+    assert fast == pytest.approx(base)
 
 
 # ============================================================
@@ -203,7 +210,8 @@ def test_fighter_uses_discrete_when_weapon_windup_present():
     }
     f = Fighter(stats)
     assert f.base_swing_time   == pytest.approx(1.2)
-    assert f.double_swing_time == pytest.approx(1.6)
+    # Double cycle: 1.2 (single) + floor(0.25*10)/10 = 1.4 s after PATCH P4.
+    assert f.double_swing_time == pytest.approx(1.4)
 
 
 def test_fighter_falls_back_to_legacy_when_no_weapon_data():

@@ -127,7 +127,7 @@ def scan_player_weapon_image(
         # Prefer the on-disk JSON; fall back to the static table in
         # weapon_projectiles when ProjectilesLibrary doesn't know
         # this id (tests, malformed data, etc.).
-        from .weapon_projectiles import get_projectile_speed
+        from .weapon_projectiles import get_projectile_speed, PVP_COMBAT_DISTANCE
         speed_lookup = get_projectile_speed(
             weapon_name=None,
             projectile_id=int(proj_id) if isinstance(proj_id, int) else None,
@@ -135,10 +135,14 @@ def scan_player_weapon_image(
         )
         if speed_lookup and speed_lookup > 0.0:
             speed = float(speed_lookup)
-            travel = range_raw / speed if speed > 0 else 0.0
+            # PvP-specific distance, NOT range_raw -- both fighters
+            # close in before firing, so the projectile only crosses
+            # ~1.5 units regardless of the weapon's nominal range.
+            travel = PVP_COMBAT_DISTANCE / speed if speed > 0 else 0.0
         else:
             # Last-resort: the centralised helper applies its own
-            # heuristics (range default = RANGE_RANGED, etc.).
+            # heuristics (range default = RANGE_RANGED, etc.) and
+            # already uses PVP_COMBAT_DISTANCE internally.
             travel = get_travel_time(
                 projectile_id=int(proj_id) if isinstance(proj_id, int) else None,
                 weapon_range=range_raw,

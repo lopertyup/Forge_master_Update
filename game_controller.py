@@ -60,6 +60,7 @@ from backend.stats import (
     apply_pet,
     apply_skill,
     combat_stats,
+    compute_hp_buckets,
     finalize_bases,
 )
 
@@ -438,6 +439,12 @@ class GameController:
             return
 
         sj = combat_stats(profile)
+        # Inject the per-source HP buckets used by the PvP engine.
+        # When the simulator sees them it applies 1.0/0.5/0.5/2.0
+        # to equip/pet/skill/mount instead of the legacy global x5.
+        sj.update(compute_hp_buckets(
+            profile, self._pets, self._mount, self._skills,
+        ))
         se = opponent_stats
 
         def _run() -> None:
@@ -543,11 +550,15 @@ class GameController:
                         name, {k: 0.0 for k in PETS_STATS_KEYS})
                     old_pet_lv1 = self._lv1_version_of(
                         old_pet, self._pets_library)
+                    pets_new_swap = dict(current_pets)
+                    pets_new_swap[name] = new_pet_lv1
                     results[name] = self._compare_profile_vs_profile(
                         new_profile=apply_pet(
                             current_profile, old_pet_lv1, new_pet_lv1),
                         old_profile=current_profile,
                         skills=skills,
+                        pets_new=pets_new_swap,
+                        pets_old=current_pets,
                     )
             except Exception:
                 log.exception("test_pet() raised an exception")
@@ -605,6 +616,8 @@ class GameController:
                         current_profile, old_mount_lv1, new_mount_lv1),
                     old_profile=current_profile,
                     skills=skills,
+                    mount_new=new_mount_lv1,
+                    mount_old=current_mount,
                 )
             except Exception:
                 log.exception("test_mount() raised an exception")
@@ -938,13 +951,17 @@ class GameController:
 
     # ── Internal helper: NEW_ME vs OLD_ME ────────────────────
 
-    @staticmethod
     def _compare_profile_vs_profile(
+        self,
         new_profile: Dict,
         old_profile: Dict,
         skills:      Optional[List] = None,
         skills_new:  Optional[List] = None,
         skills_old:  Optional[List] = None,
+        pets_new:    Optional[Dict] = None,
+        pets_old:    Optional[Dict] = None,
+        mount_new:   Optional[Dict] = None,
+        mount_old:   Optional[Dict] = None,
     ) -> Tuple[int, int, int]:
         """
         Run N_SIMULATIONS fights of new_profile vs old_profile with the
@@ -953,12 +970,27 @@ class GameController:
 
         `skills` provides the same skill list to both sides (pet/mount
         swap tests). For a skill swap test, pass distinct `skills_new`
-        and `skills_old` instead.
+        and `skills_old` instead. The optional `pets_*` / `mount_*`
+        overrides let pet/mount swap tests inject the post-swap state
+        on the relevant side; unspecified sides fall back to the
+        current controller state. Same logic for `skills_*`.
         """
         if skills_new is None: skills_new = skills
         if skills_old is None: skills_old = skills
         sj = combat_stats(new_profile)
         se = combat_stats(old_profile)
+        sj.update(compute_hp_buckets(
+            new_profile,
+            pets_new   if pets_new   is not None else self._pets,
+            mount_new  if mount_new  is not None else self._mount,
+            skills_new if skills_new is not None else self._skills,
+        ))
+        se.update(compute_hp_buckets(
+            old_profile,
+            pets_old   if pets_old   is not None else self._pets,
+            mount_old  if mount_old  is not None else self._mount,
+            skills_old if skills_old is not None else self._skills,
+        ))
         return simulate_batch(sj, se, skills_new, skills_old,
                               n=N_SIMULATIONS,
                               max_duration=COMPANION_MAX_DURATION)
@@ -971,6 +1003,36 @@ class GameController:
         return fmt_number(n)
 
     @staticmethod
+    def rarity_color(rarity: str) -> str:
+        from ui.theme import rarity_color
+        return rarity_color(rarity)
+
+    @staticmethod
+    def stats_display_list() -> List[Tuple[str, str, bool]]:
+        """List (key, label, is_flat) for the detailed display of a profile.
+
+        Order: flat stats first (totals then bases), then substats in the
+        canonical in-game order (crit / block / regen / ... / health).
+        """
+        return [
+            ("hp_total",       "❤  Total HP",          True),
+            ("attack_total",   "⚔  Total ATK",          True),
+            ("hp_base",        "   Base HP",            True),
+            ("attack_base",    "   Base ATK",           True),
+            ("crit_chance",    "🎯 Crit Chance",         False),
+            ("crit_damage",    "💥 Crit Damage",         False),
+            ("block_chance",   "🛡  Block Chance",       False),
+            ("health_regen",   "♻  Health Regen",       False),
+            ("lifesteal",      "🩸 Lifesteal",           False),
+            ("double_chance",  "✌  Double Chance",      False),
+            ("damage_pct",     "⚔  Damage %",           False),
+            ("melee_pct",      "⚔  Melee %",            False),
+            ("ranged_pct",     "⚔  Ranged %",           False),
+            ("attack_speed",   "⚡ Attack Speed",        False),
+            ("skill_damage",   "✨ Skill Damage",        False),
+            ("skill_cooldown", "⏱  Skill Cooldown",     False),
+            ("health_pct",     "❤  Health %",           False),
+        ]
     def rarity_color(rarity: str) -> str:
         from ui.theme import rarity_color
         return rarity_color(rarity)

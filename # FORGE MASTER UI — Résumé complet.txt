@@ -1,0 +1,518 @@
+Voici un résumé exhaustif de l'état du chantier Forge Master UI au 25/04/2026.
+
+---
+
+## 📋 Journal des modifications
+
+| Date  | Module                              | Statut |
+|-------|-------------------------------------|--------|
+| 25/04 | P1 — Multiplicateurs PvP par source | ✅ TERMINÉE (101/101 tests verts) |
+
+### Détail P1 (Multiplicateurs PvP par source)
+- `backend/constants.py` : ajout PVP_HP_BASE_MULTIPLIER (1.0), PVP_HP_PET_MULTIPLIER (0.5), PVP_HP_SKILL_MULTIPLIER (0.5), PVP_HP_MOUNT_MULTIPLIER (2.0). PVP_HP_MULTIPLIER (5.0) gardé en fallback legacy.
+- `backend/stats.py` : `pvp_hp_total()` réécrit en somme pondérée 4-buckets ; nouveau helper `compute_hp_buckets()` ; `combat_stats()` propage les 4 sous-totaux.
+- `backend/enemy_ocr_types.py` : `EnemyComputedStats` étendu avec equip_health / pet_health / mount_health / skill_passive_health.
+- `backend/enemy_stat_calculator.py` : peuple les 4 sous-totaux dans le retour.
+- `game_controller.py` : `simulate()` appelle `compute_hp_buckets()` et injecte ; `_compare_profile_vs_profile()` devenue instance method, accepte les overrides pets_*/mount_*/skills_* pour les swap-tests.
+- `ui/views/simulator.py` : copie les 4 sous-totaux de l'ennemi recompute vers `opp_combat`.
+- `tests/test_weapon_projectiles.py`, `test_player_weapon_scanner.py` : alignés sur PVP_COMBAT_DISTANCE = 1.5 (rattrapage du patch P5).
+- ✅ **101 / 101 tests verts.**
+
+### Fichiers `helper/` à supprimer (déjà implémentés ailleurs)
+- ⚠ `helper/PvpBaseConfig.json` : valeurs maintenant dans `backend/constants.py`. **À supprimer manuellement** (permissions sandbox bloquent le rm).
+- 13 autres JSON dans `helper/` sont des doublons exacts de `data/` (le runtime n'utilise que `data/`). À supprimer aussi : AscensionConfigsLibrary, AutoItemMapping, ItemBalancingConfig, ItemBalancingLibrary, ManualSpriteMapping, MountUpgradeLibrary, PetLibrary, PetUpgradeLibrary, ProjectilesLibrary, SecondaryStatLibrary, SkillLibrary, SkillPassiveLibrary, WeaponLibrary.
+
+---
+
+## 1. Cartographie du dossier
+
+```
+forge_master_UI_Chantier/
+│
+├── main.py / game_controller.py          ← Entrée + bridge UI ↔ backend
+├── ui/                                   ← Interface (CTk)
+│   ├── app.py, theme.py, widgets.py, zone_picker.py, dialogs.py
+│   └── views/  (dashboard, equipment, mount_view, pets_view,
+│                skills_view, simulator, optimizer_view, zones_view)
+│
+├── backend/                              ← RUNTIME = consommé par la simulation
+│   ├── constants.py                      (toutes les constantes globales)
+│   ├── ocr.py / fix_ocr.py / parser.py   (capture + OCR + parse)
+│   ├── stats.py                          (math : équipement, pet, mount, skills,
+│   │                                      swing_time_discrete/double, PvP scalars)
+│   ├── simulation.py                     (Fighter + simulate + simulate_batch)
+│   ├── optimizer.py                      (algorithme génétique substats)
+│   ├── persistence/                      (load/save profile, pets, mount, skills,
+│   │                                      libraries, zones)
+│   ├── library_ops.py                    (helpers pour lookup pet/mount/skill)
+│   ├── library/   pets_library.txt mount_library.txt skills_library.txt
+│   ├── enemy_*  (5 fichiers)             (pipeline reconnaissance ennemi :
+│   │                                      OCR → identification icônes → recalcul HP/Dmg)
+│   ├── player_weapon_scanner.py          (idem mais côté joueur)
+│   ├── weapon_breakpoints.py             (loader des JSON helper/weapon atq speed/)
+│   └── weapon_projectiles.py             (travel time / projectile speeds)
+│
+├── data/                                 ← RUNTIME = données consommées
+│   ├── ItemBalancingLibrary.json, WeaponLibrary.json, ProjectilesLibrary.json
+│   ├── PetLibrary.json, PetUpgradeLibrary.json, MountUpgradeLibrary.json
+│   ├── SkillLibrary.json, SkillPassiveLibrary.json
+│   ├── SecondaryStatLibrary.json, ItemBalancingConfig.json
+│   ├── PvpBaseConfig.json, AscensionConfigsLibrary.json
+│   ├── AutoItemMapping.json, ManualSpriteMapping.json
+│   ├── items/raw/  + items/  (icônes joueur sources et découpées)
+│   └── sprites/    (atlas PNG par âge — utilisés par l'identifier)
+│
+├── icons_checker/                        ← RUNTIME (template-matching joueur/ennemi)
+│   ├── Primitive…Divine/<Slot>/*.png    (230 / 232 items labellisés)
+│   ├── pet_icons/   *.png               (25 pets)
+│   ├── mount_icons/ *.png               (15 mounts)
+│   ├── skill_icons/ *.png               (18 skills)
+│   └── pets/, skills/, mount/  (atlas bruts)
+│
+├── helper/                               ← AIDES DEV — n'interagit PAS avec le runtime
+│   ├── *.ts                              (BattleEngine, PvpBattleEngine, statEngine,
+│   │                                      Items, Mounts, Pets) — sources TS de référence
+│   ├── *.json (~20 fichiers)             (DOUBLONS de data/ – source de vérité d'origine,
+│   │                                      copie utilisée pour rétro-engineering)
+│   ├── icons_checker/                    (DOUBLON de la racine, base pour labelling)
+│   ├── items/                            (atlas PNG — sources)
+│   ├── weapon atq speed/  (62 .txt)      ← Tables de breakpoints par arme.
+│   │                                       LU au runtime via backend/weapon_breakpoints.py
+│   │                                       MAIS les fonctions de ce module ne sont
+│   │                                       JAMAIS appelées par stats.py / simulation.py.
+│   └── CHANTIER_SIMULATION_ENNEMI.md     (état d'avancement de la grosse refonte)
+│
+├── tools/                                ← AIDES DEV — outils manuels (Tk / scripts)
+│   ├── calibrate_offsets.py              (calibrer offsets icônes ennemi)
+│   ├── label_item_sprites.py             (labelliser blobs)
+│   ├── extract_item_blobs.py             (approche abandonnée)
+│   └── ocr_color_sweep.py                (debug OCR)
+│
+├── debug_scan/, debug_test/, logs/, screenshots/, outputs/   (artefacts runtime jetables)
+│
+├── tests/    (101 tests – 8 suites)      ← OK
+│
+├── README.md                             (doc utilisateur)
+├── PATCH_NOTES_SIMULATION.md             (9 patches à appliquer – combat réel vs simulé)
+└── requirements.txt
+```
+
+**Helpers / dev qui n'interagissent PAS avec le runtime** :
+- Tout `helper/*.ts` (BattleEngine.ts, PvpBattleEngine.ts, statEngine.ts, Items.tsx, Mounts.tsx, Pets.tsx, constants.ts) → références TypeScript du jeu, jamais importées.
+- `helper/*.json` → **doublons** de `data/*.json`. Le code lit `data/`. Garder l'un ou l'autre.
+- `helper/items/`, `helper/icons_checker/` → atlas/sources bruts qui ont servi à fabriquer `icons_checker/` racine.
+- `helper/CHANTIER_SIMULATION_ENNEMI.md` → roadmap interne.
+- `tools/*.py` → utilitaires de calibration (Tk), lancés à la main, jamais par l'UI principale.
+- `debug_scan/`, `debug_test/`, `outputs/`, `pytest-cache-files-*`, `__pycache__/` → artefacts jetables.
+
+**Cas particulier** : `helper/weapon atq speed/*.txt` est consommé au runtime par `backend/weapon_breakpoints.py` — c'est donc une donnée RUNTIME placée dans `helper/`. Mais aucune autre partie du backend n'appelle `weapon_breakpoints.py` aujourd'hui (voir audit §4).
+
+---
+
+## 2. Vérification des librairies — toutes les infos requises
+
+| Bibliothèque | Source utilisée | Champs nécessaires | Statut |
+|---|---|---|---|
+| Items joueur (équipement icon → stats) | `data/ItemBalancingLibrary.json` + `icons_checker/<Age>/<Slot>/*.png` | EquipmentStats (Damage, Health, % stats), AttackRange, WindupTime, AttackDuration, ProjectileId | ✅ 230 / 232 (2 manquants signalés dans le chantier) |
+| Pets (icon + level → HP/Dmg) | `data/PetLibrary.json` + `data/PetUpgradeLibrary.json` + `icons_checker/pet_icons/*.png` (25) + `backend/library/pets_library.txt` (Lv1) | LevelInfo, PetStats, type multi (Balanced/Tank/DPS) | ✅ |
+| Mount | `data/MountUpgradeLibrary.json` + `icons_checker/mount_icons/*.png` (15) + `backend/library/mount_library.txt` (Lv1) | LevelInfo, MountStats | ✅ |
+| Skills | `data/SkillLibrary.json` + `data/SkillPassiveLibrary.json` + `icons_checker/skill_icons/*.png` (18) + `backend/library/skills_library.txt` | LevelStats (Damage, Health), Rarity, type | ✅ |
+| Substats (% sur équipement) | `data/SecondaryStatLibrary.json` (lower/upper range par stat) | StatType, Lower/Upper ranges | ✅ |
+| Weapons (windup, recovery, projectile) | `data/WeaponLibrary.json` + `data/ProjectilesLibrary.json` + `helper/weapon atq speed/*.txt` (62) | WindupTime, AttackDuration, AttackRange, ProjectileId, breakpoints précomputés | ✅ |
+| Configs PvP & Balancing | `data/PvpBaseConfig.json`, `data/ItemBalancingConfig.json`, `data/AscensionConfigsLibrary.json` | multipliers PvP, base HP/Dmg, level scaling | ✅ |
+
+→ **Toutes les données nécessaires sont bien présentes**. Les 2 items manquants côté icons_checker sont les seuls trous, déjà identifiés dans le chantier.
+
+---
+
+## 3. Attack Speed — état d'implémentation
+
+### Ce qui est compris et implémenté
+
+`backend/stats.py` modélise correctement le système discret :
+
+```python
+m  = 1 + attack_speed_pct / 100
+sw = floor(windup   / m * 10) / 10      # Rhythmic Windup Step (implicite)
+sr = floor(recovery / m * 10) / 10      # idem côté recovery
+single_cycle = sw + sr + 0.2            # Primary Weapon Cycle
+double_cycle = single_cycle + floor(0.25/m * 10)/10   # Double Attack Cycle
+```
+
+C'est **exactement** la mécanique des trois paliers que tu décris :
+
+| Concept du jeu | Implémentation actuelle |
+|---|---|
+| Primary Weapon Cycle | `swing_time_discrete()` → `sw + sr + 0.2` |
+| Rhythmic Windup Steps | Le `sw = floor(windup/m * 10)/10` reproduit exactement les paliers de la table `rhythmic_windup_steps` |
+| Double Attack Cycle | `swing_time_double()` → cycle + gap steppé de 0.25 s |
+
+### Sur le « Rhythmic Windup » spécifiquement
+
+Tu disais que c'était flou. Voici ma lecture : c'est le **palier auquel passe la phase de windup seule**, indépendamment du cycle global. Dans les fichiers JSON, `rhythmic_windup_steps` est juste la décomposition palier-par-palier du seul windup (la table commence à des seuils plus hauts : pour le Bow, 80.6 % d'AS pour passer windup à 0.5 s, 170.8 % marqué `META` pour 0.3 s, etc.).
+
+**C'est implicitement implémenté** par le `floor(windup/m * 10)/10` du simulateur — le windup baisse par pas de 0.1 s exactement comme dans la table, et le `META` n'est qu'un marqueur visuel d'un palier "ressenti" par l'animation.
+
+**Ce qui n'est pas implémenté** :
+- Le simulateur ne lit jamais directement les fichiers `helper/weapon atq speed/*.txt`. Le module `backend/weapon_breakpoints.py` existe (et est testé) mais aucune autre partie du backend ne l'appelle. Tout le travail est refait à partir du raw `WindupTime` / `AttackDuration` de `WeaponLibrary.json`.
+- Le marqueur `META` n'est exploité nulle part — utile éventuellement pour l'UI ("tu es à 1 palier du META") mais sans impact sur la sim.
+
+### Points de validation
+
+Tests `test_weapon_breakpoints.py` (24 tests) et `test_projectile_simulation.py` (13 tests) verts. Ils valident la formule discrète et le routing legacy. La sim tombe en mode "linéaire legacy" si `weapon_windup` ou `weapon_recovery` manquent dans le profil — donc tant que la zone `player_weapon` n'est pas calibrée, le joueur reste sur l'ancienne formule (ATTACK_INTERVAL / speed_mult).
+
+---
+
+## 4. Audit — désalignements code ↔ vision
+
+### ✅ P0-critique : Multiplicateurs PvP par source — CORRIGÉ (25/04)
+
+**Avant :** `pvp_hp_total()` faisait simplement `hp_total × 5.0`, écrasant toute stratégie mount-heavy / pet-heavy.
+
+**Après :** somme pondérée par source, conformément à `data/PvpBaseConfig.json` :
+```
+hp_pool_pvp = hp_equip × 1.0
+            + hp_pet   × 0.5
+            + hp_skill × 0.5
+            + hp_mount × 2.0
+```
+
+- Sous-totaux exposés côté ennemi via `EnemyComputedStats` (4 nouveaux champs : `equip_health`, `pet_health`, `mount_health`, `skill_passive_health`).
+- Sous-totaux dérivés côté joueur via le helper `compute_hp_buckets(profile, pets, mount, skills)` qui décompose `hp_base`.
+- Le controller injecte les 4 buckets avant chaque `simulate()` et chaque swap-test (pets / mount / skills / equipment).
+- `PVP_HP_MULTIPLIER = 5.0` conservé en **fallback legacy** uniquement (utilisé par les tests qui ne fournissent pas les 4 buckets).
+- 101 / 101 tests verts.
+
+### 🟠 Patches simulation déjà identifiés mais non appliqués (PATCH_NOTES_SIMULATION.md)
+
+Un document de patches détaillé est déjà rédigé, **aucun n'est marqué « fait »**. Récapitulatif :
+
+| # | Patch | Sévérité | Impact |
+|---|---|---|---|
+| P1 | Ajouter `COMBAT_START_DELAY = 1.52 s` | 🔴 | ✅ **DÉJÀ FAIT** côté `constants.py` ET `simulation.py` (Fighter init `swing_timer = -COMBAT_START_DELAY`). À mettre à jour dans le doc. |
+| P2 | Décaler le 2nd hit du double | 🔴 | ✅ **DÉJÀ FAIT** (`_double_fire_gap` + `fire_offset` dans `_perform_attack`). |
+| P3 | Lifesteal à l'impact, pas au tir | 🔴 | ✅ **DÉJÀ FAIT** (`ls_amount` stocké dans `_pending_impacts`, appliqué dans `_apply_impact`). |
+| P4 | `swing_time_double` sans 2× POST_ATTACK_FIXED | 🔴 | ✅ **DÉJÀ FAIT** (`swing_time_double` ne ré-ajoute plus 0.2 s). |
+| P5 | `PVP_COMBAT_DISTANCE = 1.5` au lieu de 7.0 | 🟠 | ✅ **DÉJÀ FAIT** dans `weapon_projectiles.py` (tests alignés le 25/04). |
+| P6 | `INITIAL_SKILL_DELAY = 2.87 s` | 🟠 | ✅ **DÉJÀ FAIT**. |
+| P7 | Skill timer init = INITIAL_SKILL_DELAY | 🟠 | ✅ **DÉJÀ FAIT** (gating via `_first_cast_done`). |
+| P8 | Vérifier double-application `health_pct` | 🟡 | ✅ **RÉSOLU implicitement** par la correction des multiplicateurs PvP par source — l'écart venait du `× 5.0` global appliqué sur un `hp_total` qui incluait déjà `health_pct`. |
+| P9 | Init log : cycle cohérent | 🟡 | À vérifier sur le log courant. |
+
+→ **Le PATCH_NOTES est largement obsolète** : 7/9 patches sont en réalité déjà mergés mais le doc dit `🔲 À faire`. Mettre à jour.
+
+### 🟠 `weapon_breakpoints.py` chargé pour rien
+
+Le module charge les 62 tables précomputées et expose `get_current_cycle`, `get_current_double_cycle`, `get_meta_windup`, etc. Aucun de ces helpers n'est appelé par stats / simulation / controller. Deux options :
+1. **Supprimer** le module et les 62 fichiers `.txt` (la formule discrète recompute tout depuis WeaponLibrary).
+2. **Brancher** : utiliser ces tables pour valider la formule à la volée et exposer dans l'UI le « prochain palier d'AS à atteindre ». Plus stratégique pour l'utilisateur.
+
+### 🟡 Doublons `helper/` ↔ `data/`
+
+Les 14 fichiers JSON de `helper/` sont **strictement identiques** à ceux de `data/` (vérifié par `diff` le 25/04). Le runtime n'utilise que `data/`. **Action :** supprimer `helper/*.json` (14 fichiers). Sandbox sans permissions de delete → à faire manuellement.
+
+### 🟡 Style code non uniforme
+
+Le chantier signale 5 fichiers (`weapon_projectiles.py`, `player_weapon_scanner.py` + 3 tests) qui ne suivent pas le style « pas de type hints, pas de docstrings » du reste du backend. Cosmétique mais à uniformiser.
+
+### 🟡 Bouton UI « Scan weapon » manquant
+
+Le pipeline `scan_player_weapon_image()` est câblé jusqu'au `consume_player_weapon()` du controller, mais aucun bouton ne le déclenche dans `ui/views/simulator.py`. Bloquant pour l'utilisation finale côté joueur.
+
+### 🟡 Calibration zones non faite
+
+`zones.json` peut contenir des bboxes 0,0,0,0 pour `player_weapon` — action utilisateur pure (Zones tab → tracer la bbox).
+
+### 🟡 Tech Tree / Ascension / Skin / Set
+
+Non visibles à l'OCR donc défaut neutre (×1). L'écart `damage_accuracy / health_accuracy` est exposé. Solutions possibles dans le chantier : champ manuel UI, ou inférence à partir de l'écart observé.
+
+---
+
+## 5. Résumé des formules / constantes / formules de simulation
+
+### Constantes principales (`backend/constants.py`)
+
+| Constante | Valeur | Rôle | OK ? |
+|---|---|---|---|
+| `TICK` | 0.01 | pas de simulation (10 ms) | ✅ |
+| `DEFAULT_MAX_DURATION` | 60.0 s | timer match | ✅ identique à `PvpMatchTimerSeconds` |
+| `N_SIMULATIONS` | 1000 | nb de fights par batch | ✅ |
+| `PVP_HP_BASE_MULTIPLIER` | 1.0 | poids HP équipement en PvP | ✅ |
+| `PVP_HP_PET_MULTIPLIER` | 0.5 | poids HP pets en PvP | ✅ |
+| `PVP_HP_SKILL_MULTIPLIER` | 0.5 | poids HP skill passives en PvP | ✅ |
+| `PVP_HP_MOUNT_MULTIPLIER` | 2.0 | poids HP mount en PvP | ✅ |
+| `PVP_HP_MULTIPLIER` | 5.0 | fallback legacy global (utilisé seulement si les 4 buckets sont absents) | ✅ |
+| `PVP_RESOLUTION_EPSILON` | 1e-5 | seuil draw timeout | ✅ |
+| `ATTACK_INTERVAL` | 0.25 | swing legacy fallback | ✅ |
+| `INITIAL_SKILL_DELAY` | 2.87 s | délai 1er cast skills | ✅ corrigé |
+| `COMBAT_START_DELAY` | 1.52 s | délai run-up | ✅ corrigé |
+| `CAST_BURST_DURATION` | 2.0 s | fenêtre de release multi-hits | ✅ |
+
+### Formules dérivées (`backend/stats.py`)
+
+```
+speed_mult(as_pct)        = 1 + as_pct/100
+crit_multi(crit_dmg_pct)  = 1.172 + crit_dmg_pct/99
+swing_time_discrete       = floor(W/m * 10)/10 + floor(R/m * 10)/10 + 0.2
+swing_time_double         = swing_time_discrete + floor(0.25/m * 10)/10
+
+POST_ATTACK_FIXED         = 0.2 s   (constante interne stats.py)
+DOUBLE_ATTACK_GAP         = 0.25 s  (idem)
+
+pvp_hp_total(s)           = s.hp_equip × 1.0          (somme pondérée par source)
+                          + s.hp_pet   × 0.5
+                          + s.hp_skill × 0.5
+                          + s.hp_mount × 2.0
+                            (fallback s.hp_total × 5.0 si les 4 buckets sont absents)
+compute_hp_buckets(profile, pets, mount, skills) → décompose hp_base en 4 sous-totaux
+                            puis applique (1 + health_pct/100) à chacun.
+pvp_regen_per_second(s)   = s.hp_total × s.health_regen / 100
+                            (calculé sur le hp_total pré-PvP, tick toujours via TICK)
+```
+
+### Calculs ennemi (`backend/enemy_stat_calculator.py`)
+
+```
+item_dmg / item_hp        = Σ (EquipmentStats × 1.01^(level-1))   (1.01 = LevelScalingBase)
+weapon_dmg                = item_dmg du slot Weapon
+pet_dmg / pet_hp          = LevelInfo[level-1] × pet_type_multi   (Balanced 1.0/1.0,
+                                                                   Tank +HP, DPS +Dmg)
+mount_dmg / mount_hp      = LevelInfo[level-1]
+skill_passive             = ⌊LevelStats[level-1].Damage⌋ + ⌊LevelStats[level-1].Health⌋
+
+equip_with_melee  = is_ranged ? weapon_dmg : weapon_dmg × 1.6
+                     (PlayerMeleeDamageMultiplier)
+
+equip_dmg_pool    = (PlayerBaseDamage + equip_with_melee + (item_dmg-weapon_dmg))
+                     × (1 + DamageMulti)
+system_dmg_pool   = (pet_dmg + skill_passive_dmg + mount_dmg)
+                     × (1 + DamageMulti)
+total_damage      = (equip_dmg_pool + system_dmg_pool)
+                     × (1 + (RangedDamageMulti or MeleeDamageMulti))
+
+equip_hp_pool     = (PlayerBaseHealth + item_hp) × (1 + HealthMulti)
+system_hp_pool    = (pet_hp + skill_passive_hp + mount_hp) × (1 + HealthMulti)
+total_health      = equip_hp_pool + system_hp_pool
+
+PlayerBaseDamage  = 10
+PlayerBaseHealth  = 80
+PlayerBaseCritDmg = 0.20
+LevelScalingBase  = 1.01
+```
+
+### Combat FSM (`simulation.py:Fighter`)
+
+```
+Init :
+  hp_max  = pvp_hp_total(stats)        (← 5×, à raffiner par les 4 multipliers)
+  attack  = stats.attack_total
+  base_swing_time   = swing_time_discrete(W, R, AS%)         si W,R connus
+                      sinon legacy ATTACK_INTERVAL/speed_mult
+  double_swing_time = swing_time_double(W, R, AS%)
+  _double_fire_gap  = floor(0.25/speed_mult * 10)/10
+  swing_timer       = -COMBAT_START_DELAY     (run-up)
+  skills            = liste de SkillInstance
+
+Tick (pas dt = 0.01 s) :
+  1. Land arriving projectiles
+  2. Si un combattant tombé → drain phase (projectiles seuls)
+  3. Regen (snapshot par seconde, applied par tick)
+  4. Skills (ordre P/O random) → tick FSM (cooldown→cast→hits)
+  5. Basic attack FSM (ordre P/O random) :
+       swing_timer += dt
+       à expiration : roll double_chance → release 1 ou 2 hits
+       block roll au tir, crit roll au tir, lifesteal stocké et appliqué à l'impact
+  6. t += dt
+
+Fin :
+  Verdict : alive(P)+!alive(O) → WIN, etc.
+  Timeout : compare hp_pct() avec ε
+```
+
+---
+
+## 6. Plan d'action recommandé
+
+### ✅ Priorité 1 — Modèle PvP HP correct (P0) — TERMINÉE le 25/04
+
+Tous les sous-éléments réalisés :
+1. ✅ `EnemyComputedStats` étendu avec les 4 sous-totaux.
+2. ✅ Côté joueur : nouveau helper `compute_hp_buckets()` ; le controller injecte les 4 buckets avant chaque simulate.
+3. ✅ `PVP_HP_BASE_MULTIPLIER`, `PVP_HP_PET_MULTIPLIER`, `PVP_HP_SKILL_MULTIPLIER`, `PVP_HP_MOUNT_MULTIPLIER` ajoutés à `backend/constants.py`.
+4. ✅ `pvp_hp_total()` réécrit en somme pondérée.
+5. ⏳ `PVP_HP_MULTIPLIER = 5.0` conservé en fallback legacy (utilisé par les tests qui ne fournissent pas les buckets) — peut être supprimé après refactor des tests.
+6. ✅ Tests (incluant test_projectile_simulation, test_player_weapon_scanner, test_weapon_projectiles) → 101 / 101 verts.
+7. ✅ P8 résolu implicitement (la double application `health_pct` venait du `× 5.0` sur `hp_total` qui incluait déjà `health_pct`).
+
+### 🔧 Priorité 2 — Redesign partiel de la partie équipements pour simplifier tout le process actuel et future du code
+
+### 🔥 Priorité 2 — Build joueur tracké pièce par pièce (8 slots)
+
+**Objectif.** Aujourd'hui le profil joueur (`profile.txt`) ne stocke que des
+agrégats : `hp_total`, `attack_total`, `hp_base`, `attack_base` + les %
+substats. On ne sait PAS quelles 8 pièces (Helmet, Body, Gloves, Necklace,
+Ring, Weapon, Shoe, Belt) sont équipées, ni à quel niveau, ni leur HP/Dmg
+base individuelle. Cette pièce manquante :
+
+1. force `compute_hp_buckets()` à *décomposer* `hp_base` en buckets en
+   soustrayant pets/mount/skills — fragile si une donnée est désync.
+2. empêche le simulateur de répliquer fidèlement la formule TS du jeu
+   (`equip_with_melee = is_ranged ? weapon_dmg : weapon_dmg × 1.6` exige de
+   connaître `weapon_dmg` séparément du reste).
+3. force le comparateur d'équipement à demander un screenshot side-by-side
+   "Equipped vs NEW!" alors qu'on POURRAIT déjà connaître le `Equipped`.
+4. coupe court à toutes les optimisations futures (suggestion par slot,
+   tracking du progrès, alertes "tu as oublié d'upgrader telle pièce").
+
+**Approche.** L'identification d'icônes + OCR du level + lookup
+`ItemBalancingLibrary` est DÉJÀ implémentée et testée côté ennemi
+(`backend/enemy_pipeline.py` + `enemy_icon_identifier.py` +
+`enemy_stat_calculator._aggregate_items`). Il faut :
+
+- Factoriser ce pipeline pour qu'il prenne aussi un screenshot côté
+  joueur (panel "Equipement" du jeu — 8 slots, layout différent du
+  profil ennemi mais même logique).
+- Persister les 8 IdentifiedItem du joueur dans un nouveau fichier
+  `backend/equipment.txt` (mirroring `pets.txt` / `mount.txt`).
+- Brancher le simulateur sur ces données : `hp_equip` direct, plus de
+  décomposition.
+
+**Recognition strategy — icône d'abord, OCR du nom en backup.**
+
+| Source           | Confiance | Coût            | Décision |
+|------------------|-----------|------------------|----------|
+| Template-match icône (`icons_checker/<Age>/<Slot>/*.png`) | élevée — même librairie que côté ennemi (101 tests verts) | nul (pipeline existant) | **primaire** |
+| OCR du nom de l'item (le bandeau "Lv.81 [Quantum] Gravity Gloves") | bonne, mais sensible aux fautes | faible (déjà OCR'd dans le panel) | **fallback / sanity-check** |
+| OCR du Lv.NN sous l'icône | indispensable pour le scaling | déjà fait par `_extract_level` | **toujours** |
+
+Le `[Rarity]` et le `[Age]` sont aussi extraits par parsing du nom — utiles
+pour valider la rarity inférée par couleur.
+
+**Ce qui reste agrégé.** Les substats `% Crit/Lifesteal/Attack Speed/...`
+restent stockés au niveau profil (comme actuellement). Le jeu ne les
+décompose visuellement par pièce que dans la popup "long-press" — capture
+hors-périmètre pour ce P2. Conséquence : à l'achat d'une nouvelle pièce, le
+comparateur continue de raisonner en deltas (+X% Crit, −Y% Lifesteal) — ce
+qui suffit pour la simulation.
+
+**Données nouvelles persistées.**
+
+Nouveau fichier `backend/equipment.txt` :
+[EQUIP_HELMET]
+name   = Quantum Helmet
+rarity = ultimate
+age    = 7
+idx    = 0
+level  = 87
+hp_flat    = 0.0           # rempli depuis ItemBalancingLibrary × 1.01^(lvl-1)
+damage_flat = 12_345_678.0 # idem
+attack_type = melee        # weapon-only
+[EQUIP_BODY]
+... (même schéma)
+[EQUIP_GLOVES]
+[EQUIP_NECKLACE]
+[EQUIP_RING]
+[EQUIP_WEAPON]
+[EQUIP_SHOE]
+[EQUIP_BELT]
+
+Les 8 sections coexistent (slots vides = sections présentes mais à zéro,
+comme `pets.txt`). Le `__age__` / `__idx__` permettent un re-scan rapide
+sans relancer le template match si on ne fait que mettre à jour le level.
+
+**Mapping des fichiers à toucher.**
+
+| Action | Fichier | Type |
+|---|---|---|
+| Constantes : ajout `EQUIPMENT_FILE`, `EQUIPMENT_SLOTS` (tuple des 8 noms canoniques), `EQUIPMENT_NUMERIC_KEYS`, zone `player_equipment` dans `ZONE_DEFAULTS` | `backend/constants.py` | MODIF |
+| Persistance equipment.txt (load/save 8 slots) | `backend/persistence/equipment.py` | NEW |
+| Re-export `load_equipment` / `save_equipment` | `backend/persistence/__init__.py` | MODIF |
+| Factorisation `identify_equipment_panel(capture, layout)` qui retourne 8 `IdentifiedItem` — partagé entre ennemi et joueur | `backend/enemy_pipeline.py` ou nouveau `backend/equipment_pipeline.py` | REFACTOR |
+| Layout offsets joueur (panel Equipement diffère du panel Opponent — 8 slots disposés différemment) | `data/player_equipment_offsets.json` | NEW |
+| Scanner joueur : capture → identify_all → 8 `IdentifiedItem` → lookup ItemBalancingLibrary → 8 dicts `{name, age, idx, rarity, level, hp_flat, damage_flat, attack_type}` | `backend/player_equipment_scanner.py` | NEW |
+| Cache + consume + branche `scan("player_equipment")` ; load/save equipment ; getter `get_equipment()` | `game_controller.py` | MODIF |
+| `compute_hp_buckets()` privilégie `equipment` quand fourni : `hp_equip = sum(piece.hp_flat for piece in equipment) × (1 + health_pct/100) + 80`. Fallback inchangé (décomposition par soustraction) | `backend/stats.py` | MODIF |
+| Vue UI "🛡  Build actuel" : grille 4×2 (icônes + Lv.NN + main stat), bouton "📷 Scan Build", édition manuelle de chaque slot | `ui/views/build_view.py` | NEW |
+| Vue Zones : entrée pour `player_equipment` (1 capture) | `ui/views/zones_view.py` | MODIF mineur |
+| Comparateur d'équipement : utilise `get_equipment()` pour retrouver la pièce équipée du même slot, plus besoin de capture side-by-side | `ui/views/equipment.py` + `game_controller.compare_equipment` | MODIF |
+| Tests : `test_player_equipment_scanner.py` (4-5 tests sur le path heureux), `test_equipment_persistence.py`, mise à jour `test_smoke.py` | `tests/` | NEW + MODIF |
+| Mise à jour `compute_hp_buckets` dans test_smoke (path préféré) | `tests/test_smoke.py` | MODIF |
+
+**Sous-tâches dans l'ordre d'implémentation.**
+
+1. **P2.1** — Schéma + persistance. `EQUIPMENT_FILE`, `EQUIPMENT_SLOTS`,
+   `backend/persistence/equipment.py` (load/save), `equipment.txt` initial
+   avec 8 sections vides. Tests de round-trip.
+2. **P2.2** — Factoriser `_build_profile()` côté ennemi en exposant un
+   helper `identify_equipment_panel(capture, equipment_offsets, border_offsets, bg_offsets)` réutilisable. Garder l'API
+   `recompute_from_capture()` inchangée.
+3. **P2.3** — `backend/player_equipment_scanner.py` :
+   - prend `PIL.Image` (capture du panel équipement complet)
+   - charge les offsets joueur depuis `data/player_equipment_offsets.json`
+     (avec fallback hard-codé)
+   - appelle `identify_equipment_panel()`
+   - pour chaque slot, fait un lookup `ItemBalancingLibrary` + applique le
+     scaling level (`1.01^(level-1)`) → renvoie 8 dicts ready-to-save
+4. **P2.4** — Zone `player_equipment` dans `ZONE_DEFAULTS` + UI Zones.
+   L'utilisateur calibre la bbox autour du panel des 8 slots.
+5. **P2.5** — Outil de calibration des offsets joueur (équivalent
+   de `tools/calibrate_offsets.py` pour les positions des 8 icônes
+   dans la bbox capturée). Une seule fois, sauve dans
+   `data/player_equipment_offsets.json`.
+6. **P2.6** — Controller : cache `_last_player_equipment` + branche
+   `scan("player_equipment")` + getter / save.
+7. **P2.7** — Vue UI "Build actuel" (grille 4×2 + bouton scan + édition
+   manuelle slot par slot pour les corrections OCR).
+8. **P2.8** — `compute_hp_buckets()` détecte la présence d'`equipment`
+   et calcule `hp_equip` directement au lieu de la soustraction. Fallback
+   inchangé.
+9. **P2.9** — Comparateur : pre-fill l'`Equipped` côté du comparateur
+   depuis `get_equipment()[slot]`, simplifie le screenshot requis (juste
+   la pièce candidate suffit).
+10. **P2.10** — Tests + mise à jour du résumé + nettoyage.
+
+**Question ouverte (à trancher en P2.1 / P2.5).** Le panel "Equipement" du
+jeu côté joueur a-t-il les 8 icônes au même endroit que le panel "Opponent"
+(qui est ce qu'on parse aujourd'hui), ou bien dans une disposition
+différente ? Si différent, P2.5 (calibration manuelle) est obligatoire ;
+si identique, on réutilise `enemy_icon_offsets` tel quel et on saute P2.5.
+À vérifier sur un screenshot.
+
+**Bénéfices induits.**
+
+- `compute_hp_buckets()` devient une simple lecture (plus de soustraction
+  → robustesse).
+- Le comparateur d'équipement n'a plus besoin du screenshot side-by-side.
+- Foundation pour un futur "build optimizer" qui indique qu'elles substats sont a priorisé sur qu'elle pièce d'équipement ou encore un graph de la répartition des substats entre les pièces d'équipements, les pets, les mount...
+- Ouvre la voie à supprimer / fusionner `apply_change()` et la décomposition
+  de `compute_hp_buckets()`.
+
+
+### 🔧 Priorité 3 — Faire converger doc et code
+
+1. Mettre à jour `PATCH_NOTES_SIMULATION.md` : marquer P1, P2, P3, P4, P5, P6, P7 comme `✅ FAIT`. Ne laisser que P8 et P9.
+2. Mettre à jour `helper/CHANTIER_SIMULATION_ENNEMI.md` : section « Style code uniformisé » + « Bouton UI Scan weapon » + « Configuration zone player_weapon » sont les 3 derniers items en cours.
+
+### 🛠 Priorité 4 — Compléter le pipeline joueur (UI)
+
+1. Ajouter le bouton « 📷 Scan weapon » dans `ui/views/simulator.py` (`_build_player_panel`), pattern `attach_scan_button`.
+2. Documenter dans le README la nouvelle zone `player_weapon` à calibrer dans Zones.
+
+### 🧹 Priorité 5 — Nettoyage
+
+1. **Choisir** : soit (a) brancher `weapon_breakpoints.py` pour exposer dans l'UI le « prochain palier AS » et le statut META, soit (b) supprimer le module + les 62 `.txt` (la formule discrète suffit). Mon avis : (a), c'est très exploitable côté optimisation joueur.
+2. Décider du sort de `helper/*.json` (doublons de `data/`). Suggestion : garder uniquement `data/` au runtime, supprimer `helper/*.json` ou marquer `helper/` comme purement pédagogique.
+3. Strip type hints + docstrings sur les 5 fichiers cités dans le chantier pour uniformiser le style.
+4. Compléter les 2 items manquants dans `icons_checker/` (230/232).
+
+### 🔭 Priorité 5 — Tech Tree (futur)
+
+1. Champ « Tech Tree boost % » manuel dans la fiche profil. Plus précis qu'une déduction par écart.
+2. À défaut, exposer `displayed_*` vs `computed_*` dans l'UI joueur en plus du joueur ennemi pour faciliter l'auto-calibration.
+
+---
+
+### En une phrase
+
+Au 25/04 : le pipeline OCR → identification icônes → recalcul HP/Dmg ennemi est **complet et testé** (101/101 tests verts), le modèle PvP HP par source (1.0 / 0.5 / 0.5 / 2.0) est désormais **correctement appliqué**, l'attack speed discret et le projectile travel time sont à jour (P1-P8 du PATCH_NOTES déjà mergés). Restent : **bouton UI Scan weapon manquant**, **`weapon_breakpoints.py` chargé pour rien** (à brancher ou supprimer), **doublons `helper/*.json` à supprimer**, et **Tech Tree à exposer manuellement**.

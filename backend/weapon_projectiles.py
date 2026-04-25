@@ -19,8 +19,17 @@ _DATA_PATH = _ROOT / "data" / "ProjectilesLibrary.json"
 
 # Range constants -- AttackRange in WeaponLibrary is either
 # 0.30 (melee, 36 weapons) or 7.00 (ranged, 27 weapons).
+# These are the in-game weapon "leash" values.
 RANGE_RANGED = 7.0
 RANGE_MELEE  = 0.3
+
+# Effective travel distance in PvP. Both fighters close in until
+# they fire, so the actual gap projectiles cross is far below the
+# weapon's nominal AttackRange. Real-combat measurement on a Speed
+# 20 weapon (Blackgun): impact lands ~0.05-0.10 s after the shot,
+# which puts the effective distance at roughly 1.0-2.0 units. We
+# default to 1.5 -- to be revisited as more capture data comes in.
+PVP_COMBAT_DISTANCE = 1.5
 
 
 # Hardcoded fallback used when ProjectilesLibrary.json cannot be
@@ -109,11 +118,12 @@ def get_travel_time(weapon_name=None, projectile_id=None, lib=None,
                     weapon_range=None):
     """Compute the in-flight delay for one projectile.
 
-    ``weapon_range`` defaults to RANGE_RANGED. When the weapon is
-    melee (range below the ranged threshold) the function shortcuts
-    to 0. When the speed cannot be resolved the function also
-    returns 0 -- callers fall back to the legacy instant-hit
-    behaviour.
+    The distance crossed by a PvP projectile is NOT the weapon's
+    nominal AttackRange (7.0 units) -- in real combat the fighters
+    close in before firing, so the effective gap is closer to
+    PVP_COMBAT_DISTANCE (~1.5 units). ``weapon_range`` is used only to decide whether the weapon is melee (range below
+    the ranged threshold => 0 s travel time); ranged weapons all
+    use PVP_COMBAT_DISTANCE.
     """
     rng = float(weapon_range) if weapon_range is not None else RANGE_RANGED
     if rng < (RANGE_RANGED * 0.5):     # melee weapon, no travel time
@@ -121,7 +131,7 @@ def get_travel_time(weapon_name=None, projectile_id=None, lib=None,
     speed = get_projectile_speed(weapon_name, projectile_id, lib=lib)
     if speed is None or speed <= 0:
         return 0.0
-    return rng / speed
+    return PVP_COMBAT_DISTANCE / speed
 
 
 def clear_cache():

@@ -222,6 +222,17 @@ class EnemyComputedStats:
     total_damage:        float = 0.0
     total_health:        float = 0.0
 
+    # Per-bucket HP sub-totals (post all multi factors but BEFORE
+    # the PvP per-source weighting). Needed by simulation.pvp_hp_total
+    # to apply 1.0 / 0.5 / 0.5 / 2.0 to equip / pet / skill / mount
+    # respectively (PvpBaseConfig.json). Kept alongside the legacy
+    # total_health for back-compat -- callers ignoring them simply
+    # get the same number as before.
+    equip_health:        float = 0.0
+    pet_health:          float = 0.0
+    mount_health:        float = 0.0
+    skill_passive_health: float = 0.0
+
     critical_chance:          float = 0.0
     critical_damage:          float = 1.2   # base 1 + 0.20
     block_chance:             float = 0.0
@@ -238,8 +249,8 @@ class EnemyComputedStats:
     weapon_attack_duration:  float = 1.5
     projectile_speed:        float = 0.0
 
-    # Validation — keep both for downstream consumers.
+    # Validation -- keep both for downstream consumers.
     displayed_damage: float = 0.0
     displayed_health: float = 0.0
-    damage_accuracy:  float = 0.0   # |computed - displayed| / displayed × 100
+    damage_accuracy:  float = 0.0   # |computed - displayed| / displayed * 100
     health_accuracy:  float = 0.0

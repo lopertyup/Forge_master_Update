@@ -13,3 +13,8 @@
 08:26:53 [INFO   ] backend.simulation: simulate_batch: process pool ready (7 workers)
 14:22:46 [INFO   ] __main__: Starting Forge Master UI
 14:24:11 [INFO   ] __main__: Starting Forge Master UI
+16:01:45 [INFO   ] __main__: Starting Forge Master UI
+19:46:54 [INFO   ] __main__: Starting Forge Master UI
+19:46:55 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=7
+20:11:59 [INFO   ] __main__: Starting Forge Master UI
+20:11:59 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=7

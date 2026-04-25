@@ -364,11 +364,10 @@ def calculate_enemy_stats(
     ) * common_damage_multi
 
     equip_contrib_hp = (base_health + item_hp) * equip_health_multi
-    system_contrib_hp = (
-        pets_agg["pet_health"]
-        + skill_agg["skill_passive_health"]
-        + mount_agg["mount_health"]
-    ) * common_health_multi
+    pet_contrib_hp    = pets_agg["pet_health"]            * common_health_multi
+    skill_contrib_hp  = skill_agg["skill_passive_health"] * common_health_multi
+    mount_contrib_hp  = mount_agg["mount_health"]         * common_health_multi
+    system_contrib_hp = pet_contrib_hp + skill_contrib_hp + mount_contrib_hp
 
     damage_before_global = equip_contrib_dmg + system_contrib_dmg
     health_before_global = equip_contrib_hp + system_contrib_hp
@@ -386,6 +385,14 @@ def calculate_enemy_stats(
     final_damage = damage_after_global * specific_damage_multi
     final_health = health_after_global
 
+    # Per-bucket HP sub-totals after the same skin factor as the
+    # aggregate. Used downstream by simulation.pvp_hp_total to
+    # apply the per-source PvP weighting (1.0 / 0.5 / 0.5 / 2.0).
+    equip_health_final = equip_contrib_hp * skin_health_factor
+    pet_health_final   = pet_contrib_hp   * skin_health_factor
+    skill_health_final = skill_contrib_hp * skin_health_factor
+    mount_health_final = mount_contrib_hp * skin_health_factor
+
     # ── Validation ───────────────────────────────────────────
     displayed_dmg = float(profile.total_damage_displayed or 0.0)
     displayed_hp  = float(profile.total_health_displayed or 0.0)
@@ -396,6 +403,10 @@ def calculate_enemy_stats(
     return EnemyComputedStats(
         total_damage=final_damage,
         total_health=final_health,
+        equip_health=equip_health_final,
+        pet_health=pet_health_final,
+        mount_health=mount_health_final,
+        skill_passive_health=skill_health_final,
         critical_chance=crit_chance,
         critical_damage=1.0 + base_crit_damage + crit_damage_extra,
         block_chance=block_chance,

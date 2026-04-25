@@ -33,18 +33,23 @@ import threading
 from typing import Dict, List, Optional, Tuple
 
 from .constants import (
+    COMBAT_START_DELAY,
     DEFAULT_MAX_DURATION,
+    INITIAL_SKILL_DELAY,
     N_SIMULATIONS,
     PVP_RESOLUTION_EPSILON,
     TICK,
 )
 from .stats import (
+    DOUBLE_ATTACK_GAP,
     crit_multi,
     pvp_hp_total,
     pvp_regen_per_second,
+    speed_mult,
     swing_time,
     swing_time_discrete,
     swing_time_double,
+    _step_down,
 )
 
 log = logging.getLogger(__name__)
@@ -90,6 +95,12 @@ class SkillInstance:
         self.buff_timer  = 0.0
         self.atk_bonus   = 0.0
         self.hp_bonus    = 0.0
+        # Every skill -- regardless of its cooldown -- waits the same
+        # INITIAL_SKILL_DELAY before the FIRST cast. Real combat
+        # measurement: Lightning at cd 0% and -9.47% both fire their
+        # first cast around t=2.87 s, never at t=cooldown. After the
+        # first cast we fall back to the regular cooldown gating.
+        self._first_cast_done = False
 
         # Successive hits spread evenly across a fraction of the cooldown
         self.hit_interval = (self.cooldown / self.hits) if self.hits > 1 else 0.0
@@ -104,11 +115,15 @@ class SkillInstance:
             self._tick_cast(dt, target)
         else:
             self.cd_timer += dt
-            if self.cd_timer >= self.cooldown:
+            threshold = (INITIAL_SKILL_DELAY
+                         if not self._first_cast_done
+                         else self.cooldown)
+            if self.cd_timer >= threshold:
                 self.cd_timer   = 0.0
                 self.casting    = True
                 self.cast_timer = 0.0
                 self.hits_fired = 0
+                self._first_cast_done = True
 
     def _tick_cast(self, dt: float, target: "Fighter") -> None:
         self.cast_timer += dt
@@ -135,12 +150,16 @@ class SkillInstance:
                 self.buff_timer  = 0.0
         else:
             self.cd_timer += dt
-            if self.cd_timer >= self.cooldown:
+            threshold = (INITIAL_SKILL_DELAY
+                         if not self._first_cast_done
+                         else self.cooldown)
+            if self.cd_timer >= threshold:
                 self.cd_timer    = 0.0
                 self.buff_active = True
                 self.buff_timer  = 0.0
                 self.atk_bonus   = self.buff_atk
                 self.hp_bonus    = self.buff_hp
+                self._first_cast_done = True
                 carrier.attack += self.atk_bonus
                 carrier.hp_max += self.hp_bonus
                 carrier.hp     += self.hp_bonus
@@ -201,6 +220,17 @@ class Fighter:
         # the queue is flushed independently in the simulator loop.
         self.projectile_travel_time = float(
             stats.get("projectile_travel_time", 0.0) or 0.0)
+        # Sequential gap between the two hits of a double-attack
+        # swing. Same 0.1 s flooring rule as the wind-up/recovery
+        # cycle: floor(0.25 / mult * 10) / 10. Pre-computed once here
+        # since the shooter's attack-speed doesn't change mid-fight.
+        # This delay applies to BOTH ranged and melee doubles --
+        # melee just resolves the offset second hit through the same
+        # pending-impacts queue (with travel_time = 0).
+        _mult_local = speed_mult(self.attack_speed_pct)
+        if _mult_local <= 0:
+            _mult_local = 1.0
+        self._double_fire_gap = _step_down(DOUBLE_ATTACK_GAP / _mult_local)
         # List of (impact_time, damage, lifesteal_amount). Ordered by
         # insertion which is also chronological because every push
         # uses the same travel time.
@@ -210,11 +240,18 @@ class Fighter:
         self.regen_per_sec    = pvp_regen_per_second(stats)
         self._regen_snapshot  = self.regen_per_sec
 
-        # Swing FSM
-        self.swing_timer    = 0.0
+        # Swing FSM. The fighters spend COMBAT_START_DELAY running
+        # toward each other before the first wind-up can begin, so
+        # the swing timer starts negative -- the first swing release
+        # then lands at t = COMBAT_START_DELAY + swing_duration.
+        # _start_swing_after_init() rolls the first double_chance
+        # but leaves swing_timer untouched (still negative), so the
+        # very first release is the only one delayed; subsequent
+        # swings call the regular _start_swing() and behave normally.
+        self.swing_timer    = -COMBAT_START_DELAY
         self.swing_duration = self.base_swing_time
         self.is_double      = False
-        self._start_swing()
+        self._start_swing_after_init()
 
         # Build skill instances
         sd_pct = float(stats.get("skill_damage",   0.0) or 0.0)
@@ -222,6 +259,19 @@ class Fighter:
         self.skills: List[SkillInstance] = [
             SkillInstance(data, sd_pct, sc_pct) for _, data in (active_skills or [])
         ]
+
+    def _start_swing_after_init(self) -> None:
+        """Like _start_swing() but preserves the negative bias from
+        the combat-start delay set in __init__. Called once at the
+        very end of __init__; subsequent swings use _start_swing()
+        which resets the timer to 0.
+        """
+        self.is_double      = (random.random() < self.double_chance)
+        self.swing_duration = (self.double_swing_time
+                               if self.is_double
+                               else self.base_swing_time)
+        # NB: do NOT reset swing_timer here -- it was set to
+        # -COMBAT_START_DELAY just above.
 
     # -- queries --
 
@@ -270,12 +320,16 @@ class Fighter:
         # current target.hp is already <= 0 (the user explicitly asked
         # for "if the target is dead, the impact still arrives but HP
         # stays at zero"). The clamp to zero happens at impact time.
-        hits = 2 if self.is_double else 1
-        for _ in range(hits):
-            self._perform_attack(target, current_time)
+        if self.is_double:
+            self._perform_attack(target, current_time, fire_offset=0.0)
+            self._perform_attack(target, current_time,
+                                 fire_offset=self._double_fire_gap)
+        else:
+            self._perform_attack(target, current_time, fire_offset=0.0)
         self._start_swing()
 
-    def _perform_attack(self, target: "Fighter", current_time: float = 0.0) -> None:
+    def _perform_attack(self, target: "Fighter", current_time: float = 0.0,
+                        fire_offset: float = 0.0) -> None:
         # Block cancels the hit entirely. Resolved at FIRE time so a
         # deferred projectile that was rolled as "blocked" never
         # reaches the queue at all -- mirrors a missed shot.
@@ -286,14 +340,16 @@ class Fighter:
         if rand() < self.crit_chance:
             dmg *= self.crit_multi
         ls_amount = dmg * self.lifesteal if self.lifesteal > 0.0 else 0.0
-        travel = self.projectile_travel_time
-        if travel <= 0.0:
-            # Melee / unknown weapon -> immediate hit & lifesteal.
+        # impact_time = fire_time (current_time + fire_offset)
+        # + projectile travel. fire_offset is non-zero for the second
+        # hit of a double swing.
+        delay = fire_offset + self.projectile_travel_time
+        if delay <= 0.0:
+            # Melee single / first-hit-of-double: immediate landing.
             self._apply_impact(target, dmg, ls_amount)
         else:
-            # Ranged: schedule the impact. The shooter's swing
-            # cooldown is unaffected (handled by _start_swing()).
-            self._pending_impacts.append((current_time + travel, dmg, ls_amount))
+            self._pending_impacts.append(
+                (current_time + delay, dmg, ls_amount))
 
     def _apply_impact(self, target: "Fighter", dmg: float, ls_amount: float) -> None:
         """Land one previously-rolled hit on *target*.

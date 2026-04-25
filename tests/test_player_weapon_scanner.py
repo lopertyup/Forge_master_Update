@@ -78,7 +78,11 @@ def test_scan_pulls_weapon_fields_from_library(monkeypatch):
     assert out["weapon_recovery"] == pytest.approx(0.90)   # 1.20 - 0.30
     assert out["attack_type"]     == "ranged"
     assert out["projectile_speed"] == pytest.approx(25.0)
-    assert out["projectile_travel_time"] == pytest.approx(7.0 / 25.0)
+    # PvP travel uses PVP_COMBAT_DISTANCE (~1.5 u), NOT the weapon's
+    # nominal AttackRange (7.0). Both fighters close in before firing.
+    from backend.weapon_projectiles import PVP_COMBAT_DISTANCE
+    assert out["projectile_travel_time"] == pytest.approx(
+        PVP_COMBAT_DISTANCE / 25.0, abs=1e-6)
 
 
 def test_scan_melee_weapon_zero_travel(monkeypatch):

@@ -39,42 +39,49 @@ def test_melee_range_returns_zero_travel_time():
     assert wp.get_travel_time("Club", weapon_range=0.3) == 0.0
 
 
-def test_ranged_default_uses_full_seven_units():
-    """When weapon_range is omitted the helper assumes RANGE_RANGED=7."""
-    # Bow: speed 20 in fallback table → 7/20 = 0.35 s
-    assert wp.get_travel_time("Bow") == pytest.approx(0.35)
+def test_ranged_default_uses_pvp_combat_distance():
+    """When weapon_range is omitted the helper uses PVP_COMBAT_DISTANCE."""
+    # Bow: speed 20 in fallback table -> 1.5/20 = 0.075 s
+    assert wp.get_travel_time("Bow") == pytest.approx(wp.PVP_COMBAT_DISTANCE / 20.0)
 
 
-def test_explicit_range_overrides_default():
-    """A custom weapon_range scales travel time linearly."""
-    # Bow at half range = 3.5/20 = 0.175 s
-    assert wp.get_travel_time("Bow", weapon_range=3.5) == pytest.approx(0.175)
+def test_explicit_range_passed_only_for_melee_check():
+    """weapon_range is only used to gate melee vs ranged.
+
+    A range below RANGE_RANGED * 0.5 disables travel (melee). Any
+    other value falls through to PVP_COMBAT_DISTANCE / speed -- the
+    nominal AttackRange isn't used as the actual flight distance
+    in PvP.
+    """
+    assert wp.get_travel_time("Bow", weapon_range=3.5) == pytest.approx(
+        wp.PVP_COMBAT_DISTANCE / 20.0)
 
 
 # ============================================================
-#  Per-weapon travel times (cross-checked against the chantier
-#  doc reference table)
+#  Per-weapon travel times (using PVP_COMBAT_DISTANCE = 1.5
+#  units -- both fighters close in before firing, so the
+#  effective gap is far below the weapon's nominal AttackRange).
 # ============================================================
 
 def test_bow_travel_time():
-    """Bow: 7 / 20 u·s⁻¹ = 0.35 s."""
-    assert wp.get_travel_time("Bow") == pytest.approx(0.35)
+    """Bow: 1.5 / 20 = 0.075 s in PvP."""
+    assert wp.get_travel_time("Bow") == pytest.approx(wp.PVP_COMBAT_DISTANCE / 20.0)
 
 
 def test_crossbow_travel_time():
-    """Crossbow: 7 / 25 u·s⁻¹ = 0.28 s."""
-    assert wp.get_travel_time("Crossbow") == pytest.approx(0.28)
+    """Crossbow: 1.5 / 25 = 0.06 s."""
+    assert wp.get_travel_time("Crossbow") == pytest.approx(wp.PVP_COMBAT_DISTANCE / 25.0)
 
 
 def test_quantumstaff_travel_time():
-    """Quantumstaff: 7 / 30 u·s⁻¹ ≈ 0.2333 s."""
-    assert wp.get_travel_time("Quantumstaff") == pytest.approx(7.0 / 30.0,
+    """Quantumstaff: 1.5 / 30 = 0.05 s."""
+    assert wp.get_travel_time("Quantumstaff") == pytest.approx(wp.PVP_COMBAT_DISTANCE / 30.0,
                                                                 abs=1e-6)
 
 
 def test_tomahawk_slow_projectile():
-    """Tomahawk: 7 / 15 u·s⁻¹ ≈ 0.4667 s — slowest in the catalogue."""
-    assert wp.get_travel_time("Tomahawk") == pytest.approx(7.0 / 15.0,
+    """Tomahawk: 1.5 / 15 = 0.1 s -- slowest projectile in the catalogue."""
+    assert wp.get_travel_time("Tomahawk") == pytest.approx(wp.PVP_COMBAT_DISTANCE / 15.0,
                                                             abs=1e-6)
 
 
@@ -86,10 +93,11 @@ def test_projectile_id_lookup_overrides_fallback():
     """Lookup via projectile_id should hit ProjectilesLibrary first.
 
     The on-disk JSON keys id 0 with Speed 20.0, so a Bow-shaped
-    request with projectile_id=0 must compute 7/20 = 0.35 s.
+    request with projectile_id=0 must compute PVP_COMBAT_DISTANCE/20.
     """
     assert wp.get_travel_time(weapon_name="Bow",
-                              projectile_id=0) == pytest.approx(0.35)
+                              projectile_id=0) == pytest.approx(
+        wp.PVP_COMBAT_DISTANCE / 20.0)
 
 
 def test_projectile_id_lookup_with_dict_lib():
@@ -99,7 +107,7 @@ def test_projectile_id_lookup_with_dict_lib():
     assert speed == pytest.approx(14.0)
     # And full helper:
     assert wp.get_travel_time(projectile_id=42, lib=fake_lib) \
-        == pytest.approx(7.0 / 14.0, abs=1e-6)
+        == pytest.approx(wp.PVP_COMBAT_DISTANCE / 14.0, abs=1e-6)
 
 
 def test_projectile_id_unknown_returns_none():
@@ -124,7 +132,7 @@ def test_unknown_weapon_returns_none():
 
 
 def test_get_travel_time_returns_zero_when_speed_unknown():
-    """Unknown weapon → fall back to legacy instant-hit."""
+    """Unknown weapon -> fall back to legacy instant-hit."""
     assert wp.get_travel_time("DefinitelyNotAWeapon") == 0.0
 
 
