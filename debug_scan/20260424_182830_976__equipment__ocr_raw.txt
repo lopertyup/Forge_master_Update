@@ -1,0 +1,5 @@
+[civine] Talon Necklate
+10.7bDamage
+V:97
++16.9%LifFesteal
++97.9%CriticalDamage

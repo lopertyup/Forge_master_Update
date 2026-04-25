@@ -18,11 +18,6 @@ rarity       = common
 hp_flat      = 2400.0
 damage_flat  = 300.0
 
-[Cino]
-rarity       = rare
-hp_flat      = 83200.0
-damage_flat  = 10400.0
-
 [Crab]
 rarity       = rare
 hp_flat      = 80000.0

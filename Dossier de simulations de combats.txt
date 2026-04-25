@@ -1,0 +1,346 @@
+Dossier de simulations de combats (analyse comparative joueur / adversaire)
+Simulation 1
+
+Moi
+
+5.9m Total Damage
+28.3m Total Health
++35.4% Critical Chance
++384% Critical Damage
++83% Lifesteal
++33.1% Double Chance
++16.1% Melee Damage
++22% Ranged Damage
++93.7% Attack Speed
+
+VS
+
+5.61m Total Damage
+26.9m Total Health
++54% Critical Chance
++370% Critical Damage
++3.07% Block Chance
++48.5% Lifesteal
++107% Double Chance
++21.7% Ranged Damage
++55.7% Attack Speed
++22.2% Skill Damage
+
+Résultat observé : 77 / 23
+Observation : résultat inattendu au regard des statistiques offensives adverses supérieures en double chance, crit rate et crit damage. Hypothèse de déséquilibre potentiel lié à la modélisation du lifesteal ou à la pondération effective de l’attack speed.
+
+Simulation 2
+
+Moi
+
+8.94m Total Damage
+71.7m Total Health
++22.5% Critical Chance
++156% Critical Damage
++3.75% Block Chance
++47.7% Lifesteal
++53.8% Double Chance
++9.42% Damage
++10.6% Ranged Damage
++49.4% Attack Speed
++21.1% Skill Damage
++18.6% Health
++4.84% Health
+
+VS
+
+Résultat observé : 97 / 3
+Observation : domination quasi totale malgré un volume de HP adverses très élevé et un crit damage significatif. Présence de compétences “mythic” identifiée comme facteur structurant dominant, susceptible d’écraser les interactions standards de scaling.
+
+Simulation 3
+
+Moi
+
+6.75m Total Damage
+88.2m Total Health
++16% Critical Chance
++216% Critical Damage
++4.24% Block Chance
++13.6% Lifesteal
++37.5% Double Chance
++57.1% Melee Damage
++9.43% Ranged Damage
++37.3% Attack Speed
++39.9% Skill Damage
++15.9% Health
++27.4% Health
+
+VS
+
+Résultat observé : 100 / 0
+Observation : cohérence complète des résultats avec la simulation, absence d’anomalie détectée.
+
+Simulation 4
+
+4.5m Total Damage
+33.3m Total Health
++9.55% Critical Chance
++126% Critical Damage
++4.13% Block Chance
++71.8% Lifesteal
++90.5% Double Chance
++10.1% Damage
++44.4% Melee Damage
++19.1% Ranged Damage
++77.1% Attack Speed
++15.2% Health
++13.7% Health
+
+VS
+
+Résultat observé : 100 / 0
+Observation : cohérence validée, aucune incohérence détectée.
+
+Simulation 5
+
+19.9m Total Damage
+90.8m Total Health
++57.2% Critical Chance
++458% Critical Damage
++28.4% Lifesteal
++100% Double Chance
++10.7% Damage
++13.5% Ranged Damage
++107% Attack Speed
++4.63% Health
+
+VS
+
+Résultat observé : 0 / 100
+Observation : cohérence validée.
+
+Simulation 6
+
+6.48m Total Damage
+30.1m Total Health
++35.1% Critical Chance
++397% Critical Damage
++17.6% Lifesteal
++124% Double Chance
++25.6% Ranged Damage
++22.8% Attack Speed
++22% Skill Damage
++1.27% Health
+
+VS
+
+Résultat observé : 100 / 0
+Observation : cohérence validée.
+
+Simulation 7
+
+4.43m Total Damage
+19.5m Total Health
++16.5% Critical Chance
++100% Critical Damage
++2.5% Block Chance
++98.4% Double Chance
++18.8% Damage
++46% Melee Damage
++172% Attack Speed
++4.83% Health
++32.6% Health
+
+VS
+
+Résultat observé : 100 / 0
+Observation : cohérence validée.
+
+Simulation 8
+
+9.18m Total Damage
+60.2m Total Health
++51.6% Critical Chance
++238% Critical Damage
++30.8% Lifesteal
++89.9% Double Chance
++1.37% Damage
++14.6% Ranged Damage
++123% Attack Speed
++5.84% Health
+
+VS
+
+Résultat observé : 0 / 100
+Observation : cohérence validée.
+
+Simulation 9
+
+4.8m Total Damage
+39.3m Total Health
++34.2% Critical Chance
++568% Critical Damage
++4.82% Block Chance
++34.4% Lifesteal
++93.8% Double Chance
++12.5% Damage
++27.1% Ranged Damage
++61.4% Attack Speed
+
+VS
+
+Résultat observé : 80 / 20
+Sur 10 combats : 0 victoire
+Observation : divergence entre simulation déterministe et résultats empiriques. Hypothèse d’une sous-modélisation du lifesteal ou d’une mauvaise prise en compte de la fréquence réelle des attaques.
+
+Simulation 10
+
+6.66m Total Damage
+39.8m Total Health
++39.3% Critical Chance
++249% Critical Damage
++35.6% Lifesteal
++28.9% Double Chance
++41.4% Damage
++16.6% Ranged Damage
++84.4% Attack Speed
++2.79% Health
++18.1% Health
+
+VS
+
+Résultat observé : 89 / 11
+Sur 10 combats : 1 défaite, 9 victoires
+Observation : simulation globalement stable et cohérente.
+
+Simulation 11
+
+3.18m Total Damage
+43.7m Total Health
++27.9% Critical Chance
++86% Critical Damage
++4.06% Block Chance
++14.7% Lifesteal
++62.3% Double Chance
++9.9% Damage
++18.7% Ranged Damage
++32.1% Attack Speed
++47.7% Skill Damage
+-5.44% Skill Cooldown
++26.1% Health
++20.9% Health
+
+VS
+
+Résultat observé : 100 / 0
+Observation : cohérence validée.
+
+Simulation 12
+
+3.72m Total Damage
+21.7m Total Health
++18.7% Critical Chance
++111% Critical Damage
++5.27% Block Chance
++78.3% Lifesteal
++84.3% Double Chance
++43.5% Damage
++66.5% Attack Speed
+-1.39% Skill Cooldown
++5.94% Health
++13.2% Health
+
+VS
+
+Résultat observé : 100 / 0
+Observation : cohérence validée.
+
+Simulation 13
+
+23.9m Total Damage
+123m Total Health
++43.6% Critical Chance
++481% Critical Damage
++45.2% Lifesteal
++102% Double Chance
++28.3% Damage
++131% Attack Speed
++9.99% Health
+
+VS
+
+Résultat observé : 0 / 100
+Observation : cohérence validée.
+
+Simulation 14
+
+15.2m Total Damage
+75m Total Health
++35.5% Critical Chance
++312% Critical Damage
++29.8% Lifesteal
++84.4% Double Chance
++19.4% Damage
++23.9% Ranged Damage
++96.2% Attack Speed
++22% Skill Damage
+-4.19% Skill Cooldown
+
+VS
+
+Résultat observé : 0 / 100
+Observation : cohérence validée.
+
+Simulation 15
+
+3.83m Total Damage
+21.9m Total Health
++52% Critical Chance
++6.53% Critical Damage
++2.08% Block Chance
++51% Lifesteal
++89.9% Double Chance
++29% Melee Damage
++7.5% Ranged Damage
++90.9% Attack Speed
++27.4% Skill Damage
++5.24% Health
+
+VS
+
+Résultat observé : 100 / 0
+Observation : cohérence validée.
+
+Simulation 16
+
+5.88m Total Damage
+53.7m Total Health
++49.6% Critical Chance
++246% Critical Damage
++43% Lifesteal
++67.4% Double Chance
++24.7% Damage
++6.08% Ranged Damage
++140% Attack Speed
+
+VS
+
+Résultat observé : 26 / 74
+Sur 10 combats : 10 défaites
+Observation : incohérence possible avec les paramètres de sustain. Hypothèse d’interaction non linéaire entre lifesteal, attack speed et critique.
+
+Simulation 17
+
+4.3m Total Damage
+37m Total Health
++37.4% Critical Chance
++323% Critical Damage
++1.1% Block Chance
++30.1% Lifesteal
++94.9% Double Chance
++42.6% Melee Damage
++3.21% Ranged Damage
++30.3% Attack Speed
++9.62% Health
++11.6% Health
+
+VS
+
+Résultat observé : 100 / 0
+Observation : cohérence validée.
+

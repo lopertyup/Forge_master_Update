@@ -31,6 +31,11 @@ ZONE_DEFAULTS = {
     "pet":       {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
     "mount":     {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
     "skill":     {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
+    # Player's equipped weapon icon -- a single 1-bbox zone the user
+    # configures by drawing a tight box around the weapon icon on
+    # their own character screen. Consumed by the player_weapon
+    # scanner to derive windup / recovery / projectile_travel_time.
+    "player_weapon": {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
 }
 
 # ── Simulation parameters ───────────────────────────────────
@@ -49,6 +54,19 @@ PVP_RESOLUTION_EPSILON   = 1e-5   # HP% tie threshold at timeout
 # One hit takes ATTACK_INTERVAL seconds, reducible by attack_speed:
 #   swing_time = ATTACK_INTERVAL * (2 if double_hit else 1) / speed_mult
 ATTACK_INTERVAL          = 0.25
+
+# ── Skill timing ────────────────────────────────────────────
+# Fixed base delay before a skill's FIRST cast (same for all
+# skills). The skill_cooldown stat does NOT reduce this delay —
+# it only scales the library cooldown between subsequent casts.
+INITIAL_SKILL_DELAY      = 3.8
+
+# Multi-hit "pure damage" skills release all their hits within
+# this window (seconds) after the cast starts. Exception:
+# damage skills with buff_duration > 0 (e.g. Drone) spread
+# their hits over buff_duration instead, and their cooldown
+# only begins once all hits have fired.
+CAST_BURST_DURATION      = 2.0
 
 # ── Stat schemas ────────────────────────────────────────────
 

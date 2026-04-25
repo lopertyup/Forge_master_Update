@@ -1,0 +1,8 @@
+5.9m Total Damage
+28.3m Total Health
++35.4% Critical Chance
++384% Critical Damage
++83% Lifesteal
++33.1% Double Chance
++16.1% Melee Damage
++22% Ranged Damage

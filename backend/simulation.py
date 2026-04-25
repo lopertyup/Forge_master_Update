@@ -3,7 +3,7 @@
   FORGE MASTER — PvP combat simulation engine (simplified)
 
   Design rules:
-    * HP pool = hp_total × PVP_HP_MULTIPLIER, same on BOTH sides.
+    * HP pool = hp_total x PVP_HP_MULTIPLIER, same on BOTH sides.
       (Companion / skill / equipment contributions are already
        folded into hp_total by stats.apply_*.)
     * One swing takes swing_time(stats) seconds; doubled on a
@@ -14,14 +14,14 @@
     * Block cancels a basic attack entirely (no damage, no
       lifesteal). Lifesteal applies only on basic attacks.
     * Crit multiplies the basic-attack damage by crit_multi.
-    * Skills cycle cooldown → cast; they use the chantier (b)
+    * Skills cycle cooldown -> cast; they use the chantier (b)
       data (damage per hit / hits / cooldown). Buffs are
       detected via data["type"] == "buff".
     * Regen amount/sec comes from stats.pvp_regen_per_second
       (based on PRE-PvP hp_total), snapshot once per simulated
       second, applied per tick while hp < hp_max.
     * A fighter always targets the OTHER fighter.
-    * On timeout, higher HP% wins (|gap| < epsilon → DRAW).
+    * On timeout, higher HP% wins (|gap| < epsilon -> DRAW).
 ============================================================
 """
 
@@ -29,6 +29,7 @@ import atexit
 import logging
 import os
 import random
+import threading
 from typing import Dict, List, Optional, Tuple
 
 from .constants import (
@@ -42,19 +43,21 @@ from .stats import (
     pvp_hp_total,
     pvp_regen_per_second,
     swing_time,
+    swing_time_discrete,
+    swing_time_double,
 )
 
 log = logging.getLogger(__name__)
 
 
-# ════════════════════════════════════════════════════════════
+# ============================================================
 #  SKILL INSTANCE
-# ════════════════════════════════════════════════════════════
+# ============================================================
 
 class SkillInstance:
     """
-    One equipped skill, cycling cooldown → cast → hits.
-    Only the ACTIVE part is used here — passives (passive_damage /
+    One equipped skill, cycling cooldown -> cast -> hits.
+    Only the ACTIVE part is used here -- passives (passive_damage /
     passive_hp) are already folded into the profile's attack_base
     and hp_base by stats.apply_skill.
     """
@@ -91,7 +94,7 @@ class SkillInstance:
         # Successive hits spread evenly across a fraction of the cooldown
         self.hit_interval = (self.cooldown / self.hits) if self.hits > 1 else 0.0
 
-    # ── lifecycle ───────────────────────────────────────────
+    # -- lifecycle --
 
     def tick(self, dt: float, carrier: "Fighter", target: "Fighter") -> None:
         if self.is_buff:
@@ -143,14 +146,14 @@ class SkillInstance:
                 carrier.hp     += self.hp_bonus
 
 
-# ════════════════════════════════════════════════════════════
+# ============================================================
 #  FIGHTER
-# ════════════════════════════════════════════════════════════
+# ============================================================
 
 class Fighter:
     """
     One combatant. Single-phase swing FSM:
-      - At swing start, roll double-hit → sets swing_duration.
+      - At swing start, roll double-hit -> sets swing_duration.
       - At swing end, release 1 or 2 hits (block / crit rolled per hit).
     """
 
@@ -159,13 +162,31 @@ class Fighter:
         stats:         Dict,
         active_skills: Optional[List[Tuple[str, Dict]]] = None,
     ):
-        # HP pool — same ×5 scaling for both sides.
+        # HP pool -- same x5 scaling for both sides.
         self.hp_max = pvp_hp_total(stats)
         self.hp     = self.hp_max
         self.attack = float(stats.get("attack_total", stats.get("attack", 0.0)))
 
         self.attack_speed_pct = float(stats.get("attack_speed", 0.0) or 0.0)
-        self.base_swing_time  = swing_time(self.attack_speed_pct)
+
+        # Discrete attack-speed model -- when the weapon's wind-up and
+        # recovery are known, fall back to the per-0.1 s breakpoint
+        # cycle (the formula the in-game UI uses). Otherwise keep the
+        # legacy linear timing so older code paths are unaffected.
+        wu = stats.get("weapon_windup")
+        rc = stats.get("weapon_recovery")
+        if wu is not None and rc is not None:
+            wu = float(wu)
+            rc = float(rc)
+            self.base_swing_time   = swing_time_discrete(wu, rc, self.attack_speed_pct)
+            self.double_swing_time = swing_time_double(wu, rc, self.attack_speed_pct)
+            self._weapon_windup    = wu
+            self._weapon_recovery  = rc
+        else:
+            self.base_swing_time   = swing_time(self.attack_speed_pct)
+            self.double_swing_time = self.base_swing_time * 2.0
+            self._weapon_windup    = None
+            self._weapon_recovery  = None
 
         self.double_chance = min(1.0, float(stats.get("double_chance", 0.0) or 0.0) / 100.0)
         self.lifesteal     = float(stats.get("lifesteal",    0.0) or 0.0) / 100.0
@@ -173,7 +194,19 @@ class Fighter:
         self.crit_multi    = crit_multi(float(stats.get("crit_damage", 0.0) or 0.0))
         self.block_chance  = float(stats.get("block_chance", 0.0) or 0.0) / 100.0
 
-        # Regen: computed on raw hp_total (pre-×5), applied while hp<hp_max.
+        # Projectile travel time -- 0.0 for melee, > 0 for ranged.
+        # When > 0 a basic-attack swing pushes a deferred impact onto
+        # _pending_impacts instead of applying damage instantly. The
+        # SHOOTER's swing cooldown does NOT wait for the projectile;
+        # the queue is flushed independently in the simulator loop.
+        self.projectile_travel_time = float(
+            stats.get("projectile_travel_time", 0.0) or 0.0)
+        # List of (impact_time, damage, lifesteal_amount). Ordered by
+        # insertion which is also chronological because every push
+        # uses the same travel time.
+        self._pending_impacts: List[Tuple[float, float, float]] = []
+
+        # Regen: computed on raw hp_total (pre-x5), applied while hp<hp_max.
         self.regen_per_sec    = pvp_regen_per_second(stats)
         self._regen_snapshot  = self.regen_per_sec
 
@@ -190,7 +223,7 @@ class Fighter:
             SkillInstance(data, sd_pct, sc_pct) for _, data in (active_skills or [])
         ]
 
-    # ── queries ─────────────────────────────────────────────
+    # -- queries --
 
     def alive(self) -> bool:
         return self.hp > 0.0
@@ -198,13 +231,13 @@ class Fighter:
     def hp_pct(self) -> float:
         return self.hp / self.hp_max if self.hp_max > 0 else 0.0
 
-    # ── regen ───────────────────────────────────────────────
+    # -- regen --
 
     def refresh_regen_snapshot(self) -> None:
         self._regen_snapshot = self.regen_per_sec
 
     def apply_regen(self, dt: float) -> None:
-        # Inlined `min()` — saves a builtin call per tick (~2 M calls / 1k sims).
+        # Inlined min() -- saves a builtin call per tick (~2 M calls / 1k sims).
         hp  = self.hp
         mhp = self.hp_max
         rps = self._regen_snapshot
@@ -213,48 +246,101 @@ class Fighter:
         new_hp = hp + rps * dt
         self.hp = mhp if new_hp > mhp else new_hp
 
-    # ── attack FSM ──────────────────────────────────────────
+    # -- attack FSM --
 
     def _start_swing(self) -> None:
         """Decide now whether this swing is a double-hit, set its duration."""
         self.is_double      = (random.random() < self.double_chance)
-        self.swing_duration = self.base_swing_time * (2.0 if self.is_double else 1.0)
+        # double_swing_time is set once at __init__: it is either the
+        # discrete (windup + recovery + 0.2 s + stepped 0.25 s gap +
+        # 0.2 s) cycle when wind-up data is available, or simply twice
+        # the legacy single-swing time. Either way one lookup, no math.
+        self.swing_duration = (self.double_swing_time
+                               if self.is_double
+                               else self.base_swing_time)
         self.swing_timer    = 0.0
 
-    def tick_combat(self, dt: float, target: "Fighter") -> None:
+    def tick_combat(self, dt: float, target: "Fighter", current_time: float = 0.0) -> None:
         self.swing_timer += dt
         if self.swing_timer < self.swing_duration:
             return
-        # Release the swing — inlined `target.alive()` check.
+        # Release the swing. We DON'T early-out on a dead target here
+        # any more: a swing released this tick may schedule a deferred
+        # projectile impact, which must still be queued even if the
+        # current target.hp is already <= 0 (the user explicitly asked
+        # for "if the target is dead, the impact still arrives but HP
+        # stays at zero"). The clamp to zero happens at impact time.
         hits = 2 if self.is_double else 1
         for _ in range(hits):
-            if target.hp <= 0.0:
-                break
-            self._perform_attack(target)
+            self._perform_attack(target, current_time)
         self._start_swing()
 
-    def _perform_attack(self, target: "Fighter") -> None:
-        # Block cancels the hit entirely.
+    def _perform_attack(self, target: "Fighter", current_time: float = 0.0) -> None:
+        # Block cancels the hit entirely. Resolved at FIRE time so a
+        # deferred projectile that was rolled as "blocked" never
+        # reaches the queue at all -- mirrors a missed shot.
         rand = random.random  # local binding
         if rand() < target.block_chance:
             return
         dmg = self.attack
         if rand() < self.crit_chance:
             dmg *= self.crit_multi
-        target.hp -= dmg
-        # Lifesteal — basic attacks only, only when below hp_max.
-        ls = self.lifesteal
-        if ls > 0.0:
+        ls_amount = dmg * self.lifesteal if self.lifesteal > 0.0 else 0.0
+        travel = self.projectile_travel_time
+        if travel <= 0.0:
+            # Melee / unknown weapon -> immediate hit & lifesteal.
+            self._apply_impact(target, dmg, ls_amount)
+        else:
+            # Ranged: schedule the impact. The shooter's swing
+            # cooldown is unaffected (handled by _start_swing()).
+            self._pending_impacts.append((current_time + travel, dmg, ls_amount))
+
+    def _apply_impact(self, target: "Fighter", dmg: float, ls_amount: float) -> None:
+        """Land one previously-rolled hit on *target*.
+
+        Damage is clamped at 0 — a target already at 0 HP stays at 0
+        (user rule: the impact arrives but HP doesn't dip into the
+        negative). Lifesteal is only granted to a still-living
+        shooter; a corpse can't heal.
+        """
+        new_hp = target.hp - dmg
+        target.hp = new_hp if new_hp > 0.0 else 0.0
+        if ls_amount > 0.0 and self.hp > 0.0:
             hp  = self.hp
             mhp = self.hp_max
             if hp < mhp:
-                new_hp = hp + dmg * ls
-                self.hp = mhp if new_hp > mhp else new_hp
+                heal = hp + ls_amount
+                self.hp = mhp if heal > mhp else heal
+
+    def tick_pending_impacts(self, current_time: float, target: "Fighter") -> None:
+        """Resolve every queued projectile whose flight time elapsed.
+
+        Iterates the list once. Because every entry uses the same
+        travel time as the shooter's weapon, the list is naturally
+        sorted chronologically — once we find one still in flight we
+        can stop. The shooter may itself be dead (corpse): the impact
+        still lands on *target*; only the lifesteal heal is skipped
+        (handled by _apply_impact).
+        """
+        pending = self._pending_impacts
+        if not pending:
+            return
+        i = 0
+        n = len(pending)
+        while i < n:
+            t_impact, dmg, ls_amount = pending[i]
+            if t_impact > current_time:
+                break
+            self._apply_impact(target, dmg, ls_amount)
+            i += 1
+        if i:
+            # Drop the resolved entries in one slice op.
+            del pending[:i]
 
 
-# ════════════════════════════════════════════════════════════
+# ============================================================
 #  SIMULATE
-# ════════════════════════════════════════════════════════════
+# ============================================================
 
 def _resolve_timeout(p: Fighter, o: Fighter) -> str:
     gap = p.hp_pct() - o.hp_pct()
@@ -273,39 +359,53 @@ def simulate(
     """
     Run a single PvP fight. Returns 'WIN', 'LOSE' or 'DRAW'.
 
-    - `sj`, `se`            : player / opponent combat stats.
-    - `skills_p`, `skills_o`: equipped skills — [(label, data), ...].
-
-    Hot-loop micro-optimisations (behaviour preserved):
-      * Local binding of `random.random`, TICK, skill lists and bound
-        methods — saves ~2 attribute lookups per call site per tick.
-      * Direct `fighter.hp > 0.0` checks instead of `alive()` calls —
-        saves ~3 M Python method calls per 1 000 fights batch.
-      * Skills list: skip the randomised-interleave branch entirely
-        when both sides have zero skills (common case).
+    - sj, se               : player / opponent combat stats.
+    - skills_p, skills_o   : equipped skills -- [(label, data), ...].
     """
     p = Fighter(sj, skills_p)
     o = Fighter(se, skills_o)
 
-    # Local bindings — these matter in a 6 000-iteration tight loop.
-    rand          = random.random
-    tick          = TICK
-    p_skills      = p.skills
-    o_skills      = o.skills
-    p_tick_combat = p.tick_combat
-    o_tick_combat = o.tick_combat
-    p_apply_regen = p.apply_regen
-    o_apply_regen = o.apply_regen
-    p_refresh     = p.refresh_regen_snapshot
-    o_refresh     = o.refresh_regen_snapshot
-    has_any_skill = bool(p_skills) or bool(o_skills)
+    # Local bindings -- these matter in a 6 000-iteration tight loop.
+    rand                 = random.random
+    tick                 = TICK
+    p_skills             = p.skills
+    o_skills             = o.skills
+    p_tick_combat        = p.tick_combat
+    o_tick_combat        = o.tick_combat
+    p_apply_regen        = p.apply_regen
+    o_apply_regen        = o.apply_regen
+    p_refresh            = p.refresh_regen_snapshot
+    o_refresh            = o.refresh_regen_snapshot
+    p_tick_impacts       = p.tick_pending_impacts
+    o_tick_impacts       = o.tick_pending_impacts
+    p_pending            = p._pending_impacts
+    o_pending            = o._pending_impacts
+    has_any_skill        = bool(p_skills) or bool(o_skills)
+    has_any_projectile   = (p.projectile_travel_time > 0.0
+                            or o.projectile_travel_time > 0.0)
 
     t                   = 0.0
     last_regen_refresh  = 0.0
     while t < max_duration:
-        # Inlined alive() — saves 2 method calls per tick (~12 M calls / 1k sims).
-        if p.hp <= 0.0 or o.hp <= 0.0:
-            break
+        # 1. Land arriving projectiles BEFORE deciding alive/dead this
+        #    tick so a shot in flight can finish off the target.
+        if has_any_projectile:
+            if p_pending:
+                p_tick_impacts(t, o)
+            if o_pending:
+                o_tick_impacts(t, p)
+
+        p_alive = p.hp > 0.0
+        o_alive = o.hp > 0.0
+
+        # 2. As soon as one side falls, the fight enters a "drain"
+        #    phase: no new attacks/skills/regen, but in-flight
+        #    projectiles still land. They can tip a WIN into a DRAW.
+        if not p_alive or not o_alive:
+            if not p_pending and not o_pending:
+                break
+            t += tick
+            continue
 
         # Regen snapshot once per second, applied every tick.
         if t - last_regen_refresh >= 1.0:
@@ -315,7 +415,7 @@ def simulate(
         p_apply_regen(tick)
         o_apply_regen(tick)
 
-        # Skills — skip entirely when neither side has any (common fast case).
+        # Skills -- skip entirely when neither side has any (common fast case).
         if has_any_skill:
             if rand() < 0.5:
                 for sk in p_skills: sk.tick(tick, p, o)
@@ -324,15 +424,17 @@ def simulate(
                 for sk in o_skills: sk.tick(tick, o, p)
                 for sk in p_skills: sk.tick(tick, p, o)
 
-        # Basic-attack FSM (order randomised per tick).
+        # Basic-attack FSM (order randomised per tick). Same-tick
+        # double-fire is intended: tick = frame, and the user's rule
+        # is "if both attack at the same instant, randomise who fires
+        # first, the other fires the next frame" — which is exactly
+        # the rand()-coin-flip already in place.
         if rand() < 0.5:
-            p_tick_combat(tick, o)
-            if o.hp > 0.0:
-                o_tick_combat(tick, p)
+            p_tick_combat(tick, o, t)
+            o_tick_combat(tick, p, t)
         else:
-            o_tick_combat(tick, p)
-            if p.hp > 0.0:
-                p_tick_combat(tick, o)
+            o_tick_combat(tick, p, t)
+            p_tick_combat(tick, o, t)
 
         t += tick
 
@@ -347,20 +449,14 @@ def simulate(
     return _resolve_timeout(p, o)
 
 
-# ════════════════════════════════════════════════════════════
+# ============================================================
 #  PARALLEL SIMULATION POOL
-# ════════════════════════════════════════════════════════════
-#
-# For large batches (N_SIMULATIONS = 1000), splitting work across
-# CPU cores with a persistent ProcessPoolExecutor gives a ~3-6x
-# speedup on a typical 4-8 core desktop. The pool is created lazily
-# on first use and shut down at interpreter exit. On any failure
-# (spawn disabled, pickling error, etc.) we transparently fall back
-# to the serial path — the public API is unchanged.
+# ============================================================
 
-_PARALLEL_THRESHOLD = 200   # don't bother spawning workers below this
-_POOL               = None  # type: ignore  # ProcessPoolExecutor | False | None
+_PARALLEL_THRESHOLD = 200
+_POOL               = None  # type: ignore
 _POOL_WORKERS       = max(1, (os.cpu_count() or 2) - 1)
+_POOL_LOCK: threading.Lock = threading.Lock()
 
 
 def _simulate_chunk(
@@ -382,23 +478,23 @@ def _simulate_chunk(
 
 
 def _get_pool():
-    """
-    Lazy-init a persistent ProcessPoolExecutor. Returns the pool, or
-    None if pool creation failed (in which case callers use the
-    serial fallback). The sentinel value `False` is cached so we
-    don't retry on every call once a failure is known.
-    """
     global _POOL
     if _POOL is False:
         return None
-    if _POOL is None:
+    if _POOL is not None:
+        return _POOL
+    with _POOL_LOCK:
+        if _POOL is False:
+            return None
+        if _POOL is not None:
+            return _POOL
         try:
             from concurrent.futures import ProcessPoolExecutor
             _POOL = ProcessPoolExecutor(max_workers=_POOL_WORKERS)
             atexit.register(_POOL.shutdown, wait=False)
             log.info("simulate_batch: process pool ready (%d workers)", _POOL_WORKERS)
         except Exception as e:
-            log.warning("simulate_batch: process pool unavailable (%s) — using serial", e)
+            log.warning("simulate_batch: process pool unavailable (%s) -- using serial", e)
             _POOL = False
             return None
     return _POOL
@@ -412,15 +508,7 @@ def simulate_batch(
     n:            int                              = N_SIMULATIONS,
     max_duration: float                            = DEFAULT_MAX_DURATION,
 ) -> Tuple[int, int, int]:
-    """
-    Run N fights. Returns (wins, loses, draws).
-
-    For N >= 200 the work is split across a persistent process pool
-    (one worker per CPU core minus one). For smaller N the serial
-    path is used — process-spawn overhead would outweigh the gain.
-    If the pool can't be created the function transparently falls
-    back to the serial path.
-    """
+    """Run N fights. Returns (wins, loses, draws)."""
     if n < _PARALLEL_THRESHOLD:
         return _simulate_chunk(n, sj, se, skills_p, skills_o, max_duration)
 
@@ -428,7 +516,6 @@ def simulate_batch(
     if pool is None:
         return _simulate_chunk(n, sj, se, skills_p, skills_o, max_duration)
 
-    # Split N fights as evenly as possible across workers.
     nw = _POOL_WORKERS
     base, rem = divmod(n, nw)
     chunks = [base + (1 if i < rem else 0) for i in range(nw)]
@@ -446,8 +533,7 @@ def simulate_batch(
             total_d += d
         return total_w, total_l, total_d
     except Exception as e:
-        # Broken pool / pickling error / worker crash: fall back serial once.
-        log.warning("simulate_batch: parallel dispatch failed (%s) — falling back to serial", e)
+        log.warning("simulate_batch: parallel dispatch failed (%s) -- falling back to serial", e)
         global _POOL
         try:
             pool.shutdown(wait=False)

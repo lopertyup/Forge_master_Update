@@ -1,0 +1,15 @@
+22:57:12 [INFO   ] __main__: Starting Forge Master UI
+22:57:12 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=25, lib_mount=15, lib_skills=18, zones=6
+22:57:44 [INFO   ] __main__: Starting Forge Master UI
+22:57:44 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=25, lib_mount=15, lib_skills=18, zones=6
+22:58:22 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+22:58:34 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=25, lib_mount=15, lib_skills=18, zones=6
+22:58:59 [INFO   ] backend.simulation: simulate_batch: process pool ready (7 workers)
+23:20:09 [INFO   ] __main__: Starting Forge Master UI
+23:20:09 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=25, lib_mount=15, lib_skills=18, zones=6
+08:22:09 [INFO   ] __main__: Starting Forge Master UI
+08:22:09 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=25, lib_mount=15, lib_skills=18, zones=6
+08:26:39 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=25, lib_mount=15, lib_skills=18, zones=6
+08:26:53 [INFO   ] backend.simulation: simulate_batch: process pool ready (7 workers)
+14:22:46 [INFO   ] __main__: Starting Forge Master UI
+14:24:11 [INFO   ] __main__: Starting Forge Master UI

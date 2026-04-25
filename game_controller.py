@@ -199,6 +199,48 @@ class GameController:
         z = self._zones.get(zone_key) or {}
         return max(1, int(z.get("captures", 1)))
 
+    # ── Enemy recompute cache (Phase 3 wiring) ──────────────
+    #
+    # Whenever scan(zone_key="opponent", ...) finishes the
+    # controller also runs backend.enemy_pipeline on the same
+    # capture and stores the result here. The simulator view
+    # can then prefer these recomputed totals over the raw OCR
+    # ones when feeding `simulate()`.
+
+    def get_last_enemy_stats(self):
+        """Return the latest EnemyComputedStats or None."""
+        return getattr(self, "_last_enemy_stats", None)
+
+    def get_last_enemy_profile(self):
+        """Return the latest EnemyIdentifiedProfile or None."""
+        return getattr(self, "_last_enemy_profile", None)
+
+    def consume_enemy_recompute(self):
+        """Pop and return ``(stats, profile)``; clears the cache."""
+        stats = getattr(self, "_last_enemy_stats", None)
+        prof  = getattr(self, "_last_enemy_profile", None)
+        self._last_enemy_stats = None
+        self._last_enemy_profile = None
+        return stats, prof
+
+    # ── Player weapon scan ──────────────────────────────────────
+    #
+    # Same one-shot cache pattern as the opponent: scan() stashes
+    # the latest scan_player_weapon_image() result into
+    # _last_player_weapon and the simulator pops it via
+    # consume_player_weapon() before each fight.
+
+    def get_last_player_weapon(self):
+        """Read-only peek at the cached player weapon scan."""
+        return getattr(self, "_last_player_weapon", None)
+
+    def consume_player_weapon(self):
+        """Pop and return the cached player weapon stat dict."""
+        data = getattr(self, "_last_player_weapon", None)
+        self._last_player_weapon = None
+        return data
+
+
     def get_zones(self) -> Dict[str, Dict]:
         """Full zones dict (a shallow copy) — used by the Zones view."""
         return {k: {"captures": v.get("captures", 1),
@@ -314,6 +356,65 @@ class GameController:
                     log.debug("debug_scan: ocr_fixed dump skipped", exc_info=True)
 
             status = "ok" if text.strip() else "empty"
+            # Phase 3 — recompute enemy stats from icons + substats
+            # for the opponent zone. Failures here are swallowed: the
+            # text-based path keeps working and the simulator simply
+            # won't see a recompute cache hit.
+            if zone_key == "opponent" and bboxes:
+                try:
+                    from backend import enemy_pipeline
+                    img = ocr.capture_region(bboxes[0])
+                    if img is not None:
+                        e_stats, e_prof, _ = enemy_pipeline.recompute_from_capture(
+                            img, ocr_text=text,
+                        )
+                        self._last_enemy_stats = e_stats
+                        self._last_enemy_profile = e_prof
+                        if e_stats.damage_accuracy > 15.0:
+                            log.warning(
+                                "enemy recompute: Dmg gap %.1f%% "
+                                "(Tech Tree not factored in)",
+                                e_stats.damage_accuracy,
+                            )
+                        if e_stats.health_accuracy > 15.0:
+                            log.warning(
+                                "enemy recompute: HP gap %.1f%%",
+                                e_stats.health_accuracy,
+                            )
+                except Exception:
+                    log.exception(
+                        "scan: enemy_pipeline recompute failed — "
+                        "simulator will use OCR text only",
+                    )
+
+            # Player weapon scan -- one-shot: capture the user-drawn
+            # weapon icon bbox and store the derived windup / recovery
+            # / projectile_travel_time so the simulator can pick them
+            # up via consume_player_weapon() on the next fight.
+            elif zone_key == "player_weapon" and bboxes:
+                try:
+                    from backend import player_weapon_scanner
+                    img = ocr.capture_region(bboxes[0])
+                    if img is not None:
+                        scan = player_weapon_scanner.scan_player_weapon_image(img)
+                        if scan is not None:
+                            self._last_player_weapon = scan
+                            log.info(
+                                "player_weapon: age=%s idx=%s type=%s "
+                                "W=%.2fs R=%.2fs travel=%.3fs",
+                                scan.get("weapon_age"),
+                                scan.get("weapon_idx"),
+                                scan.get("attack_type"),
+                                scan.get("weapon_windup", 0.0),
+                                scan.get("weapon_recovery", 0.0),
+                                scan.get("projectile_travel_time", 0.0),
+                            )
+                except Exception:
+                    log.exception(
+                        "scan: player_weapon scanner failed -- "
+                        "simulator will use legacy timing for the player",
+                    )
+
             self._dispatch(callback, text, status)
 
         threading.Thread(target=_run, daemon=True).start()

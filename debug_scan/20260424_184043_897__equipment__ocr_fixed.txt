@@ -1,0 +1,8 @@
+[Quantum] Antimatter Feet
+1.8m Health
++36.3% Attack Speed
++39.3% Double Chance
+[Quantum] Antigravlty Boots
+1.88m Health
++3.87% Critical Chance
++80.1% Critical Damage

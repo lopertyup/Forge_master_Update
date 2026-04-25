@@ -1,0 +1,20 @@
+# ============================================================
+#   FORGE MASTER UI — runtime dependencies
+#   Install with:  pip install -r requirements.txt
+# ============================================================
+#
+# Versions are lower-bounds (>=) so users can always pick up
+# security patches without re-releasing. Bump a floor here only
+# when we rely on a feature added in a newer release.
+
+# ── UI ──────────────────────────────────────────────────────
+customtkinter>=5.2.0
+
+# ── Imaging (screen grab + pixel manipulation) ──────────────
+Pillow>=10.0.0
+numpy>=1.24.0
+
+# ── OCR (optional at runtime — is_available() reports False
+#    gracefully if this stack is missing, but the scan buttons
+#    need it to actually read anything) ─────────────────────
+rapidocr-onnxruntime>=1.3.0

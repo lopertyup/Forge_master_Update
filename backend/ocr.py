@@ -24,6 +24,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from typing import List, Optional, Sequence, Tuple
 
 log = logging.getLogger(__name__)
@@ -39,41 +40,62 @@ _ImageGrab               = None
 _PIL_Image               = None
 _engine:                 object = None
 
+# Thread safety:
+#   _init_lock   — serialises first-time init so RapidOCR() is never
+#                  instantiated twice when two scan threads race each
+#                  other on cold start.
+#   _engine_lock — serialises inference. RapidOCR's preprocessing holds
+#                  per-call state and is not documented as thread-safe;
+#                  the UI has one user and at most a handful of scans
+#                  in flight, so serialising is free in practice.
+_init_lock:   threading.Lock = threading.Lock()
+_engine_lock: threading.Lock = threading.Lock()
+
 
 def _init() -> bool:
     """Locate RapidOCR and initialise it.
 
     Imported lazily so a boot without DL deps costs nothing.
     Returns True on success, False otherwise (with a warning log).
+    Thread-safe: concurrent first calls will only instantiate the
+    engine once thanks to `_init_lock` + the double-checked flag.
     """
     global _available, _ImageGrab, _PIL_Image, _engine
+    # Fast path — the vast majority of calls hit this and avoid lock
+    # acquisition entirely.
     if _available is not None:
         return _available
 
-    try:
-        from PIL import ImageGrab as _IG
-        from PIL import Image as _Im
-    except Exception as e:
-        log.warning("OCR disabled: Pillow missing (%s)", e)
+    with _init_lock:
+        # Re-check inside the critical section: another thread may have
+        # completed the init between our fast-path check and here.
+        if _available is not None:
+            return _available
+
+        try:
+            from PIL import ImageGrab as _IG
+            from PIL import Image as _Im
+        except Exception as e:
+            log.warning("OCR disabled: Pillow missing (%s)", e)
+            _available = False
+            return False
+
+        try:
+            from rapidocr_onnxruntime import RapidOCR  # type: ignore
+            _engine = RapidOCR()
+            _ImageGrab = _IG
+            _PIL_Image = _Im
+            _available = True
+            log.info("OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)")
+            return True
+        except Exception as e:
+            log.debug("rapidocr_onnxruntime unavailable: %s", e)
+
+        log.warning(
+            "OCR disabled: install `rapidocr-onnxruntime pillow` to enable it."
+        )
         _available = False
         return False
-
-    try:
-        from rapidocr_onnxruntime import RapidOCR  # type: ignore
-        _engine = RapidOCR()
-        _ImageGrab = _IG
-        _PIL_Image = _Im
-        _available = True
-        log.info("OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)")
-        return True
-    except Exception as e:
-        log.debug("rapidocr_onnxruntime unavailable: %s", e)
-
-    log.warning(
-        "OCR disabled: install `rapidocr-onnxruntime pillow` to enable it."
-    )
-    _available = False
-    return False
 
 
 def is_available() -> bool:
@@ -90,6 +112,32 @@ def capture_region(bbox: Bbox):
     except Exception as e:
         log.warning("capture_region(%r) failed: %s", bbox, e)
         return None
+
+
+def capture_and_ocr(bbox: Bbox,
+                    debug_stamp: Optional[str] = None,
+                    debug_zone:  Optional[str] = None,
+                    debug_step:  int = 0):
+    """Grab + OCR one bbox in a single call.
+
+    Returns ``(PIL.Image | None, str)``. Used by the enemy
+    identification pipeline which needs BOTH the raw image (for icon
+    template matching) AND the extracted text. Existing callers that
+    only need the text keep using ``run_ocr``; the image returned here
+    is the one OCR ran on (un-recoloured).
+    """
+    if not _init():
+        return None, ""
+    img = capture_region(bbox)
+    if img is None:
+        return None, ""
+    text = ocr_image(
+        img,
+        debug_stamp=debug_stamp,
+        debug_zone=debug_zone,
+        debug_step=debug_step,
+    )
+    return img, text
 
 
 def _to_numpy(img):
@@ -124,7 +172,10 @@ def ocr_image(
     The image goes through `fix_ocr.recolour_ui_labels()` first, which
     re-paints every pixel belonging to the game's rarity/epoch label
     palette with a uniform replacement colour so RapidOCR reads them
-    at consistent contrast.
+    at consistent contrast. When `debug_zone` is one of the known
+    zone keys (equipment/skill/pet/mount), the zone-specific best
+    colour from `ZONE_REPLACEMENT_COLORS` is used; otherwise the
+    module default applies.
 
     When `debug_stamp` and `debug_zone` are provided, both the raw
     input image AND the recoloured image are saved under
@@ -143,8 +194,12 @@ def ocr_image(
             except Exception:
                 log.debug("debug_scan raw dump skipped", exc_info=True)
 
-        from .fix_ocr import recolour_ui_labels
-        img = recolour_ui_labels(img)
+        from .fix_ocr import recolour_ui_labels, ZONE_REPLACEMENT_COLORS
+        # Per-zone replacement colour — the OCR colour sweep showed
+        # equipment/skill/pet/mount each have their own optimum.
+        # Zones not listed fall back to the module default.
+        replacement = ZONE_REPLACEMENT_COLORS.get(debug_zone) if debug_zone else None
+        img = recolour_ui_labels(img, replacement=replacement)
 
         if debug_stamp is not None and debug_zone is not None:
             try:
@@ -154,7 +209,10 @@ def ocr_image(
                 log.debug("debug_scan processed dump skipped", exc_info=True)
 
         arr = _to_numpy(img)
-        result, _elapsed = _engine(arr)  # type: ignore[misc]
+        # Serialise engine access — RapidOCR is not guaranteed to be
+        # thread-safe for concurrent inference. See `_engine_lock`.
+        with _engine_lock:
+            result, _elapsed = _engine(arr)  # type: ignore[misc]
         lines = _lines_from_rapidocr(result)
         return "\n".join(lines)
     except Exception as e:
@@ -170,10 +228,6 @@ def run_ocr(
     """Capture + OCR each bbox, join results with blank lines.
 
     Empty / failed bboxes are silently skipped.
-
-    When `debug_stamp` and `debug_zone` are supplied, each bbox's raw
-    capture and its recoloured variant are written to debug_scan/
-    with step index set to the bbox's position (0, 1, …).
     """
     if not _init():
         return ""
@@ -191,3 +245,31 @@ def run_ocr(
         if text:
             out.append(text)
     return "\n\n".join(out)
+
+
+def capture_and_ocr(
+    bbox: Bbox,
+    debug_stamp: Optional[str] = None,
+    debug_zone:  Optional[str] = None,
+    debug_step:  int = 0,
+):
+    """Grab + OCR one bbox in a single call.
+
+    Returns ``(PIL.Image | None, str)``. Used by the enemy
+    identification pipeline which needs BOTH the raw image (for icon
+    template matching) AND the extracted text. Existing callers that
+    only need the text keep using ``run_ocr``; the image returned here
+    is the one OCR ran on (un-recoloured).
+    """
+    if not _init():
+        return None, ""
+    img = capture_region(bbox)
+    if img is None:
+        return None, ""
+    text = ocr_image(
+        img,
+        debug_stamp=debug_stamp,
+        debug_zone=debug_zone,
+        debug_step=debug_step,
+    )
+    return img, text

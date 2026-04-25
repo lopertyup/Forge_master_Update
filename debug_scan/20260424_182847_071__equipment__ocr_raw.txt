@@ -1,0 +1,5 @@
+(oivine] staff
+13.8bDamage(ranged)
+LV.121
++11.8%CriticalChance
++8.13%Lifesteal

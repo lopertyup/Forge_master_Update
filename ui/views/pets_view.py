@@ -218,42 +218,25 @@ class PetsView(ctk.CTkFrame):
                 text_color=C["lose"])
             return
 
-        if status == "unknown_not_lvl1":
+        if status == "unknown":
             name = meta.get("name") if meta else "?"
             self._lbl_status.configure(
-                text=f"⚠ « {name} » is not in the library. Import it at Lv.1 first to register its reference stats.",
+                text=f"⚠ « {name} » is not in the library — check the spelling or add it manually to pets_library.txt.",
                 text_color=C["lose"])
             return
 
-        # status ∈ {"ok", "added"}
         for w in self._result_outer.winfo_children():
             w.destroy()
 
-        if status == "added":
-            name = meta.get("name") if meta else ""
-            self._lbl_status.configure(
-                text=f"✅ « {name} » added to library (Lv.1) — simulation running…",
-                text_color=C["win"])
-            self.update_idletasks()
-            self.app.after(50, self._refresh_library_only)
-        else:
-            self._lbl_status.configure(text="⏳ Simulation running…",
-                                        text_color=C["muted"])
-            self.update_idletasks()
+        self._lbl_status.configure(text="⏳ Simulation running…",
+                                    text_color=C["muted"])
+        self.update_idletasks()
 
         def on_result(results: Dict[str, Tuple[int, int, int]]) -> None:
             self._lbl_status.configure(text="", text_color=C["muted"])
             self._display_results(results, new_pet)
 
         self.controller.test_pet(new_pet, on_result)
-
-    def _refresh_library_only(self) -> None:
-        """Refreshes only the library section without rebuilding the entire view."""
-        for child in self._scroll.winfo_children():
-            info = child.grid_info()
-            if info.get("row") == 3:
-                child.destroy()
-        self._build_library()
 
     def _display_results(self, results: Dict[str, Tuple[int, int, int]],
                           new_pet: Dict) -> None:
@@ -382,10 +365,10 @@ class PetsView(ctk.CTkFrame):
                 text="⚠ Could not read the pet name.",
                 text_color=C["lose"])
             return
-        if status == "unknown_not_lvl1":
+        if status == "unknown":
             name = meta.get("name") if meta else "?"
             self._lbl_status.configure(
-                text=f"⚠ « {name} » is not in the library. Import it at Lv.1 first.",
+                text=f"⚠ « {name} » is not in the library — check the spelling.",
                 text_color=C["lose"])
             return
 

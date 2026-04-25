@@ -1,0 +1,14 @@
+Equipped
+[Quantum] Energy Helmet
+1.78mHealthV
+Lv.98
++12.1%LiFesteal
++10.9%CriticalChance
+[quantum] subMask
+1.8mHealthA
+LV.99
++17.4%MeleeDamage
++23.2%SkillDamage
+..
+Sell
+Equip

@@ -1,0 +1,23 @@
+lopertyup o
+[-FR-]
+Lv. 24 Forge
+M,226m
+5.9mTotalDamage
+28.3mTotalHealth
+Lv.101
+Lv.98
+LV.103
+LV:100
+Lv. 101
+LV-103
+LV.100
+LV.7
+LV.153
+LV.8
+LV.8
++35.4%CriticalChance
++384%CriticalDamage
++83%Lifesteal
++33.1%DoubleChance
++16.1%MeleeDamage
++22%RangedDamage

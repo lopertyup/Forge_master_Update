@@ -1,0 +1,8 @@
+[Quantum] Energy Helmet
+1.78m Health
++12.1% Lifesteal
++10.9% Critical Chance
+[Quantum] sub Mask
+1.8m Health
++17.4% Melee Damage
++23.2% Skill Damage

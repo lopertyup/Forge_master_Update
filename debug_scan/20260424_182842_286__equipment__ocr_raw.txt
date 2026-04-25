@@ -1,0 +1,5 @@
+[civine] DivinityRing
+9.33bDamage
+LV583
++20.4%CriticalDamage
++24.4%AttackSpeed

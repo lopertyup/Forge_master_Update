@@ -8,7 +8,8 @@
 ============================================================
 """
 
-from typing import Dict
+import math
+from typing import Dict, Optional
 
 from .constants import (
     ATTACK_INTERVAL,
@@ -21,6 +22,17 @@ from .constants import (
 #  DERIVED SCALARS
 # ════════════════════════════════════════════════════════════
 
+# Fixed post-attack window the game adds at the end of every
+# basic attack — applied AFTER the wind-up + recovery phases
+# have been stepped down to the nearest 0.1 s. This is the same
+# constant in every age and weapon class.
+POST_ATTACK_FIXED = 0.2
+
+# Sequential delay between the two hits of a double-attack swing,
+# also subject to 0.1 s rounding by the in-game tick.
+DOUBLE_ATTACK_GAP = 0.25
+
+
 def speed_mult(attack_speed_pct: float) -> float:
     """% attack_speed → raw multiplier applied to the swing duration."""
     return 1.0 + (attack_speed_pct or 0.0) / 100.0
@@ -31,12 +43,100 @@ def crit_multi(crit_damage_pct: float) -> float:
     return 1.172 + (crit_damage_pct or 0.0) / 99.0
 
 
-def swing_time(attack_speed_pct: float) -> float:
+# ────────────────────────────────────────────────────────────
+#  Attack-speed cycle helpers
+# ────────────────────────────────────────────────────────────
+#
+#  The game does NOT scale attack speed continuously: it floors
+#  the wind-up and the recovery to the nearest 0.1 s SEPARATELY
+#  before adding the constant 0.2 s post-attack window. As a
+#  result the DPS curve is staircase-shaped — there are discrete
+#  "breakpoints" of attack speed where the cycle drops by 0.1 s
+#  and missing one by a hair brings no improvement.
+#
+#  Two flavours below:
+#    * swing_time_discrete()  — single-hit cycle
+#    * swing_time_double()    — double-hit cycle (one extra
+#      sequential 0.25 s gap, also stepped)
+#
+#  The legacy linear helper swing_time() now dispatches to the
+#  discrete formula when wind-up / recovery are provided, and
+#  preserves the old behaviour when they are not (so older code
+#  paths and tests calling swing_time(pct) keep working).
+# ────────────────────────────────────────────────────────────
+
+
+def _step_down(value: float) -> float:
+    """Floor ``value`` to the nearest 0.1 s tick, never below zero."""
+    if value <= 0:
+        return 0.0
+    return math.floor(value * 10.0) / 10.0
+
+
+def swing_time_discrete(
+    windup: float,
+    recovery: float,
+    attack_speed_pct: float = 0.0,
+) -> float:
+    """Real cycle time of a single basic attack (in seconds).
+
+    Formula::
+
+        m  = 1 + attack_speed_pct / 100
+        sw = floor(windup / m * 10) / 10
+        sr = floor(recovery / m * 10) / 10
+        cycle = sw + sr + 0.2
     """
-    Time (seconds) for ONE basic-attack swing, reducible by attack_speed.
-    A double-hit swing takes twice this duration (simulation.py handles
-    that by multiplying by 2 on the fly).
+    mult = speed_mult(attack_speed_pct)
+    if mult <= 0:
+        mult = 1.0
+    sw = _step_down(windup / mult)
+    sr = _step_down(recovery / mult)
+    return sw + sr + POST_ATTACK_FIXED
+
+
+def swing_time_double(
+    windup: float,
+    recovery: float,
+    attack_speed_pct: float = 0.0,
+) -> float:
+    """Double-attack cycle: single cycle + a stepped 0.25 s gap.
+
+    The second hit is fired sequentially after a 0.25 s window
+    that is also subject to the 0.1 s tick. The fixed 0.2 s
+    post-attack delay is added a second time after the second
+    hit.
     """
+    mult = speed_mult(attack_speed_pct)
+    if mult <= 0:
+        mult = 1.0
+    base = swing_time_discrete(windup, recovery, attack_speed_pct)
+    gap  = _step_down(DOUBLE_ATTACK_GAP / mult)
+    return base + gap + POST_ATTACK_FIXED
+
+
+def swing_time(
+    attack_speed_pct: float,
+    windup: Optional[float]   = None,
+    recovery: Optional[float] = None,
+) -> float:
+    """Cycle time of one basic-attack swing.
+
+    Two modes:
+      * Legacy (windup/recovery omitted): falls back to the linear
+        ``ATTACK_INTERVAL / speed_mult`` formula. This keeps
+        every existing simulator code path working unchanged.
+      * Discrete (both windup and recovery supplied): uses
+        :func:`swing_time_discrete` with the 0.1 s breakpoint
+        rounding.
+
+    A double-hit swing takes :func:`swing_time_double` seconds in
+    the discrete mode, or twice the legacy value otherwise — the
+    simulator handles the doubling itself today.
+    """
+    if windup is not None and recovery is not None:
+        return swing_time_discrete(float(windup), float(recovery),
+                                   attack_speed_pct)
     return ATTACK_INTERVAL / speed_mult(attack_speed_pct)
 
 
@@ -63,11 +163,15 @@ def finalize_bases(profile: Dict) -> Dict:
 def combat_stats(profile: Dict) -> Dict:
     """Extract the stats needed to simulate a fight.
 
-    Uses `.get()` with zero defaults for numeric fields so a partially-
-    filled profile (e.g. a fresh install where OCR has only captured
-    some stats yet) does not KeyError halfway through a background
-    simulation thread — the simulator will simply treat missing stats
-    as zero.
+    Uses ``.get()`` with zero defaults for numeric fields so a
+    partially-filled profile (e.g. a fresh install where OCR has
+    only captured some stats yet) does not KeyError halfway
+    through a background simulation thread — the simulator will
+    simply treat missing stats as zero.
+
+    Wind-up / recovery come from the WeaponLibrary; they default
+    to ``None`` here so the simulator can fall back to the legacy
+    linear timing when they are unavailable.
     """
     return {
         "hp_total":        profile.get("hp_total",       0.0),
@@ -82,6 +186,14 @@ def combat_stats(profile: Dict) -> Dict:
         "skill_cooldown":  profile.get("skill_cooldown", 0.0),
         "block_chance":    profile.get("block_chance",   0.0),
         "attack_type":     profile.get("attack_type",    "melee"),
+        "weapon_windup":   profile.get("weapon_windup"),
+        "weapon_recovery": profile.get("weapon_recovery"),
+        # Travel time of the weapon's projectile in seconds. 0.0 for
+        # melee or unknown weapons; > 0 for ranged. The simulator
+        # queues a deferred impact when this is > 0 so a slow
+        # projectile (Tomahawk, Rock) doesn't deal damage on the
+        # same tick the swing was released.
+        "projectile_travel_time": profile.get("projectile_travel_time", 0.0),
     }
 
 
@@ -156,13 +268,21 @@ apply_mount = apply_companion
 # ════════════════════════════════════════════════════════════
 
 def pvp_hp_total(stats: Dict) -> float:
-    """Final HP pool used as the fighter's hp_max: `hp_total × 5`."""
+    """Final HP pool used as the fighter's hp_max: ``hp_total × 5``."""
     return float(stats.get("hp_total", 0.0) or 0.0) * PVP_HP_MULTIPLIER
 
 
 def pvp_regen_per_second(stats: Dict) -> float:
     """
     Regen amount per second. Computed on the PRE-PvP HP (hp_total),
+    not on the ×5 pool, so it's weaker in relative terms. Only kicks
+    in while the fighter is below its current hp_max (handled by the
+    simulator).
+    """
+    hp_total  = float(stats.get("hp_total",     0.0) or 0.0)
+    regen_pct = float(stats.get("health_regen", 0.0) or 0.0)
+    return hp_total * regen_pct / 100.0
+ amount per second. Computed on the PRE-PvP HP (hp_total),
     not on the ×5 pool, so it's weaker in relative terms. Only kicks
     in while the fighter is below its current hp_max (handled by the
     simulator).

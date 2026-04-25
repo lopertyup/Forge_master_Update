@@ -1,0 +1,13 @@
+Equipped
+[Quantum] Antimatter Feet
+1.8mHealthV
+LV.99
++36.3%AttackSpeed
++39.3%DoubleChance
+[quantum] Antigravlty Boots
+1.88mHealthA
+LV5103
++3.87%CriticalChance
++80.1%CriticalDamage
+Sell
+Equip

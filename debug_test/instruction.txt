@@ -1,0 +1,7 @@
+Solution apporté par utilisateur préparer une liste de toutes les couleurs puis écrire un code appliquant toutes ces couleurs a des images fournit par l'utilisateur, a chaque fois coller le texte dans un fichier txt accompagner de la couleur utiliser pour remplacer le texte, pour chaque couleur faire différent exemple de equipement, pet, skill, mount. Donc : --> code tournant sur chaque image du dossier fournit (debug test), images numérautées equipementx skillx mountx petx --> pour chaque images test la transformation par toutes les couleurs tester (faire une grande variété) --> pour chaque couleurs imprime le résultats du OCR dans un autre fichier test :
+
+equipementx
+couleur : #1CAFF
+résultat OCR
+
+Enfin vérifier toutes les couleurs et tester leur similarité avec le texte rechercher (format.txt) trouver les couleurs avec le plus de réussite et les renvoyer a l'utilisateur.

@@ -1,0 +1,12 @@
+Equipped
+[Quantum] Antigravity Boots
+1.88mHealth△
+LV5103
++3.87%CriticalChance
++80.1%CriticalDamage
+[quantum] Anttimatter Feet
+1.8mHealthV
++36.3%AttackSpeed
++39.3%DoubleChance
+Sell
+Equip

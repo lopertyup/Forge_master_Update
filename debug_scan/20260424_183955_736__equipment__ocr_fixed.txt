@@ -1,0 +1,8 @@
+[Quantum] Antigravity Boots
+1.86m Health
++38.7% Attack Speed
++2.62% Critical Chance
+[Quantum] Anttimatter Feet
+1.8m Health
++36.3% Attack Speed
++39.3% Double Chance

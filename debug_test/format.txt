@@ -1,0 +1,246 @@
+equipement1 :
+
+[Quantum] Higgs Collar
+221k Damage
++4.75% Lifesteal
++10% Critical Chance
+[Interstellar] Psi Choker
+13.7k Damage
++29.5% Double Chance
+
+equipement2 :
+
+[Quantum] Energy Helmet
+1.78m Health
++12.1% Lifesteal
++10.9% Critical Chance
+[Quantum] Energy Helmet
+1.75m Health
++90.9% Critical Damage
++2.32% Block Chance
+
+equipement3 : 
+
+[Quantum] Black Gun
+230k Damage (ranged)
++60.5% Critical Damage
++17.8% Lifesteal
+[Multiverse] Virtual Sword
+90.3k Damage
++4.31% Melee Damage
+
+equipement4 : 
+
+[Quantum] Black Gun
+230k Damage (ranged)
++60.5% Critical Damage
++17.8% Lifesteal
+[Interstellar] Light & Shield
+11.1k Damage
+55.9k Health
++21.1% Skill Damage
+
+equipement5 : 
+
+[Quantum] Black Gun
+230k Damage (ranged)
++60.5% Critical Damage
++17.8% Lifesteal
+[Interstellar] lonic Blaster
+13.9k Damage (ranged)
++34.3% Attack Speed
+
+equipement6 :
+
+[Divine] Mercury Sandals
+33.3b Health
++8.8% Lifesteal
++19.8% Attack Speed
+
+equipement7 :
+
+[Underworld] Void Claw
+2.93b Damage
++34.6% Double Chance
++90.3% Critical Damage
+
+equipement8 :
+
+[Modern] Tactical Belt
+2.63k Health
++31% Melee Damage
+
+equipement9 :
+
+[Early-Modern] Leather Boots
+888 Health
+
+equipement10 :
+
+[Space] Corset
+13.2k Health
++12% Ranged Damage
+
+equipement11 :
+
+[Medieval] Cuirass
+276 Health
+
+skill1 :
+
+Lv. 29
+[common] Meat
+Passive:
++39 Base Damage +316 Base Health
+
+skill2 :
+
+Lv. 33
+[Rare] shurikens
+dealing 357 Damage
+Passive:
++149 Base Damage +1.19k Base Health
+
+skill3 :
+
+Lv. 49
+[Epic] Arrow Rain
+dealing 109k Damage
+Passive:
++1.07k Base Damage +8.58k Base Health
+
+skill4 :
+
+Lv. 16
+[Legendary] Bomb
+dealing 716k Damage
+Passive:
++6.18k Base Damage +49.4k Base Health
+
+skill5 :
+
+Lv. 7
+[Ultimate] worm
+dealing 4.74m Damage
+Passive:
++45.2k Base Damage +361k Base Health
+
+skill6 :
+
+Lv. 7
+[Mythic] Drone
+dealing 24.4m Damage
+Passive:
++347k Base Damage +2.78m Base Health
+
+pet1 :
+
+Lv.4
+[common] Dog
+154 Damage
+412 Health
+-1.09% Skill Cooldown
+
+pet2 :
+
+Lv.2
+[Rare] Bear
+252 Damage
+6.06k Health
++28% Skill Damage
+
+pet3 :
+
+Lv.2
+[Epic] Panda
+3.53k Damage
+84.8k Health
++4.45% Damage
+
+pet4:
+
+Lv. 1
+[Legendary] Serpent
+256k Damage
+684k Health
+-4.47% Skill Cooldown
++1.52% Block Chance
+
+pet5:
+
+Lv. 1
+[Ultimate] Treant
+427k Damage
+10.2m Health
++9.72% Lifesteal
++1.46% Damage
+
+pet6 :
+
+Lv.25
+[Mythic] Baby Dragon
+2.27m Damage
+18.2m Health
++19.5% Lifesteal
++80.3% Critical Damage
+
+mount1 :
+
+Lv.1
+[common] Lily Leaf
+312 Damage
+2.49k Health
++1.05% Health Regen
+
+mount2 :
+
+Lv.1
+[Rare] Dino
+10.4k Damage
+83.2k Health
++7.87% Double Chance
+
+mount3 :
+
+Lv.2
+[Rare] Brown Horse
+10.4k Damage
+83.6k Health
++30.9% Critical Damage
+
+mount4 :
+
+Lv.37
+[Epic] Pig
+257k Damage
+2.06m Health
++63% Critical Damage
+
+mount5 :
+
+Lv.41
+[Legendary] Bike
+1.47m Damage
+11.7m Health
++11.1% Lifesteal
++37.7% Attack Speed
+
+mount6 :
+
+Lv.31
+[Ultimate] Droid
+4.77m Damage
+38.1m Health
++89.7% Critical Damage
++15% Health
+
+mount7 :
+
+Lv. 49
+[Mythic] Hover Disk
+535m Damage
+4.28b Health
++66.5% Critical Damage
++11.3% Critical Chance
+
+

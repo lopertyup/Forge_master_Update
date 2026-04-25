@@ -45,19 +45,38 @@ from typing import Any, Dict, List, NamedTuple, Optional
 #
 # Before OCR we therefore re-paint every pixel belonging to one
 # of these label colours (including its anti-aliased halo) with
-# LABEL_REPLACEMENT_COLOR (a dark blue #2B17D2). The text then
-# becomes high-contrast and uniformly coloured — OCR reads it
-# cleanly regardless of which tier/epoch the label originally
-# belonged to.
+# a replacement colour. The text then becomes high-contrast and
+# uniformly coloured — OCR reads it cleanly regardless of which
+# tier/epoch the label originally belonged to.
 #
-# We paint to dark blue rather than pure black because black
-# pixels blend with the soft UI borders/shadows around the
-# equipment rows, thickening the anti-aliased halos into
-# continuous dark blobs that break character boundaries. A
-# distinctive blue has the same luminance contrast as black
-# against light backgrounds but keeps glyph edges clean.
+# The replacement colour is NOT one-size-fits-all. A palette
+# sweep (150 candidates × 29 ground-truth images, token-level F1
+# vs debug_test/format.txt — see tools/ocr_color_sweep.py) showed
+# that each UI zone has its own optimum:
+#
+#     equipment → #BFD2AC  (pastel olive)   F1 ≈ 0.336
+#     pet       → #FF8C1A  (orange)         F1 ≈ 0.245
+#     mount     → #1AFFFF  (cyan)           F1 ≈ 0.224
+#     skill     → #4747D1  (blue)           F1 ≈ 0.211
+#     (overall) → #E6E699  (pale yellow)    F1 ≈ 0.246
+#
+# Callers pick the zone-specific colour via ZONE_REPLACEMENT_COLORS
+# and pass it to `recolour_ui_labels(img, replacement=…)`. If they
+# don't, the default `LABEL_REPLACEMENT_COLOR` is used (the overall
+# sweep winner, safe for profile/opponent where the text is black
+# and no repainting actually happens).
 
-LABEL_REPLACEMENT_COLOR = (0x1C, 0xAF, 0xFF)  # cyan           (#1CAFF)
+LABEL_REPLACEMENT_COLOR = (0xE6, 0xE6, 0x99)  # pale yellow    (#E6E699)
+
+# Per-zone override — values come from the OCR colour sweep
+# (tools/ocr_color_sweep.py, summary in debug_test/). Zones not in
+# this dict fall through to LABEL_REPLACEMENT_COLOR.
+ZONE_REPLACEMENT_COLORS = {
+    "equipment": (0xBF, 0xD2, 0xAC),  # pastel olive   (#BFD2AC)
+    "pet":       (0xFF, 0x8C, 0x1A),  # orange         (#FF8C1A)
+    "mount":     (0x1A, 0xFF, 0xFF),  # cyan           (#1AFFFF)
+    "skill":     (0x47, 0x47, 0xD1),  # blue           (#4747D1)
+}
 
 # Forge Master UI label palette.
 #
@@ -89,6 +108,20 @@ UI_LABEL_COLORS = (
 # cleanly separates them.
 _HUE_MIN_CHROMA = 20.0   # min (max−min) for a pixel to have "enough colour"
 _HUE_COS_SIM    = 0.92   # min cosine similarity between pixel hue and target hue
+
+# Number of erosion iterations used to detect "solid interior" regions
+# inside the match mask. A pixel survives erosion iff it has N matching
+# 4-neighbours in every direction, i.e. lies at least N pixels deep
+# inside a same-colour blob. The "deep interior" found this way is
+# SUBTRACTED from the mask before re-painting, so large saturated-colour
+# backgrounds (highlighted/equipped card tiles, icon badge squares) do
+# not get repainted alongside the glyphs.
+#
+# Glyph strokes at the rendered UI resolution are ~2–3 px wide, so they
+# fully disappear from the eroded mask after 3 iterations (their
+# interior is empty) and are preserved for re-painting. Anything thicker
+# than ~7 px keeps a non-empty interior → excluded.
+_MASK_EROSION_ITERATIONS = 3
 
 
 def _build_match_mask(arr: Any, target: tuple) -> Any:
@@ -151,8 +184,37 @@ def _build_match_mask(arr: Any, target: tuple) -> Any:
     return (p_chroma >= _HUE_MIN_CHROMA) & (cos_sim >= _HUE_COS_SIM)
 
 
-def recolour_ui_labels(img: Any) -> Any:
-    """Re-paint every UI-label pixel with LABEL_REPLACEMENT_COLOR.
+def _erode_mask_4conn(mask: Any, iterations: int) -> Any:
+    """4-connected binary erosion applied `iterations` times.
+
+    A pixel survives one erosion step iff all four of its von Neumann
+    neighbours (up, down, left, right) are also in the mask. Pixels on
+    the image border treat out-of-bounds neighbours as "outside the
+    mask" and therefore erode away, which is what we want (a blob
+    touching the border cannot be distinguished from an interior one).
+
+    Implemented with four shifted AND operations rather than a 2D
+    convolution so it stays a tight numpy-only routine.
+    """
+    import numpy as np
+    eroded = mask
+    for _ in range(max(0, iterations)):
+        next_mask = np.zeros_like(eroded)
+        # Only keep pixels where the neighbour in each direction is also in the mask.
+        # Slice-assignment is equivalent to the 4-connected AND of shifted masks.
+        next_mask[1:-1, 1:-1] = (
+            eroded[1:-1, 1:-1]
+            & eroded[:-2, 1:-1]
+            & eroded[2:,  1:-1]
+            & eroded[1:-1, :-2]
+            & eroded[1:-1, 2:]
+        )
+        eroded = next_mask
+    return eroded
+
+
+def recolour_ui_labels(img: Any, replacement: Optional[tuple] = None) -> Any:
+    """Re-paint every UI-label pixel with `replacement` (or the default).
 
     Walks every target in `UI_LABEL_COLORS`, builds a boolean mask of
     matching pixels (via `_build_match_mask`), then paints the union of
@@ -160,6 +222,11 @@ def recolour_ui_labels(img: Any) -> Any:
     the original is not modified. If no pixel matches (e.g. capture
     contains no coloured labels at all), returns the original image
     unchanged.
+
+    `replacement` is an (R, G, B) tuple. When None, falls back to
+    `LABEL_REPLACEMENT_COLOR`. Callers should usually pass the
+    zone-specific value from `ZONE_REPLACEMENT_COLORS` — a colour
+    sweep showed each zone has its own best replacement.
 
     Falls back silently to returning the input unchanged if numpy / PIL
     happen to be missing (should never happen at runtime since the OCR
@@ -180,7 +247,29 @@ def recolour_ui_labels(img: Any) -> Any:
     if not mask.any():
         return img
 
-    arr[mask] = LABEL_REPLACEMENT_COLOR
+    # Strip "solid interior" pixels from the mask. Some cards (notably
+    # highlighted / equipped [Space] items) have a saturated red tile
+    # as their background — the exact same hue as the label text. Without
+    # this step, that entire tile matches the mask and gets repainted to
+    # the replacement colour, wiping out the contrast between the now-
+    # olive text and the now-olive background and producing garbled OCR
+    # (e.g. "sdeas [aeeds]" instead of "[Space] Straps").
+    #
+    # Erosion by _MASK_EROSION_ITERATIONS peels that many pixels off the
+    # mask's perimeter. Thin glyph strokes (~2–3 px wide) fully vanish
+    # from the eroded mask → their interior set is empty → `mask & ~interior`
+    # still covers the whole glyph. Thick solid blobs keep a non-empty
+    # interior → we SUBTRACT it from the mask, leaving only a ~N-pixel
+    # boundary ring that gets repainted. The blob's interior keeps its
+    # original colour, so OCR still sees high-contrast glyphs (repainted)
+    # against the untouched card background.
+    interior = _erode_mask_4conn(mask, _MASK_EROSION_ITERATIONS)
+    mask = mask & ~interior
+
+    if not mask.any():
+        return img
+
+    arr[mask] = replacement if replacement is not None else LABEL_REPLACEMENT_COLOR
     return Image.fromarray(arr.astype("uint8"))
 
 
@@ -238,6 +327,7 @@ _STAT_CAMEL_MAP = {
 # OCR typos that survive every other normalisation step.
 _OCR_TYPOS = {
     "LiFesteal":  "Lifesteal",
+    "LifFesteal": "Lifesteal",
     "Lifeste al": "Lifesteal",
     "LifeSteal":  "Lifesteal",
 }
@@ -274,6 +364,10 @@ def _bracket_norm(s: str) -> str:
 
 
 _KNOWN_BRACKET_NORM = {_bracket_norm(s): s for s in _KNOWN_BRACKET_LABELS}
+# Pre-computed once — `difflib.get_close_matches` needs a sequence of
+# candidates. Without this tuple we rebuilt `list(...keys())` on every
+# _fuzzy_* call (which is hot — twice per OCR line).
+_KNOWN_BRACKET_NORM_KEYS = tuple(_KNOWN_BRACKET_NORM.keys())
 
 
 def _fuzzy_bracket_label(name: str) -> str:
@@ -290,7 +384,7 @@ def _fuzzy_bracket_label(name: str) -> str:
     if norm in _KNOWN_BRACKET_NORM:
         return _KNOWN_BRACKET_NORM[norm]
     matches = difflib.get_close_matches(
-        norm, list(_KNOWN_BRACKET_NORM.keys()), n=1, cutoff=0.6)
+        norm, _KNOWN_BRACKET_NORM_KEYS, n=1, cutoff=0.6)
     if matches:
         return _KNOWN_BRACKET_NORM[matches[0]]
     return name
@@ -308,7 +402,7 @@ def _fuzzy_bracket_label_strict(name: str) -> Optional[str]:
     if norm in _KNOWN_BRACKET_NORM:
         return _KNOWN_BRACKET_NORM[norm]
     matches = difflib.get_close_matches(
-        norm, list(_KNOWN_BRACKET_NORM.keys()), n=1, cutoff=0.8)
+        norm, _KNOWN_BRACKET_NORM_KEYS, n=1, cutoff=0.8)
     if matches:
         return _KNOWN_BRACKET_NORM[matches[0]]
     return None
@@ -375,6 +469,29 @@ def _normalize_line(line: str) -> str:
         line,
     )
 
+    # 3quater. Partial-bracket recovery. PaddleOCR sometimes keeps a
+    #          MANGLED version of exactly one bracket while dropping
+    #          (or garbling) the other:
+    #              '(nterstellarj Adamantum'        → '[' dropped, ']' → 'j'
+    #              'interstellarjimpactors'         → '[' dropped, ']' → 'j'
+    #              'interstellar] PeluleSynchronizer' → '[' dropped, ']' kept
+    #          Step 3bis needs BOTH brackets so those lines slip through,
+    #          and step 3ter below bails out because a ']' / 'j' is still
+    #          present.
+    #
+    #          We detect: optional broken-open char ( / l / I, a
+    #          word (non-greedy), then a broken-close char ] / j / J / ).
+    #          The word is fed to `_fuzzy_bracket_label_strict` (≥0.8
+    #          cutoff) so random lines with incidental 'j' or ')' chars
+    #          are never promoted — only true epoch/tier misreads are.
+    if "[" not in line:
+        m = re.match(r"^[\(lI]?([A-Za-z]+?)[\]jJ\)]\s*(.*)$", line)
+        if m:
+            canon = _fuzzy_bracket_label_strict(m.group(1))
+            if canon:
+                rest = m.group(2).strip()
+                line = f"[{canon}] {rest}" if rest else f"[{canon}]"
+
     # 3ter. Bracket-LESS rarity fallback. PaddleOCR occasionally swallows
     #       the '[' and ']' glyphs entirely when the label is rendered
     #       in red on red-ish backgrounds (even after red→black). In
@@ -434,9 +551,14 @@ def _normalize_line(line: str) -> str:
     # "1.84m Health A" → "1.84m Health"
     # "228k Damage/"   → "228k Damage"
     # "183k Damage V"  → "183k Damage"
+    #
+    # IMPORTANT: on doit préserver le qualifier "(ranged)" / "(melee)"
+    # qui suit "Damage" pour les armes. On capture donc le qualifier
+    # parenthésé optionnel et on le ré-injecte, puis on strippe les
+    # parasites restants (y compris d'éventuels restes après le qualifier).
     line = re.sub(
-        r"(\b(?:Health|Damage))\s*[^%\d\+\-\n\r]*$",
-        r"\1",
+        r"(\b(?:Health|Damage))(\s*\(\s*[A-Za-z]+\s*\))?\s*[^%\d\+\-\n\r\(\)]*$",
+        lambda m: m.group(1) + (m.group(2) or ""),
         line,
     )
 
@@ -467,7 +589,7 @@ class Token(NamedTuple):
 
 _RE_LV_FORGE  = re.compile(r"^Lv\.\s*(\d+)\s+Forge\s*$", re.IGNORECASE)
 _RE_LV        = re.compile(r"^Lv\.\s*(\d+)\s*$", re.IGNORECASE)
-_RE_RARITY    = re.compile(r"^\[\s*([A-Z][a-zA-Z]*)\s*\]\s+(.+?)\s*$")
+_RE_RARITY    = re.compile(r"^\[\s*([A-Z][A-Za-z\-]*)\s*\]\s+(.+?)\s*$")
 _RE_TOTAL_DMG = re.compile(r"^([\d.]+)\s*([kmb]?)\s+Total\s+Damage\s*$", re.IGNORECASE)
 _RE_TOTAL_HP  = re.compile(r"^([\d.]+)\s*([kmb]?)\s+Total\s+Health\s*$", re.IGNORECASE)
 _RE_FLAT_DMG  = re.compile(

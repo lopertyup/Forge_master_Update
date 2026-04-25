@@ -8,6 +8,7 @@
 
 from typing import Dict
 
+import logging
 import customtkinter as ctk
 
 from backend.constants import N_SIMULATIONS
@@ -30,6 +31,8 @@ from ui.widgets import (
     build_header,
     skill_icon_grid,
 )
+
+log = logging.getLogger(__name__)
 
 
 class SimulatorView(ctk.CTkFrame):
@@ -288,6 +291,46 @@ class SimulatorView(ctk.CTkFrame):
         opp_stats["attack_type"] = self.opp_type.get()
         opp_stats  = finalize_bases(opp_stats)
         opp_combat = combat_stats(opp_stats)
+
+        # ── Phase 3 — prefer recomputed stats when available ──
+        # The controller stashes EnemyComputedStats whenever the
+        # opponent zone was scanned via OCR. Override the OCR
+        # text-derived totals with the values rebuilt from the
+        # identified gear; the substats (crit, lifesteal, etc.)
+        # already came from the same OCR text so we leave them.
+        recomputed, _ = self.controller.consume_enemy_recompute()
+        if recomputed is not None:
+            opp_combat["hp_total"]     = float(recomputed.total_health)
+            opp_combat["attack_total"] = float(recomputed.total_damage)
+            opp_combat["attack_type"]  = (
+                "ranged" if recomputed.is_ranged_weapon else "melee"
+            )
+            # Discrete attack-speed model: thread the weapon's wind-up
+            # and recovery (recovery = AttackDuration − WindupTime)
+            # into the simulator so it floors swing/recovery to the
+            # nearest 0.1 s instead of using the legacy linear curve.
+            wu = float(recomputed.weapon_windup_time)
+            ad = float(recomputed.weapon_attack_duration)
+            opp_combat["weapon_windup"]   = wu
+            opp_combat["weapon_recovery"] = max(ad - wu, 0.0)
+            # Projectile travel time: 0 for melee, range/speed for
+            # ranged. The simulator queues a deferred impact when
+            # this is > 0 so a slow projectile (e.g. Tomahawk ~0.47s)
+            # doesn't apply damage instantly like a melee weapon.
+            travel = 0.0
+            if recomputed.is_ranged_weapon:
+                speed = float(recomputed.projectile_speed or 0.0)
+                rng = float(recomputed.weapon_attack_range or 0.0)
+                if speed > 0.0 and rng > 0.0:
+                    travel = rng / speed
+            opp_combat["projectile_travel_time"] = travel
+            log.info(
+                "simulator: using recomputed enemy stats — "
+                "HP=%.0f Dmg=%.0f (text-OCR overridden); "
+                "weapon W=%.2fs R=%.2fs travel=%.3fs",
+                recomputed.total_health, recomputed.total_damage,
+                wu, max(ad - wu, 0.0), travel,
+            )
         opp_skills = self.controller.get_skills_from_codes(opp_selected)
 
         self._lbl_status.configure(text="⏳ Simulation running…",
@@ -299,8 +342,37 @@ class SimulatorView(ctk.CTkFrame):
         self._lbl_verdict.configure(text="")
         self.update_idletasks()
 
+        # ── Player weapon scan -- enrich the player profile with the
+        # ── windup / recovery / projectile_travel_time derived from
+        # ── the user's last "scan player_weapon" capture. We pass the
+        # ── enriched profile via profile_override so the controller's
+        # ── existing combat_stats() picks the new fields up.
+        player_profile = None
+        pw_scan = self.controller.consume_player_weapon()
+        if pw_scan is not None:
+            base = self.controller.get_profile() or {}
+            player_profile = dict(base)
+            player_profile["weapon_windup"]          = pw_scan.get("weapon_windup")
+            player_profile["weapon_recovery"]        = pw_scan.get("weapon_recovery")
+            player_profile["projectile_travel_time"] = pw_scan.get(
+                "projectile_travel_time", 0.0)
+            # Only override attack_type if the profile didn't already
+            # have one (preserves the explicit ranged/melee toggle the
+            # user may have set on the dashboard).
+            if not player_profile.get("attack_type"):
+                player_profile["attack_type"] = pw_scan.get("attack_type", "melee")
+            log.info(
+                "simulator: applying player weapon scan W=%.2fs R=%.2fs "
+                "travel=%.3fs (type=%s)",
+                pw_scan.get("weapon_windup", 0.0),
+                pw_scan.get("weapon_recovery", 0.0),
+                pw_scan.get("projectile_travel_time", 0.0),
+                pw_scan.get("attack_type", "?"),
+            )
+
         # Controller already dispatches on the Tk thread; no need for after()
-        self.controller.simulate(opp_combat, opp_skills, self._display_results)
+        self.controller.simulate(opp_combat, opp_skills, self._display_results,
+                                 profile_override=player_profile)
 
     def _display_results(self, wins: int, loses: int, draws: int) -> None:
         self._lbl_win.configure(text=str(wins))

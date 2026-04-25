@@ -256,6 +256,12 @@ class EquipmentView(ctk.CTkFrame):
         for w in parent.winfo_children():
             w.destroy()
 
+        # Tout équipement avec "damage_flat" est une arme — on doit donc
+        # afficher son type d'attaque (ranged / melee) pour que l'utilisateur
+        # puisse vérifier que le parser l'a bien détecté.
+        atk_type = eq.get("attack_type")
+        has_flat = bool(eq.get("damage_flat", 0.0))
+
         any_shown = False
         for i, (key, label, is_flat) in enumerate(_STAT_ROWS):
             val = eq.get(key, 0.0)
@@ -269,7 +275,15 @@ class EquipmentView(ctk.CTkFrame):
             )
             row_f.pack(padx=4, pady=1, fill="x")
             row_f.grid_columnconfigure(1, weight=1)
-            ctk.CTkLabel(row_f, text=label, font=FONT_SMALL,
+
+            # Pour la ligne "Damage (flat)" d'une arme, on accole
+            # un badge ranged / melee au label.
+            row_label = label
+            if key == "damage_flat" and has_flat:
+                badge = "🏹 Ranged" if atk_type == "ranged" else "⚔ Melee"
+                row_label = f"{label}  ({badge})"
+
+            ctk.CTkLabel(row_f, text=row_label, font=FONT_SMALL,
                          text_color=C["muted"], anchor="w").grid(
                 row=0, column=0, padx=10, pady=4, sticky="w")
             val_str = fmt_number(val) if is_flat else f"+{val}%"

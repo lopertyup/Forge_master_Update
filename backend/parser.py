@@ -110,13 +110,19 @@ def _parse_single_equipment(text: str) -> Dict[str, Optional[float]]:
     if m:
         eq["hp_flat"] = parse_flat(m.group(1))
  
-    # Flat damage: "12.3m Damage" optionnellement suivi de (ranged)
+    # Flat damage: "12.3m Damage" optionnellement suivi de (ranged) ou (melee).
+    # Tout équipement portant du "damage flat" est une ARME, et possède donc
+    # un type d'attaque. On considère « melee » par défaut (les armes melee
+    # ne portent pas de qualifier en jeu) et on bascule à « ranged » lorsque
+    # le qualifier est présent.
     m = re.search(r'([\d.]+[kmb]?)\s*Damage(\s*\([^)]*\))?(?!\s*%)', text, re.IGNORECASE)
     if m:
         eq["damage_flat"] = parse_flat(m.group(1))
         suffix = m.group(2) or ""
         if re.search(r'ranged', suffix, re.IGNORECASE):
             eq["attack_type"] = "ranged"
+        else:
+            eq["attack_type"] = "melee"
  
     eq["crit_chance"]    = extract(text, [r'\+([\d. ]+)%\s*Critical\s*Chance'])
     eq["crit_damage"]    = extract(text, [r'\+([\d. ]+)%\s*Critical\s*Damage'])
