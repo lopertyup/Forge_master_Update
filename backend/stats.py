@@ -213,21 +213,29 @@ def combat_stats(profile: Dict) -> Dict:
 
 
 def compute_hp_buckets(
-    profile: Dict,
-    pets:    Optional[Dict[str, Dict]] = None,
-    mount:   Optional[Dict] = None,
-    skills:  Optional[list] = None,
+    profile:   Dict,
+    pets:      Optional[Dict[str, Dict]] = None,
+    mount:     Optional[Dict] = None,
+    skills:    Optional[list] = None,
+    equipment: Optional[Dict[str, Dict]] = None,
 ) -> Dict[str, float]:
     """Decompose ``profile.hp_total`` into 4 source buckets.
 
     Pets, mount and skill passives store their HP contributions
     individually (``hp_flat`` for companions, ``passive_hp`` for
-    skills), so we sum them here and treat the rest of ``hp_base``
-    as the equipment bucket (which also includes the 80 HP player
-    base). Each bucket is then scaled by ``(1 + health_pct/100)``
-    -- the same global multiplier the game applies on the in-game
-    Total HP display -- so the four returned values sum back to
-    ``hp_total`` exactly.
+    skills). The equipment bucket is computed in one of two ways:
+
+      * If ``equipment`` is provided (a dict of 8 EQUIP_* slots,
+        each with ``hp_flat``), its sum + the 80 HP player base is
+        used directly. This is the preferred path -- it removes the
+        legacy subtraction and matches the game's TS calculation.
+      * Otherwise, the equipment bucket is derived by subtraction
+        ``hp_base - pet_pre - mount_pre - skill_pre`` (legacy).
+
+    Each bucket is then scaled by ``(1 + health_pct/100)`` -- the
+    same global multiplier the game applies on the in-game Total HP
+    display -- so the four returned values sum back to ``hp_total``
+    when the inputs are consistent.
 
     Returns ``{"hp_equip", "hp_pet", "hp_mount", "hp_skill_passive"}``,
     every value in absolute (post-percentage) HP units. Caller may
@@ -254,9 +262,37 @@ def compute_hp_buckets(
             if isinstance(data, dict):
                 skill_pre += float(data.get("passive_hp", 0.0) or 0.0)
 
-    equip_pre = hp_base - pet_pre - mount_pre - skill_pre
-    if equip_pre < 0.0:
-        equip_pre = 0.0
+    # Preferred path: sum the equipment-piece hp_flat directly when
+    # the 8-slot Build is known. ``equipment`` is the dict returned
+    # by GameController.get_equipment(), keyed by EQUIP_*. Slots
+    # with no piece equipped store hp_flat == 0 / None and contribute
+    # nothing.
+    equip_known = False
+    equip_pre = 0.0
+    if isinstance(equipment, dict):
+        equip_pieces_sum = 0.0
+        any_piece = False
+        for entry in equipment.values():
+            if not isinstance(entry, dict):
+                continue
+            hp_flat = entry.get("hp_flat") or 0.0
+            try:
+                hp_flat = float(hp_flat)
+            except (TypeError, ValueError):
+                hp_flat = 0.0
+            if hp_flat > 0.0:
+                any_piece = True
+            equip_pieces_sum += hp_flat
+        if any_piece:
+            # 80 HP is the PlayerBaseHealth from ItemBalancingConfig --
+            # it is part of the equipment-side pool in the TS engine.
+            equip_pre   = equip_pieces_sum + 80.0
+            equip_known = True
+
+    if not equip_known:
+        equip_pre = hp_base - pet_pre - mount_pre - skill_pre
+        if equip_pre < 0.0:
+            equip_pre = 0.0
 
     mult = 1.0 + float(profile.get("health_pct", 0.0) or 0.0) / 100.0
     return {
@@ -288,6 +324,33 @@ def apply_change(profile: Dict, old_eq: Dict, new_eq: Dict) -> Dict:
     for k in PERCENT_STATS_KEYS:
         new[k] = round(
             profile.get(k, 0.0) - old_eq.get(k, 0.0) + new_eq.get(k, 0.0), 6)
+
+    if new_eq.get("attack_type") is not None:
+        new["attack_type"] = new_eq["attack_type"]
+
+    new["hp_base"]     = profile["hp_base"]     - old_eq.get("hp_flat",     0) + new_eq.get("hp_flat",     0)
+    new["attack_base"] = profile["attack_base"] - old_eq.get("damage_flat", 0) + new_eq.get("damage_flat", 0)
+
+    _recompute_totals(new)
+    return new
+
+
+def apply_change_flat_only(profile: Dict, old_eq: Dict, new_eq: Dict) -> Dict:
+    """Swap only the FLAT hp/damage of an equipment piece.
+
+    Used by the comparator when the equipped piece is taken from the
+    persisted equipment.txt -- which caches level-scaled hp_flat /
+    damage_flat / attack_type, but NOT per-piece substats (those still
+    live aggregated in profile.txt). Substat fields on the profile are
+    therefore left untouched, and the candidate's substats are
+    SHOWN but not folded back in.
+
+    The simulator still gets a meaningful new profile: the flat HP and
+    flat damage swap reflects the upgrade, while the % substats stay
+    as the player's CURRENT totals -- which is the most honest answer
+    we can produce until per-piece substats are tracked.
+    """
+    new = dict(profile)
 
     if new_eq.get("attack_type") is not None:
         new["attack_type"] = new_eq["attack_type"]
@@ -354,7 +417,6 @@ def pvp_hp_total(stats: Dict) -> float:
         2.0). The controller fills these via compute_hp_buckets
         before each simulate(); the enemy pipeline fills them in
         EnemyComputedStats.
-
       * Legacy fallback. When none of the four keys are present,
         the function falls back to hp_total * PVP_HP_MULTIPLIER
         with the historical 5.0 factor (back-compat for tests
@@ -377,11 +439,10 @@ def pvp_hp_total(stats: Dict) -> float:
 
 
 def pvp_regen_per_second(stats: Dict) -> float:
-    """
-    Regen amount per second. Computed on the PRE-PvP HP (hp_total),
-    not on the x5 pool, so it's weaker in relative terms. Only kicks
-    in while the fighter is below its current hp_max (handled by the
-    simulator).
+    """Regen amount per second. Computed on the PRE-PvP HP
+    (hp_total), not on the per-source pool, so it scales weaker
+    in PvP. Only kicks in while the fighter is below its current
+    hp_max (handled by the simulator).
     """
     hp_total  = float(stats.get("hp_total",     0.0) or 0.0)
     regen_pct = float(stats.get("health_regen", 0.0) or 0.0)

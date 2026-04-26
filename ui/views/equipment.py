@@ -6,12 +6,16 @@
 ============================================================
 """
 
-from typing import Dict
+from typing import Dict, Optional
 import re
 
 import customtkinter as ctk
 
-from backend.constants import N_SIMULATIONS
+from backend.constants import (
+    EQUIPMENT_SLOTS,
+    EQUIPMENT_SLOT_NAMES,
+    N_SIMULATIONS,
+)
 from backend.stats import combat_stats
 
 from ui.theme import (
@@ -51,6 +55,28 @@ _STAT_ROWS = [
 def _has_two_items(text: str) -> bool:
     """True when the text contains at least two '[Rarity] Name' lines."""
     return len(re.findall(r'^\[', text, re.MULTILINE)) >= 2
+
+
+def _has_one_item(text: str) -> bool:
+    """True when the text contains EXACTLY one '[Rarity] Name' line."""
+    return len(re.findall(r'^\[', text, re.MULTILINE)) == 1
+
+
+_AUTO_SLOT_LABEL = "Auto (two items)"
+
+# Display order for the slot picker matches EQUIPMENT_SLOT_NAMES
+# (Helmet, Body, ..., Belt). The reverse mapping recovers the
+# EQUIP_* key the controller's compare_equipment expects.
+_SLOT_LABEL_TO_KEY = {
+    "Helmet":   "EQUIP_HELMET",
+    "Body":     "EQUIP_BODY",
+    "Gloves":   "EQUIP_GLOVES",
+    "Necklace": "EQUIP_NECKLACE",
+    "Ring":     "EQUIP_RING",
+    "Weapon":   "EQUIP_WEAPON",
+    "Shoe":     "EQUIP_SHOE",
+    "Belt":     "EQUIP_BELT",
+}
 
 
 class EquipmentView(ctk.CTkFrame):
@@ -95,18 +121,37 @@ class EquipmentView(ctk.CTkFrame):
         self.text_box.grid(row=1, column=0, padx=12, pady=(0, 6), sticky="nsew")
         self.text_box.bind("<KeyRelease>", self._on_text_change)
 
+        # ── Slot picker (P2.9 single-item flow) ────────────
+        # Default "Auto" keeps the legacy two-items behaviour. Picking
+        # a slot enables the path where the equipped piece is loaded
+        # from equipment.txt and only the candidate needs to be in
+        # the textbox -- substats won't fold back in (see backend
+        # apply_change_flat_only).
+        slot_row = ctk.CTkFrame(left, fg_color="transparent")
+        slot_row.grid(row=2, column=0, padx=12, pady=(0, 4), sticky="ew")
+        ctk.CTkLabel(slot_row, text="Compare against:",
+                     font=FONT_SMALL, text_color=C["muted"]).pack(
+            side="left", padx=(0, 6))
+        self._slot_var = ctk.StringVar(value=_AUTO_SLOT_LABEL)
+        slot_options = [_AUTO_SLOT_LABEL] + list(EQUIPMENT_SLOT_NAMES)
+        ctk.CTkOptionMenu(
+            slot_row, variable=self._slot_var, values=slot_options,
+            width=160, font=FONT_SMALL,
+            command=lambda _: self._on_text_change(),
+        ).pack(side="left")
+
         # ── Scan button row (OCR — equipment has 2 bboxes) ──
         self._scan_row = ctk.CTkFrame(left, fg_color="transparent")
-        self._scan_row.grid(row=2, column=0, padx=12, pady=(0, 6), sticky="ew")
+        self._scan_row.grid(row=3, column=0, padx=12, pady=(0, 6), sticky="ew")
 
         self._lbl_err = ctk.CTkLabel(left, text="", font=FONT_SMALL,
                                       text_color=C["lose"], wraplength=260)
-        self._lbl_err.grid(row=3, column=0, padx=12, pady=(0, 4))
+        self._lbl_err.grid(row=4, column=0, padx=12, pady=(0, 4))
 
         self._lbl_status = ctk.CTkLabel(left, text="Waiting for text…",
                                          font=FONT_SMALL, text_color=C["muted"],
                                          wraplength=260)
-        self._lbl_status.grid(row=4, column=0, padx=12, pady=(0, 12))
+        self._lbl_status.grid(row=5, column=0, padx=12, pady=(0, 12))
 
         # Scan button — wired AFTER _lbl_status is created so it can write
         # its progress / errors into the same status label the analyzer uses.
@@ -163,19 +208,37 @@ class EquipmentView(ctk.CTkFrame):
 
     # ── OCR callback ──────────────────────────────────────────
 
+    def _selected_slot_key(self) -> Optional[str]:
+        """Return the EQUIP_* key of the slot picker, or None for Auto."""
+        label = self._slot_var.get() if hasattr(self, "_slot_var") else _AUTO_SLOT_LABEL
+        if label == _AUTO_SLOT_LABEL:
+            return None
+        return _SLOT_LABEL_TO_KEY.get(label)
+
+    def _ready_to_analyze(self, text: str) -> bool:
+        """Two paths trigger analysis:
+        * Auto mode: the textbox holds two [Rarity] items.
+        * Slot-picked mode: the textbox holds at least one item.
+        """
+        if _has_two_items(text):
+            return True
+        if self._selected_slot_key() is not None and _has_one_item(text):
+            return True
+        return False
+
     def _on_scan_ready(self) -> None:
         """Called once the OCR finished writing both captures into the
         textbox. Equipment auto-runs the analyzer when two items are
-        detected — check for that and trigger the same pipeline used by
-        the KeyRelease handler."""
+        detected (Auto mode) or when at least one item is detected and
+        a specific slot is selected (P2.9 path)."""
         text = self.text_box.get("1.0", "end").strip()
-        if _has_two_items(text):
+        if self._ready_to_analyze(text):
             if self._after_id:
                 self.after_cancel(self._after_id)
             self._after_id = self.after(50, self._analyze)
         else:
             self._lbl_status.configure(
-                text="✓ OCR complete. Waiting for two items…",
+                text="✓ OCR complete. Pick a slot or paste a 2nd item…",
                 text_color=C["muted"])
 
     # ── Auto-analysis (debounce 600 ms) ───────────────────────
@@ -184,11 +247,15 @@ class EquipmentView(ctk.CTkFrame):
         if self._after_id:
             self.after_cancel(self._after_id)
         text = self.text_box.get("1.0", "end").strip()
-        if _has_two_items(text):
+        if self._ready_to_analyze(text):
             self._after_id = self.after(600, self._analyze)
         else:
-            self._lbl_status.configure(
-                text="Waiting for two items in the text…")
+            slot = self._selected_slot_key()
+            if slot is None:
+                msg = "Waiting for two items in the text (or pick a slot)…"
+            else:
+                msg = f"Waiting for one item to compare against your equipped {self._slot_var.get()}…"
+            self._lbl_status.configure(text=msg)
             self._lbl_err.configure(text="")
 
     # ── Analysis + simulation ─────────────────────────────────
@@ -202,10 +269,17 @@ class EquipmentView(ctk.CTkFrame):
             return
 
         text   = self.text_box.get("1.0", "end").strip()
-        result = self.controller.compare_equipment(text)
+        slot   = self._selected_slot_key()
+        result = self.controller.compare_equipment(text, slot=slot)
         if result is None:
-            self._lbl_err.configure(
-                text="⚠ Invalid text: make sure two items are present.")
+            if slot is not None:
+                self._lbl_err.configure(
+                    text=(f"⚠ Slot {self._slot_var.get()} is empty in "
+                          f"equipment.txt — scan your Build first, or "
+                          f"paste a 2-item text and switch back to Auto."))
+            else:
+                self._lbl_err.configure(
+                    text="⚠ Invalid text: make sure two items are present.")
             return
 
         self._lbl_err.configure(text="")

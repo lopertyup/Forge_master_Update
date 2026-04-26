@@ -150,5 +150,57 @@ class TestSimulationAvailable(unittest.TestCase):
         self.assertTrue(callable(simulate_batch))
 
 
+class TestComputeHpBuckets(unittest.TestCase):
+    """``compute_hp_buckets`` decomposes ``profile.hp_total`` into
+    the four PvP source buckets. Two paths must be covered:
+      * legacy subtraction (no equipment dict).
+      * preferred direct sum (equipment dict supplied -- P2.8).
+    """
+
+    def test_legacy_subtraction_path(self):
+        from backend.stats import compute_hp_buckets
+        b = compute_hp_buckets(
+            {"hp_base": 1000.0, "health_pct": 50.0},
+            pets={}, mount={}, skills=[],
+        )
+        self.assertAlmostEqual(b["hp_equip"], 1500.0)
+        self.assertEqual(b["hp_pet"],   0.0)
+        self.assertEqual(b["hp_mount"], 0.0)
+        self.assertEqual(b["hp_skill_passive"], 0.0)
+
+    def test_equipment_known_path_uses_piece_sum(self):
+        from backend.stats import compute_hp_buckets
+        equip = {
+            "EQUIP_HELMET":   {"hp_flat": 100.0},
+            "EQUIP_BODY":     {"hp_flat": 200.0},
+            "EQUIP_GLOVES":   {"hp_flat":  50.0},
+            "EQUIP_NECKLACE": {"hp_flat":  50.0},
+            "EQUIP_RING":     {"hp_flat":   0.0},
+            "EQUIP_WEAPON":   {"hp_flat":   0.0},
+            "EQUIP_SHOE":     {"hp_flat":  80.0},
+            "EQUIP_BELT":     {"hp_flat":  20.0},
+        }
+        b = compute_hp_buckets(
+            {"hp_base": 1000.0, "health_pct": 50.0},
+            equipment=equip,
+        )
+        # (500 sum + 80 PlayerBaseHealth) * 1.5 = 870
+        self.assertAlmostEqual(b["hp_equip"], 870.0)
+
+    def test_empty_equipment_falls_back_to_legacy(self):
+        from backend.stats import compute_hp_buckets
+        empty = {f"EQUIP_{s}": {"hp_flat": 0.0}
+                 for s in ("HELMET","BODY","GLOVES","NECKLACE",
+                           "RING","WEAPON","SHOE","BELT")}
+        with_equip = compute_hp_buckets(
+            {"hp_base": 1000.0, "health_pct": 50.0},
+            equipment=empty,
+        )
+        without_equip = compute_hp_buckets(
+            {"hp_base": 1000.0, "health_pct": 50.0},
+        )
+        self.assertEqual(with_equip, without_equip)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

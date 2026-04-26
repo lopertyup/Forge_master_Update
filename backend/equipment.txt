@@ -1,0 +1,79 @@
+# ============================================================
+# FORGE MASTER -- Player equipment (8 slots, editable by hand)
+# Each section caches the per-piece HP/Dmg derived from
+# ItemBalancingLibrary at scan time. Re-scan to refresh.
+# ============================================================
+
+[EQUIP_HELMET]
+__name__     = Epic Helmet #5
+__rarity__   = Epic
+__age__      = 3
+__idx__      = 5
+__level__    = 1
+hp_flat      = 2560.0
+damage_flat  = 0.0
+
+[EQUIP_BODY]
+__name__     = Epic Body #1
+__rarity__   = Epic
+__age__      = 3
+__idx__      = 1
+__level__    = 10
+hp_flat      = 2799.83429830432
+damage_flat  = 0.0
+
+[EQUIP_GLOVES]
+__name__     = Epic Gloves #0
+__rarity__   = Epic
+__age__      = 3
+__idx__      = 0
+__level__    = 1
+hp_flat      = 0.0
+damage_flat  = 320.0
+
+[EQUIP_NECKLACE]
+__name__     = Rare Necklace #1
+__rarity__   = Rare
+__age__      = 3
+__idx__      = 1
+__level__    = 1
+hp_flat      = 0.0
+damage_flat  = 320.0
+
+[EQUIP_RING]
+__name__     = Rare Ring #1
+__rarity__   = Rare
+__age__      = 3
+__idx__      = 1
+__level__    = 1
+hp_flat      = 0.0
+damage_flat  = 320.0
+
+[EQUIP_WEAPON]
+__name__     = Common Weapon #3
+__rarity__   = Common
+__age__      = 9
+__idx__      = 3
+__level__    = 1
+hp_flat      = 0.0
+damage_flat  = 3932160.0
+attack_type  = melee
+
+[EQUIP_SHOE]
+__name__     = Common Shoe #1
+__rarity__   = Common
+__age__      = 1
+__idx__      = 1
+__level__    = 1
+hp_flat      = 160.0
+damage_flat  = 0.0
+
+[EQUIP_BELT]
+__name__     = Common Belt #0
+__rarity__   = Common
+__age__      = 0
+__idx__      = 0
+__level__    = 15
+hp_flat      = 45.97896853544051
+damage_flat  = 0.0
+

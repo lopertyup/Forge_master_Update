@@ -47,6 +47,11 @@ _ZONES: List[Tuple[str, str, str, str]] = [
      "Trace the zone around the pet stat panel"),
     ("mount",     "🐴", "Mount",
      "Trace the zone around the mount stat panel"),
+    ("player_weapon", "🗡", "Player weapon",
+     "Trace a tight box around YOUR equipped weapon icon"),
+    ("player_equipment", "🛡", "Player build (8 slots)",
+     "Trace the zone around YOUR full character/equipment panel "
+     "(same framing as the opponent profile)"),
 ]
 
 

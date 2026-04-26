@@ -3,6 +3,11 @@
 > Document généré depuis l'analyse comparative log simulé vs combat réel.
 > Référence : Blackgun (P, 73.4% atk spd) vs Quantumstaff (O, 0% atk spd).
 > Combat réel : début à 2:29, premier swing à 3:81, premier impact \~4:33.
+>
+> **Mise à jour 25/04/2026** : P1 → P8 mergés (la plupart l'étaient déjà
+> avant cette mise à jour, P8 a été résolu via le chantier P1 PvP HP par
+> source). P9 reste cosmétique. Voir le fichier de résumé pour les
+> détails.
 
 \---
 
@@ -10,15 +15,15 @@
 
 |#|Patch|Sévérité|Statut|
 |-|-|-|-|
-|P1|Combat start delay|🔴 Majeur|🔲 À faire|
-|P2|Double hit — second projectile décalé|🔴 Majeur|🔲 À faire|
-|P3|Lifesteal à l'impact, pas au tir|🔴 Majeur|🔲 À faire|
-|P4|swing\_time\_double — POST\_ATTACK\_FIXED en trop|🔴 Majeur|🔲 À faire|
-|P5|Travel time — distance effective PvP|🟠 Important|🔲 À faire|
-|P6|Skills — INITIAL\_SKILL\_DELAY incorrect|🟠 Important|🔲 À faire|
-|P7|Skills — timer init = cooldown au lieu de delay|🟠 Important|🔲 À faire|
-|P8|PvP HP pool — double application health\_pct|🟡 Mineur|🔲 À faire|
-|P9|Init log — cycle affiché incohérent|🟡 Mineur|🔲 À faire|
+|P1|Combat start delay|🔴 Majeur|✅ FAIT (`COMBAT_START_DELAY = 1.52` dans `constants.py`, `Fighter.__init__` négativise `swing_timer`)|
+|P2|Double hit — second projectile décalé|🔴 Majeur|✅ FAIT (`_double_fire_gap` + `fire_offset` dans `simulation.py`)|
+|P3|Lifesteal à l'impact, pas au tir|🔴 Majeur|✅ FAIT (`ls_amount` enqueué dans `_pending_impacts`, appliqué dans `_apply_impact`)|
+|P4|swing\_time\_double — POST\_ATTACK\_FIXED en trop|🔴 Majeur|✅ FAIT (`stats.swing_time_double` ne ré-ajoute plus 0.2 s)|
+|P5|Travel time — distance effective PvP|🟠 Important|✅ FAIT (`PVP_COMBAT_DISTANCE = 1.5` dans `weapon_projectiles.py`, tests alignés le 25/04)|
+|P6|Skills — INITIAL\_SKILL\_DELAY incorrect|🟠 Important|✅ FAIT (`INITIAL_SKILL_DELAY = 2.87`)|
+|P7|Skills — timer init = cooldown au lieu de delay|🟠 Important|✅ FAIT (gating `_first_cast_done` dans `SkillInstance.tick`)|
+|P8|PvP HP pool — double application health\_pct|🟡 Mineur|✅ FAIT (résolu via P1 PvP HP par source : la somme pondérée 1.0 / 0.5 / 0.5 / 2.0 sur les sous-totaux remplace le `× 5.0` global qui multipliait `hp_total` déjà gonflé par `health_pct`)|
+|P9|Init log — cycle affiché incohérent|🟡 Mineur|🔲 À faire (cosmétique uniquement, n'affecte pas la simulation)|
 
 \---
 

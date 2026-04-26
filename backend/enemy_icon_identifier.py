@@ -271,19 +271,20 @@ SLOT_TO_TYPE_ID: Dict[str, int] = {
 }
 
 
-# Items are organised by hand under helper/icons_organized/<AgeName>/<SlotDir>/
-# with filenames matching ``SpriteName`` from AutoItemMapping.json. The
-# folder layout uses friendly slot names that differ from the JSON's TypeName,
-# so we maintain a small alias map.
-ITEMS_ROOT = Path(__file__).resolve().parent.parent / "helper" / "icons_organized"
+# Items are organised under icons_checker/<AgeName>/<SlotDir>/<SpriteName>.png
+# (project root, runtime asset). The slot directory uses friendly names
+# (Headgear/Armor/Glove/Neck/Ring/Weapon/Foot/Belt) that differ from the
+# JSON TypeName -- the alias map below converts.
+ITEMS_ROOT = Path(__file__).resolve().parent.parent / "icons_checker"
 
-# AutoItemMapping AgeName values are PascalCase but spell EarlyModern as
-# "Earlymodern"; the user-organised folders use "EarlyModern" — keep the
-# mapping based on the integer Age index so both stay decoupled.
+# AutoItemMapping AgeName values are PascalCase ("Earlymodern" with no
+# hyphen) but the on-disk folder layout uses "Early-Modern" with a
+# hyphen. We key everything on the integer Age index so both can stay
+# decoupled.
 _AGE_INT_TO_FOLDER: Dict[int, str] = {
     0: "Primitive",
     1: "Medieval",
-    2: "EarlyModern",
+    2: "Early-Modern",
     3: "Modern",
     4: "Space",
     5: "Interstellar",
@@ -523,5 +524,4 @@ def identify_all(
         "items":  items,
         "pets":   pets,
         "mount":  mount,
-        "skills": skills,
-    }
+        "skills": skills,}

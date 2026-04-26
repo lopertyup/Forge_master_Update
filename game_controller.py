@@ -34,7 +34,9 @@ from backend.parser import (
 )
 from backend.persistence import (
     SKILL_SLOTS,
+    empty_equipment,
     empty_skill,
+    load_equipment,
     load_mount,
     load_mount_library,
     load_pets,
@@ -44,6 +46,7 @@ from backend.persistence import (
     load_skills,
     load_skills_library,
     load_zones,
+    save_equipment,
     save_mount,
     save_mount_library,
     save_pets,
@@ -56,6 +59,7 @@ from backend import zone_store
 from backend.simulation import simulate_batch
 from backend.stats import (
     apply_change,
+    apply_change_flat_only,
     apply_mount,
     apply_pet,
     apply_skill,
@@ -84,6 +88,7 @@ class GameController:
         self._skill_slots:    Dict[str, Dict] = {}   # raw {slot_label: data}
         self._pets:           Dict[str, Dict] = {}
         self._mount:          Dict            = {}
+        self._equipment:      Dict[str, Dict] = {}   # 8 player equipment slots
         self._pets_library:   Dict[str, Dict] = {}
         self._mount_library:  Dict[str, Dict] = {}
         self._skills_library: Dict[str, Dict] = {}
@@ -101,6 +106,7 @@ class GameController:
         self._skill_slots           = load_skill_slots()
         self._pets                  = load_pets()
         self._mount                 = load_mount()
+        self._equipment             = load_equipment()
         self._pets_library          = load_pets_library()
         self._mount_library         = load_mount_library()
         self._skills_library        = load_skills_library()
@@ -240,6 +246,35 @@ class GameController:
         data = getattr(self, "_last_player_weapon", None)
         self._last_player_weapon = None
         return data
+
+    # ── Player equipment (8 slots) ──────────────────────────
+    #
+    # Persistent build mirroring pets.txt / mount.txt. Updated in
+    # two ways:
+    #   * full re-scan via the "player_equipment" zone (fills all 8
+    #     slots from one screenshot), or
+    #   * hand-edit of equipment.txt / set_equipment_slot() from the
+    #     Build UI view.
+    # The simulator reads it through compute_hp_buckets() to derive
+    # the per-source HP pools (P2.8).
+
+    def get_equipment(self) -> Dict[str, Dict]:
+        """Full equipment dict (shallow copy)."""
+        return {k: dict(v) for k, v in self._equipment.items()}
+
+    def get_equipment_slot(self, slot: str) -> Dict:
+        """One slot dict (shallow copy). ``slot`` is an EQUIPMENT_SLOTS key."""
+        return dict(self._equipment.get(slot, {}))
+
+    def set_equipment(self, equipment: Dict[str, Dict]) -> None:
+        """Replace the whole 8-slot dict and persist."""
+        self._equipment = {k: dict(v) for k, v in equipment.items()}
+        save_equipment(self._equipment)
+
+    def set_equipment_slot(self, slot: str, data: Dict) -> None:
+        """Update one slot in-place + persist."""
+        self._equipment[slot] = dict(data)
+        save_equipment(self._equipment)
 
 
     def get_zones(self) -> Dict[str, Dict]:
@@ -416,6 +451,30 @@ class GameController:
                         "simulator will use legacy timing for the player",
                     )
 
+            # Player equipment scan -- one-shot capture of the user's
+            # full equipment panel. The result is persisted directly
+            # into equipment.txt so subsequent simulations and the
+            # Build view see the up-to-date 8 pieces. No "consume"
+            # cache here -- the persisted dict IS the source of truth.
+            elif zone_key == "player_equipment" and bboxes:
+                try:
+                    from backend import player_equipment_scanner
+                    img = ocr.capture_region(bboxes[0])
+                    if img is not None:
+                        eq_dict = player_equipment_scanner.scan_player_equipment_image(img)
+                        if eq_dict is not None:
+                            self.set_equipment(eq_dict)
+                            log.info(
+                                "player_equipment: %d slots scanned, persisted to equipment.txt",
+                                sum(1 for v in eq_dict.values()
+                                    if v.get("hp_flat") or v.get("damage_flat")),
+                            )
+                except Exception:
+                    log.exception(
+                        "scan: player_equipment scanner failed -- "
+                        "build dict left untouched",
+                    )
+
             self._dispatch(callback, text, status)
 
         threading.Thread(target=_run, daemon=True).start()
@@ -442,8 +501,12 @@ class GameController:
         # Inject the per-source HP buckets used by the PvP engine.
         # When the simulator sees them it applies 1.0/0.5/0.5/2.0
         # to equip/pet/skill/mount instead of the legacy global x5.
+        # Passing self._equipment activates the preferred path: the
+        # equipment bucket is summed directly from the 8 pieces
+        # (P2.8) instead of being derived by subtraction.
         sj.update(compute_hp_buckets(
             profile, self._pets, self._mount, self._skills,
+            equipment=self._equipment,
         ))
         se = opponent_stats
 
@@ -461,24 +524,57 @@ class GameController:
     # ── Equipment ───────────────────────────────────────────
 
     def compare_equipment(
-        self, comparison_text: str
+        self,
+        comparison_text: str,
+        slot: Optional[str] = None,
     ) -> Optional[Tuple[Dict, Dict, Dict]]:
-        """Parse two items separated by a '[Rarity] Name' boundary and
-        return (old_eq, new_eq, new_profile)."""
+        """Parse one or two items and return (old_eq, new_eq, new_profile).
+
+        Two flows:
+          * **Two items in the text** (the legacy "Equipped vs NEW!"
+            popup): same behaviour as before -- both pieces are parsed
+            from OCR, ``apply_change`` swaps full substats + flat.
+          * **Single item + ``slot`` arg** (post-P2.9 path): the equipped
+            piece is loaded from the persisted ``equipment.txt`` build.
+            Only flat hp / damage / attack_type are swapped via
+            ``apply_change_flat_only`` because per-piece substats are
+            not (yet) tracked. The candidate's substats are still
+            returned in ``new_eq`` so the UI can display them.
+        """
         result = parse_equipment(comparison_text)
 
-        # parse_equipment returns {"equipped": ..., "candidate": ...} when
-        # two items are detected, or a flat dict for a single item.
-        if "equipped" not in result:
+        if "equipped" in result:
+            old_eq = result["equipped"]
+            new_eq = result["candidate"]
+            if self._profile is None:
+                return None
+            new_profile = apply_change(self._profile, old_eq, new_eq)
+            return old_eq, new_eq, new_profile
+
+        # Single-item path: requires an explicit slot AND a persisted
+        # build entry for that slot to act as ``old_eq``.
+        if slot is None:
             return None
-
-        old_eq = result["equipped"]
-        new_eq = result["candidate"]
-
         if self._profile is None:
             return None
-
-        new_profile = apply_change(self._profile, old_eq, new_eq)
+        equipped_slot = self._equipment.get(slot)
+        if not equipped_slot or not (equipped_slot.get("hp_flat")
+                                     or equipped_slot.get("damage_flat")):
+            log.info("compare_equipment: slot %s empty in equipment.txt", slot)
+            return None
+        # Translate the persisted slot to the eq dict shape consumed by
+        # apply_change_flat_only (only hp_flat / damage_flat / attack_type
+        # are read, but we forward name/rarity/level for the UI display).
+        old_eq = {
+            "hp_flat":     float(equipped_slot.get("hp_flat", 0.0) or 0.0),
+            "damage_flat": float(equipped_slot.get("damage_flat", 0.0) or 0.0),
+            "attack_type": equipped_slot.get("attack_type") or None,
+            "name":        equipped_slot.get("__name__", ""),
+            "rarity":      (equipped_slot.get("__rarity__") or "").lower(),
+            "level":       int(equipped_slot.get("__level__", 0) or 0),
+        }
+        new_eq = result  # the parsed single item
+        new_profile = apply_change_flat_only(self._profile, old_eq, new_eq)
         return old_eq, new_eq, new_profile
 
     def apply_equipment(self, new_profile: Dict) -> None:
@@ -984,12 +1080,14 @@ class GameController:
             pets_new   if pets_new   is not None else self._pets,
             mount_new  if mount_new  is not None else self._mount,
             skills_new if skills_new is not None else self._skills,
+            equipment=self._equipment,
         ))
         se.update(compute_hp_buckets(
             old_profile,
             pets_old   if pets_old   is not None else self._pets,
             mount_old  if mount_old  is not None else self._mount,
             skills_old if skills_old is not None else self._skills,
+            equipment=self._equipment,
         ))
         return simulate_batch(sj, se, skills_new, skills_old,
                               n=N_SIMULATIONS,
@@ -1003,36 +1101,6 @@ class GameController:
         return fmt_number(n)
 
     @staticmethod
-    def rarity_color(rarity: str) -> str:
-        from ui.theme import rarity_color
-        return rarity_color(rarity)
-
-    @staticmethod
-    def stats_display_list() -> List[Tuple[str, str, bool]]:
-        """List (key, label, is_flat) for the detailed display of a profile.
-
-        Order: flat stats first (totals then bases), then substats in the
-        canonical in-game order (crit / block / regen / ... / health).
-        """
-        return [
-            ("hp_total",       "❤  Total HP",          True),
-            ("attack_total",   "⚔  Total ATK",          True),
-            ("hp_base",        "   Base HP",            True),
-            ("attack_base",    "   Base ATK",           True),
-            ("crit_chance",    "🎯 Crit Chance",         False),
-            ("crit_damage",    "💥 Crit Damage",         False),
-            ("block_chance",   "🛡  Block Chance",       False),
-            ("health_regen",   "♻  Health Regen",       False),
-            ("lifesteal",      "🩸 Lifesteal",           False),
-            ("double_chance",  "✌  Double Chance",      False),
-            ("damage_pct",     "⚔  Damage %",           False),
-            ("melee_pct",      "⚔  Melee %",            False),
-            ("ranged_pct",     "⚔  Ranged %",           False),
-            ("attack_speed",   "⚡ Attack Speed",        False),
-            ("skill_damage",   "✨ Skill Damage",        False),
-            ("skill_cooldown", "⏱  Skill Cooldown",     False),
-            ("health_pct",     "❤  Health %",           False),
-        ]
     def rarity_color(rarity: str) -> str:
         from ui.theme import rarity_color
         return rarity_color(rarity)

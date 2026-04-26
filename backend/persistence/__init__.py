@@ -65,6 +65,14 @@ from .companions import (
     save_mount,
 )
 
+# Player equipment (8 slots) -------------------------------------------------
+from .equipment import (
+    empty_equipment,
+    empty_equipment_slot,
+    load_equipment,
+    save_equipment,
+)
+
 # Libraries (pets, mount, skills at Lv.1) ------------------------------------
 from .libraries import (
     _load_library,
@@ -114,6 +122,11 @@ __all__ = [
     "save_pets",
     "load_mount",
     "save_mount",
+    # equipment
+    "empty_equipment",
+    "empty_equipment_slot",
+    "load_equipment",
+    "save_equipment",
     # libraries
     "_load_library",
     "_save_library",

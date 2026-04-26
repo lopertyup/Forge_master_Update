@@ -119,6 +119,31 @@ class SimulatorView(ctk.CTkFrame):
                     padx=12, anchor="w")
             ctk.CTkFrame(sk_f, fg_color="transparent", height=8).pack()
 
+        # ── Scan weapon row ────────────────────────────────
+        # One-shot OCR of the player's equipped weapon icon. The
+        # controller stashes the resulting (windup, recovery,
+        # projectile_travel_time, attack_type) under
+        # _last_player_weapon; the next simulate() call pops it via
+        # consume_player_weapon() and feeds it into the Fighter.
+        scan_w = ctk.CTkFrame(parent, fg_color="transparent")
+        scan_w.pack(padx=12, pady=(0, 12), fill="x")
+        self._lbl_scan_player_w = ctk.CTkLabel(
+            scan_w, text="", font=FONT_SMALL, text_color=C["muted"])
+        self._lbl_scan_player_w.pack(side="right", padx=(8, 0))
+        attach_scan_button(
+            parent_btn_frame=scan_w,
+            textbox=None,                        # no text output -- the
+                                                 # scanner persists the
+                                                 # result into the
+                                                 # controller cache
+            status_lbl=self._lbl_scan_player_w,
+            scan_key="player_weapon",
+            scan_fn=self.controller.scan,
+            captures_fn=self.controller.get_zone_captures,
+            on_scan_ready=None,
+            label="📷  Scan weapon",
+        )
+
     # ── Opponent panel ────────────────────────────────────────
 
     def _build_opponent_panel(self, parent: ctk.CTkFrame) -> None:

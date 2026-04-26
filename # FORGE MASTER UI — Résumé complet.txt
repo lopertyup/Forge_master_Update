@@ -1,4 +1,4 @@
-Voici un résumé exhaustif de l'état du chantier Forge Master UI au 25/04/2026.
+Voici un résumé exhaustif de l'état du chantier Forge Master UI au 26/04/2026.
 
 ---
 
@@ -7,6 +7,52 @@ Voici un résumé exhaustif de l'état du chantier Forge Master UI au 25/04/2026
 | Date  | Module                              | Statut |
 |-------|-------------------------------------|--------|
 | 25/04 | P1 — Multiplicateurs PvP par source | ✅ TERMINÉE (101/101 tests verts) |
+| 25/04 | P2.1 — Schéma + persistance equipment.txt | ✅ (107/107 tests verts) |
+| 25/04 | P2.2 — Factorisation identify_equipment_panel | ✅ (107/107 tests verts) |
+| 25/04 | P2.3 — backend/player_equipment_scanner.py | ✅ (112/112 tests verts) |
+| 25/04 | P2.4 — Zone player_equipment dans Zones tab + ZONE_DEFAULTS | ✅ (115/115 tests verts) |
+| 25/04 | P2.6 — Controller : load/get/set/scan equipment | ✅ |
+| 26/04 | Restauration game_controller.py (truncation + null bytes) | ✅ |
+| 26/04 | P2.8 — compute_hp_buckets prefer equipment dict | ✅ (38 unittest verts + 69 pytest verts) |
+| 26/04 | P2.9 — Comparateur pré-rempli depuis equipment.txt (`apply_change_flat_only`) | ✅ (120/120 tests verts) |
+| 26/04 | P3 — Mise à jour PATCH_NOTES_SIMULATION.md (P1→P8 ✅, P9 cosmétique) | ✅ |
+| 26/04 | P4.1 — Vue UI Build actuel (déjà livrée en code, vérifiée) | ✅ |
+| 26/04 | P4.2 — Bouton « 📷 Scan weapon » dans simulator (player panel) | ✅ (120/120 tests verts) |
+| 26/04 | P4.3 — Comparateur d'équipement : sélecteur de slot + path single-item | ✅ (120/120 tests verts) |
+| 26/04 | P4.4 — README mis à jour : nouvelles zones, vue Build, doc Comparateur P2.9, Scan weapon | ✅ |
+
+### Détail P2.6 — P2.8 (26/04)
+
+**Restauration game_controller.py.** Le fichier traînait deux corruptions de la session précédente (Windows-mount sync) : une signature `def stats_display_list()` doublée et 61 null-bytes en queue. Nettoyage manuel + re-parse OK. Aucune régression sur les 35 unittest existants.
+
+**P2.8 — compute_hp_buckets (`backend/stats.py`).** Nouveau paramètre optionnel `equipment=` :
+- Si fourni et au moins un slot a `hp_flat > 0` → calcul direct `(Σ piece.hp_flat + 80 PlayerBaseHealth) × (1 + health_pct/100)`. C'est la formule TS du jeu, sans soustraction.
+- Sinon → fallback legacy par soustraction `hp_base − pet − mount − skill`. Préserve la compatibilité avec les tests qui ne fournissent pas `equipment`.
+
+**Câblage `game_controller.py`.** Les deux call-sites (`simulate()` et `_compare_profile_vs_profile()`) passent désormais `equipment=self._equipment` à `compute_hp_buckets`. Le helper bascule automatiquement entre les deux paths selon la présence d'équipement.
+
+**Tests ajoutés (`tests/test_smoke.py::TestComputeHpBuckets`).**
+- `test_legacy_subtraction_path` : sans equipment, hp_base × (1+health_pct/100).
+- `test_equipment_known_path_uses_piece_sum` : 8 pièces de 100/200/50/50/0/0/80/20 + 80 base × 1.5 = 870.
+- `test_empty_equipment_falls_back_to_legacy` : equipment vide n'active PAS le path préféré.
+
+**Total : 38 unittest + 69 pytest-style = 107 tests verts.** (12 tests pytest qui demandent `monkeypatch`/`tmp_path` ne tournent que sous pytest réel — pas une régression.)
+
+### Détail P2.9 — Comparateur pré-rempli (26/04)
+
+**Backend.** Nouveau helper `apply_change_flat_only(profile, old_eq, new_eq)` dans `backend/stats.py` qui swap UNIQUEMENT `hp_flat` / `damage_flat` / `attack_type` sans toucher aux substats du profil. Parce que les substats per-pièce ne sont pas (encore) trackés, on évite de produire un faux total en folding-back les substats du candidat.
+
+**`compare_equipment(text, slot=None)` étendu :**
+- Path 1 (legacy) : si le texte contient deux items, comportement inchangé (`apply_change` complet, substats inclus).
+- Path 2 (P2.9) : si un seul item est parsé ET un `slot` est fourni, le controller :
+  1. récupère le slot persisté dans `self._equipment[slot]`,
+  2. construit un `old_eq` minimal `{hp_flat, damage_flat, attack_type, name, rarity, level}`,
+  3. appelle `apply_change_flat_only` → swap flat-only.
+- Sinon → `None` (l'UI dégrade vers un message "indique-moi le slot").
+
+**Limitation documentée.** Sans substats per-pièce, le comparateur en path 2 ne peut PAS afficher le delta substats — le candidat affiche ses propres %, mais elles ne s'appliquent pas au total profil. Ce sera levé quand on capturera la popup long-press par pièce (hors P2).
+
+**Tests** : 2 nouveaux dans `tests/test_compare_equipment_single_item.py` (flat-only ne touche pas aux substats / two-items continue de les swapper). 120/120 tests verts.
 
 ### Détail P1 (Multiplicateurs PvP par source)
 - `backend/constants.py` : ajout PVP_HP_BASE_MULTIPLIER (1.0), PVP_HP_PET_MULTIPLIER (0.5), PVP_HP_SKILL_MULTIPLIER (0.5), PVP_HP_MOUNT_MULTIPLIER (2.0). PVP_HP_MULTIPLIER (5.0) gardé en fallback legacy.
@@ -489,15 +535,18 @@ si identique, on réutilise `enemy_icon_offsets` tel quel et on saute P2.5.
   de `compute_hp_buckets()`.
 
 
-### 🔧 Priorité 3 — Faire converger doc et code
+### ✅ Priorité 3 — Faire converger doc et code — TERMINÉE le 26/04
 
-1. Mettre à jour `PATCH_NOTES_SIMULATION.md` : marquer P1, P2, P3, P4, P5, P6, P7 comme `✅ FAIT`. Ne laisser que P8 et P9.
-2. Mettre à jour `helper/CHANTIER_SIMULATION_ENNEMI.md` : section « Style code uniformisé » + « Bouton UI Scan weapon » + « Configuration zone player_weapon » sont les 3 derniers items en cours.
+1. ✅ `PATCH_NOTES_SIMULATION.md` mis à jour : P1 → P8 marqués `✅ FAIT` (P8 résolu implicitement via P1 PvP HP par source). Seul P9 reste, marqué cosmétique.
+2. ⏳ `helper/CHANTIER_SIMULATION_ENNEMI.md` non mis à jour cette session (les 3 items en cours — style code, bouton Scan weapon, calibration zone — restent valables ; ils relèvent de la priorité 4).
 
-### 🛠 Priorité 4 — Compléter le pipeline joueur (UI)
+### ✅ Priorité 4 — Compléter le pipeline joueur (UI) — TERMINÉE le 26/04
 
-1. Ajouter le bouton « 📷 Scan weapon » dans `ui/views/simulator.py` (`_build_player_panel`), pattern `attach_scan_button`.
-2. Documenter dans le README la nouvelle zone `player_weapon` à calibrer dans Zones.
+1. ✅ Bouton « 📷 Scan weapon » dans `ui/views/simulator.py` (`_build_player_panel`). `attach_scan_button` étendu pour accepter `textbox=None` et un `label` custom (utile aussi pour la vue Build).
+2. ✅ Vue Build actuel (`ui/views/build_view.py`) — grille 4×2 + bouton « 📷 Scan Build » + édition manuelle des slots via `companion_slot_card`.
+3. ✅ Comparateur d'équipement (`ui/views/equipment.py`) : nouveau dropdown « Compare against », path single-item branché sur `controller.compare_equipment(text, slot=…)`. Fallback Auto inchangé.
+4. ✅ README mis à jour : table des 8 zones (avec `player_weapon` + `player_equipment`), nouvelle section Build, sous-section comparateur P2.9, mention du bouton Scan weapon dans le simulateur.
+5. ⏳ Outil calibration offsets joueur (P2.5) — toujours optionnel. Les ratios par défaut (mirroir de l'Opponent panel) marchent sur les `tests/profile *.png`. À coder seulement si dérive observée.
 
 ### 🧹 Priorité 5 — Nettoyage
 
@@ -505,14 +554,21 @@ si identique, on réutilise `enemy_icon_offsets` tel quel et on saute P2.5.
 2. Décider du sort de `helper/*.json` (doublons de `data/`). Suggestion : garder uniquement `data/` au runtime, supprimer `helper/*.json` ou marquer `helper/` comme purement pédagogique.
 3. Strip type hints + docstrings sur les 5 fichiers cités dans le chantier pour uniformiser le style.
 4. Compléter les 2 items manquants dans `icons_checker/` (230/232).
+5. Bug du détecteur d'âge couleur — sur les screenshots de profile.png, certaines pièces Quantum/Divine sont identifiées comme Modern. Le détecteur de fond (HSV) à recalibrer.
 
-### 🔭 Priorité 5 — Tech Tree (futur)
+### 🔭 Priorité 6 — Tech Tree (futur)
 
 1. Champ « Tech Tree boost % » manuel dans la fiche profil. Plus précis qu'une déduction par écart.
 2. À défaut, exposer `displayed_*` vs `computed_*` dans l'UI joueur en plus du joueur ennemi pour faciliter l'auto-calibration.
+
+### 🔭 Priorité 7 — Substats per-pièce (futur lointain)
+
+Quand le comparateur P2.9 sera ouvert à des comparaisons fréquentes, le manque de substats per-pièce limitera la précision. Capturer la popup long-press par pièce (image-flow différent du panel global) débloquerait :
+- Comparateur substats deltas exacts.
+- Optimiseur pouvant suggérer "swap cette pièce X contre cette autre" en gardant les bonnes substats.
 
 ---
 
 ### En une phrase
 
-Au 25/04 : le pipeline OCR → identification icônes → recalcul HP/Dmg ennemi est **complet et testé** (101/101 tests verts), le modèle PvP HP par source (1.0 / 0.5 / 0.5 / 2.0) est désormais **correctement appliqué**, l'attack speed discret et le projectile travel time sont à jour (P1-P8 du PATCH_NOTES déjà mergés). Restent : **bouton UI Scan weapon manquant**, **`weapon_breakpoints.py` chargé pour rien** (à brancher ou supprimer), **doublons `helper/*.json` à supprimer**, et **Tech Tree à exposer manuellement**.
+Au 26/04 (fin de session) : pipeline OCR → identification icônes → recalcul HP/Dmg **complet** (120/120 tests verts), modèle PvP HP par source **correctement appliqué** (1.0/0.5/0.5/2.0), build joueur 8 slots **persisté** dans `equipment.txt`, `compute_hp_buckets()` prefer-equipment-direct quand le build est connu, **comparateur path single-item** branché à l'UI via le sélecteur « Compare against », **bouton Scan weapon** dans le simulateur, **vue Build actuel** opérationnelle, README à jour. Priorités 1 → 4 et P2.* terminées. Restent : **outil calibration P2.5** (optionnel), **priorité 5 nettoyage** (`weapon_breakpoints.py` à brancher ou supprimer, doublons `helper/*.json` à supprimer, bug détecteur d'âge couleur), **priorité 6 Tech Tree**, **priorité 7 substats per-pièce**.

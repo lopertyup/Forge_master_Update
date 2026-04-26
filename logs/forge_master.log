@@ -18,3 +18,32 @@
 19:46:55 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=7
 20:11:59 [INFO   ] __main__: Starting Forge Master UI
 20:11:59 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=7
+20:13:47 [INFO   ] __main__: Starting Forge Master UI
+20:13:47 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=7
+20:15:02 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+20:15:13 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=7
+20:15:48 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Headgear — fill helper/icons_organized for age=1 slot=Helmet
+20:15:48 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Armor — fill helper/icons_organized for age=1 slot=Body
+20:15:48 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Glove — fill helper/icons_organized for age=1 slot=Gloves
+20:15:48 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Neck — fill helper/icons_organized for age=1 slot=Necklace
+20:15:48 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Ring — fill helper/icons_organized for age=1 slot=Ring
+20:15:48 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Weapon — fill helper/icons_organized for age=1 slot=Weapon
+20:15:48 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Foot — fill helper/icons_organized for age=1 slot=Shoe
+20:15:48 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Underworld\Belt — fill helper/icons_organized for age=8 slot=Belt
+20:15:51 [INFO   ] backend.enemy_libraries: enemy_libraries: loaded 15 libraries from C:\Users\lprud\Downloads\forge_master_UI_Chantier\data
+20:15:51 [WARNING] game_controller: enemy recompute: Dmg gap 99.8% (Tech Tree not factored in)
+20:15:51 [WARNING] game_controller: enemy recompute: HP gap 91.0%
+20:15:55 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Headgear — fill helper/icons_organized for age=1 slot=Helmet
+20:15:55 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Armor — fill helper/icons_organized for age=1 slot=Body
+20:15:55 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Glove — fill helper/icons_organized for age=1 slot=Gloves
+20:15:55 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Neck — fill helper/icons_organized for age=1 slot=Necklace
+20:15:55 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Ring — fill helper/icons_organized for age=1 slot=Ring
+20:15:55 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Medieval\Weapon — fill helper/icons_organized for age=1 slot=Weapon
+20:15:55 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Primitive\Foot — fill helper/icons_organized for age=0 slot=Shoe
+20:15:55 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\helper\icons_organized\Underworld\Belt — fill helper/icons_organized for age=8 slot=Belt
+20:15:58 [WARNING] game_controller: enemy recompute: Dmg gap 99.8% (Tech Tree not factored in)
+20:15:58 [WARNING] game_controller: enemy recompute: HP gap 88.0%
+20:16:21 [INFO   ] ui.views.simulator: simulator: using recomputed enemy stats — HP=5588892 Dmg=10550 (text-OCR overridden); weapon W=0.57s R=0.93s travel=0.000s; HP buckets equip=5504572 pet=83982 mount=2 skill=336
+20:16:21 [INFO   ] backend.simulation: simulate_batch: process pool ready (7 workers)
+06:31:41 [INFO   ] __main__: Starting Forge Master UI
+06:36:06 [INFO   ] __main__: Starting Forge Master UI

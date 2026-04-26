@@ -76,5 +76,27 @@
         747
       ]
     ]
+  },
+  "player_weapon": {
+    "captures": 1,
+    "bboxes": [
+      [
+        1443,
+        503,
+        1502,
+        560
+      ]
+    ]
+  },
+  "player_equipment": {
+    "captures": 1,
+    "bboxes": [
+      [
+        1401,
+        188,
+        1800,
+        860
+      ]
+    ]
   }
 }

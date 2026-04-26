@@ -54,6 +54,8 @@ from .enemy_ocr_types import (
     IdentifiedSkill,
 )
 from .enemy_stat_calculator import calculate_enemy_stats
+from .equipment_pipeline import extract_level as _extract_level_shared
+from .equipment_pipeline import identify_equipment_panel
 
 log = logging.getLogger(__name__)
 
@@ -126,6 +128,21 @@ def _build_profile(
     W, H = capture.size
     offsets = offsets_for_capture(W, H)
 
+    # ── items ──────────────────────────────────────────────
+    # Delegated to the shared equipment-panel identifier so the
+    # player-side scanner reuses the exact same template-match +
+    # Lv.NN OCR code path.
+    profile.items = identify_equipment_panel(
+        capture,
+        equipment_offsets=offsets["equipment"],
+        border_offsets=offsets["border"],
+        bg_offsets=offsets["bg"],
+        slot_order=list(offsets["slot_order"]),
+        skip_per_slot_ocr=skip_per_slot_ocr,
+    )
+
+    # The pets / mount / skills sections still need identify_all
+    # since they read different sub-zones of the SAME capture.
     identified = identify_all(
         capture,
         equipment_offsets=offsets["equipment"],
@@ -136,20 +153,6 @@ def _build_profile(
         skill_offsets=offsets["skills"],
         slot_order=list(offsets["slot_order"]),
     )
-
-    # ── items ───────────────────────────────────────────────
-    items: list[IdentifiedItem] = []
-    for i, entry in enumerate(identified["items"]):
-        level = (0 if skip_per_slot_ocr
-                 else _extract_level(capture, offsets["equipment"][i]))
-        items.append(IdentifiedItem(
-            slot=entry["slot"],
-            age=entry["age"],
-            idx=entry["idx"],
-            rarity=entry["rarity"],
-            level=max(1, level),
-        ))
-    profile.items = items
 
     # ── pets ────────────────────────────────────────────────
     pets: list[IdentifiedPet] = []

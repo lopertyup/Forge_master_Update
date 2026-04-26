@@ -14,6 +14,7 @@ PROFILE_FILE         = os.path.join(_DIR, "profile.txt")
 SKILLS_FILE          = os.path.join(_DIR, "skills.txt")
 PETS_FILE            = os.path.join(_DIR, "pets.txt")
 MOUNT_FILE           = os.path.join(_DIR, "mount.txt")
+EQUIPMENT_FILE       = os.path.join(_DIR, "equipment.txt")
 PETS_LIBRARY_FILE    = os.path.join(_DIR, "pets_library.txt")
 MOUNT_LIBRARY_FILE   = os.path.join(_DIR, "mount_library.txt")
 SKILLS_LIBRARY_FILE  = os.path.join(_DIR, "skills_library.txt")
@@ -36,6 +37,11 @@ ZONE_DEFAULTS = {
     # their own character screen. Consumed by the player_weapon
     # scanner to derive windup / recovery / projectile_travel_time.
     "player_weapon": {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
+    # Player's full equipment panel (the 8-slot grid). Captured once;
+    # the panel is identified slot-by-slot via the same template
+    # matching pipeline as the opponent profile. Drives the per-piece
+    # tracking saved in equipment.txt.
+    "player_equipment": {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
 }
 
 # ── Simulation parameters ───────────────────────────────────
@@ -96,6 +102,43 @@ COMBAT_START_DELAY       = 1.52
 # their hits over buff_duration instead, and their cooldown
 # only begins once all hits have fired.
 CAST_BURST_DURATION      = 2.0
+
+# ── Equipment schema (chantier P2) ──────────────────────────
+#
+# The player's equipped 8 pieces are persisted in equipment.txt
+# with one section per slot. Slots match the canonical in-game
+# order used by the enemy pipeline (see SLOT_ORDER in
+# enemy_ocr_types.py). Each slot stores:
+#   - identity : __name__, __rarity__, __age__, __idx__, __level__
+#   - cached   : hp_flat, damage_flat (level-scaled from
+#                ItemBalancingLibrary), attack_type (weapon only)
+# Empty slots keep their section but with zero / empty values.
+EQUIPMENT_SLOTS = (
+    "EQUIP_HELMET",
+    "EQUIP_BODY",
+    "EQUIP_GLOVES",
+    "EQUIP_NECKLACE",
+    "EQUIP_RING",
+    "EQUIP_WEAPON",
+    "EQUIP_SHOE",
+    "EQUIP_BELT",
+)
+
+# Plain-name slot lookup (no EQUIP_ prefix). Aligned with
+# SLOT_ORDER in backend/enemy_ocr_types.py.
+EQUIPMENT_SLOT_NAMES = (
+    "Helmet",
+    "Body",
+    "Gloves",
+    "Necklace",
+    "Ring",
+    "Weapon",
+    "Shoe",
+    "Belt",
+)
+
+EQUIPMENT_NUMERIC_KEYS = ("hp_flat", "damage_flat")
+EQUIPMENT_IDENTITY_KEYS = ("__name__", "__rarity__", "__age__", "__idx__", "__level__")
 
 # ── Stat schemas ────────────────────────────────────────────
 

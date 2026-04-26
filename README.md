@@ -98,16 +98,18 @@ The OCR needs to know **where on your screen** each kind of panel lives
 in BlueStacks. This is a one-time setup (stored in `backend/zones.json`).
 
 1. In the app, open the **📐 Zones** tab.
-2. The table lists six zones:
+2. The table lists eight zones:
 
-   | Zone        | What to trace                                |
-   | :---------- | :------------------------------------------- |
-   | Profile     | Your own stat panel (scrollable)             |
-   | Opponent    | The opponent's stat panel (also scrollable)  |
-   | Equipment   | The equipment comparison popup (with NEW!)   |
-   | Skill       | A skill's description panel                  |
-   | Pet         | The active pet's stat panel                  |
-   | Mount       | The mount's stat panel                       |
+   | Zone              | What to trace                                                |
+   | :---------------- | :----------------------------------------------------------- |
+   | Profile           | Your own stat panel (scrollable)                             |
+   | Opponent          | The opponent's stat panel (also scrollable)                  |
+   | Equipment         | The equipment comparison popup (with NEW!)                   |
+   | Skill             | A skill's description panel                                  |
+   | Pet               | The active pet's stat panel                                  |
+   | Mount             | The mount's stat panel                                       |
+   | Player weapon     | A tight box around YOUR equipped weapon icon                 |
+   | Player build      | YOUR full character/equipment panel (same framing as Opponent) |
 
 3. Click **Set zone** on a row. The Forge Master window stays where it
    is, and a translucent red overlay covers only BlueStacks.
@@ -116,6 +118,15 @@ in BlueStacks. This is a one-time setup (stored in `backend/zones.json`).
 5. Some zones (profile, opponent) ask for **two captures** — the panels
    scroll, so you capture once at the top and once after scrolling.
    Just follow the on-screen hint between each drag.
+
+> 💡 **Player weapon vs Player build.** The two new zones serve
+> different needs. *Player weapon* is a single icon used by the
+> Simulator to feed the exact wind-up / recovery / projectile
+> travel time of your weapon into the fight model. *Player build*
+> captures all 8 equipped pieces at once and persists them to
+> `equipment.txt` — that's what the Build view shows and what the
+> Equipment Comparator reads when you pick a slot in its
+> "Compare against" dropdown.
 
 Once a zone is green, you can forget about it — a single click on the
 **📷 Scan** button of any tab will replay that exact capture.
@@ -186,6 +197,42 @@ piece is an upgrade.
 
 ![Equipment Comparator](screenshots/equipment_comparator.png)
 
+#### Compare against a saved slot (no NEW! popup needed)
+
+Once you've captured your full build via the **Player build** zone (see
+the new **Build** tab below), you can compare a single new item against
+the piece equipped in any slot — no need for the side-by-side NEW!
+popup anymore.
+
+1. Pick a slot in the **Compare against** dropdown (Helmet, Body, …).
+2. Paste **only the new item's text** (one `[Rarity] Name` block) into
+   the textbox, or scan it.
+3. Simulation runs against the equipped piece pulled from
+   `equipment.txt`.
+
+> 💡 **Limitation.** Per-piece substats are not yet tracked. In this
+> single-item flow, only the flat HP / damage swap is folded into the
+> simulation; substats stay at your current totals. The headline
+> verdict (better / worse) is still meaningful — substat deltas just
+> aren't visualised.
+
+### Build (your 8 equipped pieces)
+
+The **Build** tab shows your eight equipped pieces in a 4 × 2 grid
+with the icon, name, level, and main stat (HP or Damage) of each
+slot. Click **📷 Scan Build** to re-capture the whole panel; the
+**Player build** zone you calibrated in the Zones tab is replayed,
+each icon is template-matched against the in-game library, levels
+are OCR'd, and the result is persisted into
+`backend/equipment.txt`.
+
+Why it matters:
+- The PvP HP pool is now computed per source (1 × equipment, 0.5 × pets,
+  0.5 × skill passives, 2 × mount). Knowing your equipment HP
+  precisely lets the simulator apply the right multiplier.
+- The Equipment Comparator reads from this Build so you can compare
+  against the equipped piece without re-capturing it every time.
+
 ### Pets
 
 In the game, open the pet's page. On the **Pets** tab in the UI, click
@@ -235,10 +282,16 @@ the simulator.
 ### Combat Simulator
 
 1. Open the **Simulator** tab.
-2. Click **📷 Scan** with the opponent's profile visible in BlueStacks
+2. (Optional, recommended) On the player panel, click **📷 Scan
+   weapon** with your equipped weapon icon visible in BlueStacks
+   (calibrated via the **Player weapon** zone). The simulator picks
+   up the wind-up / recovery / projectile travel time of your
+   weapon for the next fight; without this, it falls back to a
+   generic 0.25 s per swing.
+3. Click **📷 Scan** with the opponent's profile visible in BlueStacks
    (don't forget their skills — use the Skills scan for each one), or
    key in the stats by hand.
-3. Click **Simulate** — 1000 fights are played, and the tool reports
+4. Click **Simulate** — 1000 fights are played, and the tool reports
    your win / loss / draw rate.
 
 ### Substat Optimizer

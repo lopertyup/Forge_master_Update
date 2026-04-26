@@ -109,19 +109,25 @@ def build_import_zone(parent: ctk.CTkBaseClass, title: str, hint: str,
 
 
 def attach_scan_button(parent_btn_frame: ctk.CTkBaseClass,
-                       textbox: ctk.CTkTextbox,
+                       textbox: Optional[ctk.CTkTextbox],
                        status_lbl: ctk.CTkLabel,
                        scan_key: str,
                        scan_fn: Callable,
                        captures_fn: Optional[Callable[[str], int]] = None,
                        on_scan_ready: Optional[Callable[[], None]] = None,
+                       label: Optional[str] = None,
                        ) -> ctk.CTkButton:
     """Create and pack a 📷 scan button that drives the OCR FSM.
 
     The button appends onto `parent_btn_frame` with side="left". All
     OCR errors (ocr_unavailable / ocr_error / zone_not_configured /
     empty) are surfaced in `status_lbl`. On success, the textbox is
-    populated and `on_scan_ready` is called.
+    populated (when provided) and `on_scan_ready` is called.
+
+    `textbox=None` is supported for "headless" scans where the
+    captured text is consumed directly by the controller (e.g.
+    player_weapon, player_equipment) without a UI textbox to fill.
+    `label` overrides the default "📷 Scan" caption.
     """
     total = 1
     if captures_fn is not None:
@@ -130,12 +136,13 @@ def attach_scan_button(parent_btn_frame: ctk.CTkBaseClass,
         except Exception:
             total = 1
 
+    base_label = label if label else _SCAN_LABEL
     state = {"step": 0, "buffer": ""}  # mutable closure over the button
 
     def _label_for_step(step: int) -> str:
         if total <= 1:
-            return _SCAN_LABEL
-        return f"{_SCAN_LABEL} ({step + 1}/{total})"
+            return base_label
+        return f"{base_label} ({step + 1}/{total})"
 
     def _reset() -> None:
         state["step"]   = 0
@@ -143,6 +150,8 @@ def attach_scan_button(parent_btn_frame: ctk.CTkBaseClass,
         btn.configure(text=_label_for_step(0), state="normal")
 
     def _fill_textbox(text: str) -> None:
+        if textbox is None:
+            return
         textbox.delete("1.0", "end")
         textbox.insert("1.0", text)
 
