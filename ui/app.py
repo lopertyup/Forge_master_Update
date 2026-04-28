@@ -12,30 +12,33 @@ import customtkinter as ctk
 
 from game_controller import GameController
 from ui.theme import C, FONT_H1, FONT_NAV, FONT_SMALL
-from ui.views.build_view   import BuildView
-from ui.views.dashboard    import DashboardView
-from ui.views.equipment  import EquipmentView
-from ui.views.mount_view   import MountView
+from ui.views.dashboard      import DashboardView
+from ui.views.equipment      import EquipmentView
+from ui.views.mount_view     import MountView
 from ui.views.optimizer_view import OptimizerView
-from ui.views.pets_view    import PetsView
-from ui.views.simulator  import SimulatorView
-from ui.views.skills_view  import SkillsView
-from ui.views.zones_view   import ZonesView
+from ui.views.pets_view      import PetsView
+from ui.views.simulator      import SimulatorView
+from ui.views.skills_view    import SkillsView
+from ui.views.zones_view     import ZonesView
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
 
 log = logging.getLogger(__name__)
 
+# Side-nav layout — 8 sections matching UI_REFACTOR_PLAN §0:
+# Dashboard, Simulator, Equipment, Skills, Mount, Pets, Optimizer, Zones.
+# (build_view was folded into Equipment as the "Build actuel" tab.
+# wiki_calibration stays accessible via Equipment > "Calibrate icons → wiki",
+# i.e. hors menu principal.)
 _NAV_ITEMS = [
     ("dashboard",   "  📊  Dashboard",   DashboardView),
     ("simulator",   "  ⚔   Simulator",   SimulatorView),
-    ("build",       "  🛡   Build",      BuildView),
-    ("equipment",   "  ⚖   Equipment",  EquipmentView),
+    ("equipment",   "  🛡   Equipment",  EquipmentView),
     ("skills",      "  ✨  Skills",      SkillsView),
+    ("mount",       "  🐴  Mount",       MountView),
     ("pets",        "  🐾  Pets",        PetsView),
     ("optimizer",   "  🧬  Optimizer",   OptimizerView),
-    ("mount",       "  🐴  Mount",       MountView),
     ("zones",       "  📐  Zones",       ZonesView),
 ]
 

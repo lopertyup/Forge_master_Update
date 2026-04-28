@@ -9,6 +9,8 @@ from typing import Dict
 
 import customtkinter as ctk
 
+from backend.constants import EQUIPMENT_SLOTS, EQUIPMENT_SLOT_NAMES
+
 from ui.theme import (
     C,
     FONT_BIG,
@@ -35,6 +37,19 @@ from ui.widgets import (
 )
 
 _PET_SLOTS = ("PET1", "PET2", "PET3")
+
+# Slot emoji used by the dashboard equipment mini-grid (Plan §3).
+# Must stay in sync with ui/views/equipment.py:_SLOT_EMOJI.
+_EQ_SLOT_EMOJI = {
+    "EQUIP_HELMET":   "🪖",
+    "EQUIP_BODY":     "🦺",
+    "EQUIP_GLOVES":   "🧤",
+    "EQUIP_NECKLACE": "📿",
+    "EQUIP_RING":     "💍",
+    "EQUIP_WEAPON":   "⚔",
+    "EQUIP_SHOE":     "👢",
+    "EQUIP_BELT":     "🎗",
+}
 
 # Profile-import dialog geometry — fixed (no session persistence).
 # Tuned to sit flush against the left edge of the main window.
@@ -239,6 +254,28 @@ class DashboardView(ctk.CTkFrame):
         )
         mount_card.grid(row=1, column=0, padx=16, pady=(0, 12), sticky="ew")
 
+        # ── Equipment (8 slots mini-grid) ───────────────────
+        eq_outer = ctk.CTkFrame(scroll, fg_color=C["card"], corner_radius=12)
+        eq_outer.grid(row=6, column=0, columnspan=2, padx=16, pady=(0, 16),
+                       sticky="ew")
+        eq_outer.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(eq_outer, text="Equipment",
+                     font=FONT_SUB, text_color=C["text"]).grid(
+            row=0, column=0, padx=20, pady=(16, 8), sticky="w")
+
+        eq_grid = ctk.CTkFrame(eq_outer, fg_color="transparent")
+        eq_grid.grid(row=1, column=0, padx=10, pady=(0, 12), sticky="ew")
+        for c in range(4):
+            eq_grid.grid_columnconfigure(c, weight=1)
+
+        equipment = self.controller.get_equipment() or {}
+        for i, slot_key in enumerate(EQUIPMENT_SLOTS):
+            slot_name = EQUIPMENT_SLOT_NAMES[i]
+            data      = equipment.get(slot_key, {}) or {}
+            row, col  = divmod(i, 4)
+            mini = self._eq_mini_slot(eq_grid, slot_key, slot_name, data)
+            mini.grid(row=row, column=col, padx=4, pady=4, sticky="nsew")
+
     # ── Sub-widgets ─────────────────────────────────────────
 
     def _skill_card(self, parent, entry) -> ctk.CTkFrame:
@@ -317,6 +354,76 @@ class DashboardView(ctk.CTkFrame):
                          text_color=C["text"], anchor="e").grid(
                 row=0, column=1, padx=10, pady=4, sticky="e")
         return card
+
+    def _eq_mini_slot(self, parent, slot_key: str, slot_name: str,
+                      data: Dict) -> ctk.CTkFrame:
+        """Compact clickable card for one equipment slot.
+
+        Layout (top → bottom):  emoji + slot name (muted) /
+        item name (rarity-colored) /  Lv.X chip.
+        Clicking anywhere on the card switches to the Equipment view
+        with the matching slot pre-selected on the Comparer tab.
+        """
+        card = ctk.CTkFrame(parent, fg_color=C["card_alt"], corner_radius=10)
+
+        emoji = _EQ_SLOT_EMOJI.get(slot_key, "🛡")
+        name  = data.get("__name__")
+        rar   = data.get("__rarity__")
+        lvl   = data.get("__level__")
+
+        # Top: slot label
+        ctk.CTkLabel(
+            card, text=f"{emoji}  {slot_name}",
+            font=FONT_TINY, text_color=C["muted"], anchor="w",
+        ).pack(padx=10, pady=(8, 2), anchor="w", fill="x")
+
+        # Body: item name + rarity, or "(unscanned)"
+        if name:
+            ctk.CTkLabel(
+                card, text=name, font=FONT_SMALL,
+                text_color=rarity_color(rar) if rar else C["text"],
+                anchor="w", wraplength=140, justify="left",
+            ).pack(padx=10, pady=(0, 2), anchor="w", fill="x")
+            if lvl:
+                ctk.CTkLabel(
+                    card, text=f"Lv.{int(lvl)}",
+                    font=FONT_TINY, text_color=C["accent"], anchor="w",
+                ).pack(padx=10, pady=(0, 8), anchor="w")
+            else:
+                ctk.CTkFrame(card, fg_color="transparent", height=8).pack()
+        else:
+            ctk.CTkLabel(
+                card, text="(unscanned)", font=FONT_SMALL,
+                text_color=C["disabled"], anchor="w",
+            ).pack(padx=10, pady=(0, 8), anchor="w")
+
+        # Bind click on the whole card (and every child label) — Tk does
+        # not propagate <Button-1> from a Label up to its parent Frame, so
+        # we bind explicitly on each.
+        def _bind_click(widget):
+            try:
+                widget.bind(
+                    "<Button-1>",
+                    lambda e, sk=slot_key: self._open_equipment_at_slot(sk),
+                )
+                widget.configure(cursor="hand2")
+            except Exception:
+                pass
+            for child in widget.winfo_children():
+                _bind_click(child)
+        _bind_click(card)
+        return card
+
+    def _open_equipment_at_slot(self, slot_key: str) -> None:
+        """Switch the main app to the Equipment view and ask it to focus
+        on `slot_key` (Plan §3)."""
+        try:
+            self.app.show_view("equipment")
+        except Exception:
+            return
+        view = self.app._view_cache.get("equipment")
+        if view is not None and hasattr(view, "focus_slot"):
+            view.focus_slot(slot_key)
 
     @staticmethod
     def _skill_stat_rows(data: Dict):

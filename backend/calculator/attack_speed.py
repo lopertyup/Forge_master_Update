@@ -478,4 +478,4 @@ def _cli(argv):
 
 if __name__ == "__main__":
     import sys
-    sys.exit(_cli(s
+    sys.exit(_cli(sys.argv[1:]))

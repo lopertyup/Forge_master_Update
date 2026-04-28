@@ -1202,4 +1202,6 @@ class GameController:
             ("ranged_pct",     "⚔  Ranged %",           False),
             ("attack_speed",   "⚡ Attack Speed",        False),
             ("skill_damage",   "✨ Skill Damage",        False),
-            
+            ("skill_cooldown", "❄  Skill Cooldown",      False),
+            ("health_pct",     "❤  Health %",            False),
+        ]

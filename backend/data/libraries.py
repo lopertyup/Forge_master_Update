@@ -1,6 +1,6 @@
 """
 ============================================================
-  FORGE MASTER â Game data libraries (lazy-loaded)
+  FORGE MASTER — Game data libraries (lazy-loaded)
 
   Centralised lazy-loader for every JSON resource under
   ``data/``. Each library is cached after first read so the
@@ -22,7 +22,7 @@
   --------------
   This module used to live under the name "enemy_libraries.py"
   because it was first written for the opponent recompute
-  pipeline. It is now used by the player pipeline too â the
+  pipeline. It is now used by the player pipeline too — the
   filename is kept for backwards compatibility but the public
   API is general-purpose.
 ============================================================
@@ -43,8 +43,8 @@ log = logging.getLogger(__name__)
 #  Paths
 # ============================================================
 
-# NOTE: lives at backend/data/libraries.py — go up three parents to reach
-# the project root, then dive into the runtime ``data/`` folder.
+# Lives at backend/data/libraries.py — three parents up reaches
+# the project root, where the runtime ``data/`` folder lives.
 DATA_DIR  = Path(__file__).resolve().parent.parent.parent / "data"
 ICONS_DIR = DATA_DIR / "icons"
 
@@ -55,20 +55,6 @@ _DATA_DIR = DATA_DIR
 # ============================================================
 #  Library file map
 # ============================================================
-#
-# Maps short Python-friendly names to the JSON files in data/.
-# Every value here MUST exist on disk â if a file is missing
-# the loader returns an empty dict and logs a warning.
-#
-# Updated for the 22/04/2026 patch:
-#   added : auto_pet_mapping, auto_mount_mapping, auto_skill_mapping,
-#           stat_config_library, pet_balancing_library
-#   removed: secondary_stat_library, pvp_base_config,
-#           manual_sprite_mapping, item_balancing_config,
-#           projectiles_library
-#           (info either rolled into other libs / archived in
-#            data/_reference/ or _archive/, or transferred into
-#            backend/constants.py).
 
 _LIB_FILES: Dict[str, str] = {
     "item_balancing_library":   "ItemBalancingLibrary.json",
@@ -78,7 +64,7 @@ _LIB_FILES: Dict[str, str] = {
 
     # Pets
     "pet_library":              "PetLibrary.json",
-    "pet_balancing_library":    "PetBalancingLibrary.json",  # 3 entries
+    "pet_balancing_library":    "PetBalancingLibrary.json",
     "pet_upgrade_library":      "PetUpgradeLibrary.json",
 
     # Mounts
@@ -149,8 +135,7 @@ def reset_cache() -> None:
 # ``<project_root>/helper/weapon atq speed/`` (one JSON or TXT per
 # weapon). They are read on demand and cached by weapon key so the
 # breakpoints helper module ``backend.weapon.breakpoints`` does not
-# need its own loader — V2 of the architecture plan: a single
-# chargeur JSON across the codebase.
+# need its own loader — V2 of the architecture plan.
 
 _PROJECT_ROOT = DATA_DIR.parent
 WEAPON_ATQ_SPEED_DIR = _PROJECT_ROOT / "helper" / "weapon atq speed"
@@ -200,9 +185,6 @@ def list_known_weapon_breakpoints() -> List[str]:
 #  Icon path helpers
 # ============================================================
 
-# Maps Age int â folder name on disk under data/icons/equipment/.
-# Mirrors the AgeName values used in AutoItemMapping (with the
-# Early-Modern hyphen restored).
 AGE_INT_TO_FOLDER: Dict[int, str] = {
     0: "Primitive",     1: "Medieval",   2: "Early-Modern",
     3: "Modern",        4: "Space",      5: "Interstellar",
@@ -210,9 +192,6 @@ AGE_INT_TO_FOLDER: Dict[int, str] = {
     9: "Divine",
 }
 
-# Slot UI name â folder on disk. The UI uses Helmet/Body/Gloves/...
-# while the icon folders use Headgear/Armor/Glove/... (legacy
-# convention from AutoItemMapping\'s SpriteName values).
 SLOT_TO_FOLDER: Dict[str, str] = {
     "Helmet":   "Headgear",
     "Body":     "Armor",
@@ -226,11 +205,7 @@ SLOT_TO_FOLDER: Dict[str, str] = {
 
 
 def equipment_icon_path(age: int, slot: str, sprite_name: str) -> Path:
-    """Resolve an equipment icon path given its identity.
-
-    Returns the path even when the file is missing â callers should
-    check ``.is_file()`` themselves.
-    """
+    """Resolve an equipment icon path given its identity."""
     age_folder = AGE_INT_TO_FOLDER.get(age, str(age))
     slot_folder = SLOT_TO_FOLDER.get(slot, slot)
     return ICONS_DIR / "equipment" / age_folder / slot_folder / f"{sprite_name}.png"

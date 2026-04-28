@@ -137,8 +137,10 @@ F. SOUS-DOSSIERS
   Passifs skills                   | SkillPassiveLibrary.json
   Defaults par stat                | StatConfigLibrary.json
   Mapping nom ↔ id                 | Auto{Item,Pet,Mount,Skill}Mapping.json
-  Calcul attack speed              | backend/attack_speed_calculator.py
+  Calcul attack speed              | backend/calculator/attack_speed.py
                                    | (formule, PAS de fichier de table)
+  Breakpoints attack speed         | helper/weapon atq speed/*.json
+                                   | (chargés via backend/data/libraries.py)
 
 ────────────────────────────────────────────────────────────────────────────────
 4. CONVENTIONS DES CLÉS
@@ -185,7 +187,7 @@ Quand un nouveau patch sort, le workflow est :
 ────────────────────────────────────────────────────────────────────────────────
 
 Aucun fichier de table de breakpoints n'existe dans data/. Tout est calculé à
-la volée par backend/attack_speed_calculator.py à partir de :
+la volée par backend/calculator/attack_speed.py à partir de :
 
   WeaponLibrary[key]["WindupTime"]            — par arme
   WeaponLibrary[key]["RealAttackDuration"]    — par arme (1.10–1.20)

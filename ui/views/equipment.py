@@ -28,7 +28,12 @@ from ui.theme import (
     FONT_SUB,
     fmt_number,
 )
-from ui.widgets import attach_scan_button, build_header, confirm
+from ui.widgets import (
+    attach_scan_button,
+    build_header,
+    companion_slot_card,
+    confirm,
+)
 
 
 # Stats displayed on equipment — canonical in-game order.
@@ -78,6 +83,26 @@ _SLOT_LABEL_TO_KEY = {
     "Belt":     "EQUIP_BELT",
 }
 
+# Reverse lookup so external callers (e.g. the Dashboard equipment mini-grid)
+# can hand us an EQUIP_* key and we know which option label to set on the
+# Comparer tab's slot picker.
+_SLOT_KEY_TO_LABEL = {v: k for k, v in _SLOT_LABEL_TO_KEY.items()}
+
+
+# Slot emoji — used by the "Build actuel" tab grid (8 cells in 4x2 layout).
+# Order mirrors EQUIPMENT_SLOTS / EQUIPMENT_SLOT_NAMES so divmod(i, 4) places
+# the cards in the same in-game order (Helmet, Body, ..., Belt).
+_SLOT_EMOJI = {
+    "EQUIP_HELMET":   "🪖",
+    "EQUIP_BODY":     "🦺",
+    "EQUIP_GLOVES":   "🧤",
+    "EQUIP_NECKLACE": "📿",
+    "EQUIP_RING":     "💍",
+    "EQUIP_WEAPON":   "⚔",
+    "EQUIP_SHOE":     "👢",
+    "EQUIP_BELT":     "🎗",
+}
+
 
 class EquipmentView(ctk.CTkFrame):
 
@@ -94,10 +119,163 @@ class EquipmentView(ctk.CTkFrame):
     # ── Build ─────────────────────────────────────────────────
 
     def _build(self) -> None:
-        build_header(self, "Equipment Comparator")
+        build_header(self, "🛡   Equipment")
 
-        body = ctk.CTkFrame(self, fg_color=C["bg"], corner_radius=0)
-        body.grid(row=1, column=0, sticky="nsew", padx=16, pady=12)
+        # Tabview shell. "Build actuel" shows the persisted 8 slots; "Comparer"
+        # is the existing OCR/paste comparator. (Plan §5 will add a 3rd
+        # "Librairie" tab in a later phase once the controller exposes a
+        # filterable item list.)
+        self._tabs = ctk.CTkTabview(
+            self,
+            fg_color=C["bg"],
+            segmented_button_fg_color=C["card"],
+            segmented_button_selected_color=C["accent"],
+            segmented_button_selected_hover_color=C["accent"],
+        )
+        self._tabs.grid(row=1, column=0, sticky="nsew", padx=8, pady=(8, 8))
+        tab_build   = self._tabs.add("Build actuel")
+        tab_compare = self._tabs.add("Comparer")
+        self._build_build_tab(tab_build)
+        self._build_compare_tab(tab_compare)
+
+    # ── Tab: Build actuel ─────────────────────────────────────
+    # 4×2 grid of the 8 persisted equipment slots + a "Scan Build" button
+    # that calls the player_equipment OCR pipeline. Migrated from the
+    # legacy ui/views/build_view.py (Plan §11 phase 1).
+
+    def _build_build_tab(self, parent: ctk.CTkFrame) -> None:
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure(0, weight=1)
+
+        self._build_scroll = ctk.CTkScrollableFrame(
+            parent, fg_color=C["bg"], corner_radius=0)
+        self._build_scroll.grid(row=0, column=0, sticky="nsew")
+        self._build_scroll.grid_columnconfigure(0, weight=1)
+
+        # Actions row: Scan / Reload / status text.
+        bar = ctk.CTkFrame(self._build_scroll, fg_color="transparent")
+        bar.grid(row=0, column=0, padx=16, pady=(12, 6), sticky="ew")
+        bar.grid_columnconfigure(2, weight=1)
+
+        ctk.CTkButton(
+            bar, text="📷  Scan Build",
+            font=FONT_SMALL, width=160,
+            command=self._on_build_scan_clicked,
+        ).grid(row=0, column=0, padx=(0, 8))
+
+        ctk.CTkButton(
+            bar, text="🔄  Reload",
+            font=FONT_SMALL, width=120,
+            fg_color="transparent",
+            border_color=C["card"], border_width=1,
+            command=self._refresh_build_slots,
+        ).grid(row=0, column=1, padx=(0, 8))
+
+        self._build_status_lbl = ctk.CTkLabel(
+            bar, text="", font=FONT_SMALL,
+            text_color=C["muted"], anchor="w",
+        )
+        self._build_status_lbl.grid(row=0, column=2, sticky="ew")
+
+        # 4-column slot grid (rendered by _refresh_build_slots).
+        self._build_grid = ctk.CTkFrame(self._build_scroll, fg_color="transparent")
+        self._build_grid.grid(row=1, column=0, padx=16, pady=8, sticky="ew")
+        for c in range(4):
+            self._build_grid.grid_columnconfigure(c, weight=1)
+        self._refresh_build_slots()
+
+    def _refresh_build_slots(self) -> None:
+        """Wipe + redraw the 8-slot grid. Cheap — only 8 cards."""
+        for child in self._build_grid.winfo_children():
+            child.destroy()
+
+        equipment = self.controller.get_equipment()
+        for i, slot_key in enumerate(EQUIPMENT_SLOTS):
+            slot_name = EQUIPMENT_SLOT_NAMES[i]
+            data = equipment.get(slot_key, {}) or {}
+            name = data.get("__name__")
+            rar  = data.get("__rarity__")
+
+            stats = {}
+            if data.get("__level__") is not None:
+                stats["__level__"] = data.get("__level__")
+            hp_flat  = data.get("hp_flat")
+            dmg_flat = data.get("damage_flat")
+            if hp_flat:
+                stats["hp_flat"] = float(hp_flat)
+            if dmg_flat:
+                stats["damage_flat"] = float(dmg_flat)
+            atype = data.get("attack_type")
+            if atype:
+                stats["attack_type"] = atype
+
+            card = companion_slot_card(
+                self._build_grid,
+                slot_label=f"{_SLOT_EMOJI.get(slot_key, '🛡')}  {slot_name}",
+                name=name,
+                rarity=rar,
+                stats=stats,
+                fallback_emoji=_SLOT_EMOJI.get(slot_key, "🛡"),
+                empty_text="(unscanned)",
+            )
+            row, col = divmod(i, 4)
+            card.grid(row=row, column=col, padx=6, pady=6, sticky="nsew")
+
+        n_filled = sum(1 for v in equipment.values()
+                       if isinstance(v, dict) and v.get("__name__"))
+        self._build_status_lbl.configure(
+            text=f"{n_filled}/8 slots populated",
+            text_color=C["muted"],
+        )
+
+    def _on_build_scan_clicked(self) -> None:
+        """Trigger controller.scan('player_equipment') asynchronously and
+        refresh the grid once the scan persisted the new pieces."""
+        self._build_status_lbl.configure(
+            text="📷  Scanning ...", text_color=C["accent"])
+
+        def _on_done(text: str, status: str) -> None:
+            # Dispatched onto the Tk thread by the controller.
+            if status == "ocr_unavailable":
+                self._build_status_lbl.configure(
+                    text="⚠  OCR unavailable -- install rapidocr_onnxruntime",
+                    text_color=C["lose"])
+                return
+            if status == "zone_not_configured":
+                self._build_status_lbl.configure(
+                    text="⚠  Zone player_equipment not configured -- "
+                         "set the bbox in the Zones tab first",
+                    text_color=C["lose"])
+                return
+            if status == "ocr_error":
+                self._build_status_lbl.configure(
+                    text="⚠  OCR failed", text_color=C["lose"])
+                return
+            # Success path: equipment.txt has been overwritten by the
+            # controller. Reload the grid from disk.
+            self._refresh_build_slots()
+            self._build_status_lbl.configure(
+                text="✅  Scan applied", text_color=C["win"])
+
+        try:
+            self.controller.scan(
+                zone_key="player_equipment", callback=_on_done)
+        except Exception as e:  # noqa: BLE001
+            self._build_status_lbl.configure(
+                text=f"⚠  scan() raised: {e}",
+                text_color=C["lose"])
+
+    # ── Tab: Comparer ─────────────────────────────────────────
+
+    def _build_compare_tab(self, parent: ctk.CTkFrame) -> None:
+        """Equipment comparator (text input → old/new cards → 1k-fight sim).
+        Lives inside the 'Comparer' tab — same logic as the legacy single-
+        view EquipmentView, just with `parent` as the tab content frame."""
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure(0, weight=1)
+
+        body = ctk.CTkFrame(parent, fg_color=C["bg"], corner_radius=0)
+        body.grid(row=0, column=0, sticky="nsew", padx=8, pady=8)
         body.grid_columnconfigure(0, weight=2)   # text column
         body.grid_columnconfigure(1, weight=3)   # equipment column
         body.grid_rowconfigure(0, weight=1)
@@ -497,6 +675,27 @@ class EquipmentView(ctk.CTkFrame):
         self._render_eq(self._inner_old, {})
         self._render_eq(self._inner_new, {})
         self._build_bottom_empty()
+
+    # ── External entry point ───────────────────────────────────
+
+    def focus_slot(self, slot_key: str) -> None:
+        """Switch to the Comparer tab and pre-select `slot_key` in the
+        slot picker. Called by the Dashboard's equipment mini-grid
+        (Plan §3: "cliquer sur une pièce ouvre Equipment > slot
+        correspondant").
+        """
+        label = _SLOT_KEY_TO_LABEL.get(slot_key)
+        if label is None:
+            return
+        try:
+            self._tabs.set("Comparer")
+        except Exception:
+            pass
+        if hasattr(self, "_slot_var"):
+            self._slot_var.set(label)
+            # Refresh the status hint so the user knows which slot we
+            # locked onto without typing anything.
+            self._on_text_change()
 
     # ── Wiki calibration popup ─────────────────────────────────
 
