@@ -21,9 +21,9 @@ log = logging.getLogger(__name__)
 # ── Icon paths (relative to ui/theme.py) ─────────────────────
 _UI_DIR         = os.path.dirname(os.path.abspath(__file__))
 _ROOT_DIR       = os.path.dirname(_UI_DIR)
-ICONS_DIR       = os.path.join(_ROOT_DIR, "skill_icons")
-PET_ICONS_DIR   = os.path.join(_ROOT_DIR, "pet_icons")
-MOUNT_ICONS_DIR = os.path.join(_ROOT_DIR, "mount_icons")
+ICONS_DIR       = os.path.join(_ROOT_DIR, "data", "icons", "skills")
+PET_ICONS_DIR   = os.path.join(_ROOT_DIR, "data", "icons", "pets")
+MOUNT_ICONS_DIR = os.path.join(_ROOT_DIR, "data", "icons", "mount")
 
 
 # ── Palette ──────────────────────────────────────────────────
