@@ -25,12 +25,12 @@ from ui.zone_picker import ZonePicker
 
 log = logging.getLogger(__name__)
 
-# ── BlueStacks region (screen-absolute) ───────────────────
-# Screen is 1920×1080; the simulator (Forge Master main window) sits on the
-# left (1350×1080) and BlueStacks on the right (570×1080 starting at x=1350).
-# The zone picker overlay covers ONLY this region so the simulator stays
-# visible and usable while the user traces zones over BlueStacks.
-_BLUESTACKS_REGION: Tuple[int, int, int, int] = (1350, 0, 570, 1080)
+# ── Capture overlay region (screen-absolute) ──────────────
+# Full 1920×1080 screen. We previously constrained the overlay to the
+# BlueStacks panel (x≥1350) so the simulator stayed clickable, but the
+# new wiki-grid zone needs the user to trace over the wiki popup which
+# may sit anywhere on the display — so the overlay now spans full screen.
+_BLUESTACKS_REGION: Tuple[int, int, int, int] = (0, 0, 1920, 1080)
 
 # ── Zone catalog (order & presentation) ───────────────────
 # Each entry: (zone_key, icon, label, hint for user)
@@ -52,6 +52,9 @@ _ZONES: List[Tuple[str, str, str, str]] = [
     ("player_equipment", "🛡", "Player build (8 slots)",
      "Trace the zone around YOUR full character/equipment panel "
      "(same framing as the opponent profile)"),
+    ("wiki_grid", "📚", "Wiki grid",
+     "Trace the zone around the in-game wiki popup (4×2 item grid). "
+     "Used by Equipment Comparator → Calibrate icons."),
 ]
 
 

@@ -1,0 +1,92 @@
+{
+  "{'Rarity': 'Common', 'Id': 0}": {
+    "MountId": {
+      "Rarity": "Common",
+      "Id": 0
+    }
+  },
+  "{'Rarity': 'Common', 'Id': 1}": {
+    "MountId": {
+      "Rarity": "Common",
+      "Id": 1
+    }
+  },
+  "{'Rarity': 'Common', 'Id': 2}": {
+    "MountId": {
+      "Rarity": "Common",
+      "Id": 2
+    }
+  },
+  "{'Rarity': 'Rare', 'Id': 0}": {
+    "MountId": {
+      "Rarity": "Rare",
+      "Id": 0
+    }
+  },
+  "{'Rarity': 'Rare', 'Id': 1}": {
+    "MountId": {
+      "Rarity": "Rare",
+      "Id": 1
+    }
+  },
+  "{'Rarity': 'Rare', 'Id': 2}": {
+    "MountId": {
+      "Rarity": "Rare",
+      "Id": 2
+    }
+  },
+  "{'Rarity': 'Rare', 'Id': 3}": {
+    "MountId": {
+      "Rarity": "Rare",
+      "Id": 3
+    }
+  },
+  "{'Rarity': 'Epic', 'Id': 0}": {
+    "MountId": {
+      "Rarity": "Epic",
+      "Id": 0
+    }
+  },
+  "{'Rarity': 'Epic', 'Id': 1}": {
+    "MountId": {
+      "Rarity": "Epic",
+      "Id": 1
+    }
+  },
+  "{'Rarity': 'Legendary', 'Id': 0}": {
+    "MountId": {
+      "Rarity": "Legendary",
+      "Id": 0
+    }
+  },
+  "{'Rarity': 'Legendary', 'Id': 1}": {
+    "MountId": {
+      "Rarity": "Legendary",
+      "Id": 1
+    }
+  },
+  "{'Rarity': 'Ultimate', 'Id': 0}": {
+    "MountId": {
+      "Rarity": "Ultimate",
+      "Id": 0
+    }
+  },
+  "{'Rarity': 'Ultimate', 'Id': 1}": {
+    "MountId": {
+      "Rarity": "Ultimate",
+      "Id": 1
+    }
+  },
+  "{'Rarity': 'Mythic', 'Id': 0}": {
+    "MountId": {
+      "Rarity": "Mythic",
+      "Id": 0
+    }
+  },
+  "{'Rarity': 'Mythic', 'Id': 1}": {
+    "MountId": {
+      "Rarity": "Mythic",
+      "Id": 1
+    }
+  }
+}

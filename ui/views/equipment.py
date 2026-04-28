@@ -16,7 +16,7 @@ from backend.constants import (
     EQUIPMENT_SLOT_NAMES,
     N_SIMULATIONS,
 )
-from backend.stats import combat_stats
+from backend.calculator.stats import combat_stats
 
 from ui.theme import (
     C,
@@ -164,6 +164,18 @@ class EquipmentView(ctk.CTkFrame):
             captures_fn=self.controller.get_zone_captures,
             on_scan_ready=self._on_scan_ready,
         )
+
+        # ── Calibrate icons → wiki (opens a Toplevel popup) ────
+        # Lets the user refresh data/AutoItemMapping.json + the PNG
+        # filenames in data/icons/equipment/ from the in-game wiki
+        # popup. Useful after game updates rename items.
+        ctk.CTkButton(
+            self._scan_row, text="🔍  Calibrate icons → wiki",
+            font=FONT_SMALL, width=200,
+            fg_color="transparent",
+            border_color=C["card"], border_width=1,
+            command=self._open_wiki_calibration,
+        ).pack(side="left", padx=(8, 0))
 
         # ── Right: old + new ──────────────────────────────────
         right = ctk.CTkFrame(body, fg_color="transparent", corner_radius=0)
@@ -485,3 +497,16 @@ class EquipmentView(ctk.CTkFrame):
         self._render_eq(self._inner_old, {})
         self._render_eq(self._inner_new, {})
         self._build_bottom_empty()
+
+    # ── Wiki calibration popup ─────────────────────────────────
+
+    def _open_wiki_calibration(self) -> None:
+        """Open the icon calibration popup. Imported lazily to avoid
+        circular imports at boot."""
+        try:
+            from ui.views.wiki_calibration import WikiCalibrationDialog
+        except Exception as e:  # noqa: BLE001
+            self._lbl_err.configure(
+                text=f"⚠ Cannot open calibration popup: {e}")
+            return
+        WikiCalibrationDialog(self, self.controller)

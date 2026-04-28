@@ -24,7 +24,7 @@ from backend.constants import (
     PETS_STATS_KEYS,
 )
 from backend.constants import SKILL_PASSIVE_LV1
-from backend.parser import (
+from backend.scanner.text_parser import (
     parse_companion_meta,
     parse_equipment,
     parse_mount,
@@ -56,8 +56,8 @@ from backend.persistence import (
     save_skills_library,
 )
 from backend import zone_store
-from backend.simulation import simulate_batch
-from backend.stats import (
+from backend.simulation.engine import simulate_batch
+from backend.calculator.stats import (
     apply_change,
     apply_change_flat_only,
     apply_mount,
@@ -209,7 +209,7 @@ class GameController:
     # ── Enemy recompute cache (Phase 3 wiring) ──────────────
     #
     # Whenever scan(zone_key="opponent", ...) finishes the
-    # controller also runs backend.enemy_pipeline on the same
+    # controller also runs backend.pipeline on the same
     # capture and stores the result here. The simulator view
     # can then prefer these recomputed totals over the raw OCR
     # ones when feeding `simulate()`.
@@ -327,8 +327,8 @@ class GameController:
             return
 
         def _run() -> None:
-            from backend import ocr          # lazy import — Pillow only loaded on first scan
-            from backend.fix_ocr import fix_ocr  # normalize OCR artifacts
+            from backend.scanner import ocr   # lazy import — Pillow only loaded on first scan
+            from backend.scanner.fix_ocr import fix_ocr  # normalize OCR artifacts
 
             if not ocr.is_available():
                 self._dispatch(callback, "", "ocr_unavailable")
@@ -337,7 +337,7 @@ class GameController:
             # Stamp + debug_scan uniquement si DEBUG_OCR est actif.
             stamp = None
             if DEBUG_OCR:
-                from backend import debug_scan
+                from backend.scanner import debug_scan
                 try:
                     stamp = debug_scan.new_stamp()
                 except Exception:
@@ -398,7 +398,7 @@ class GameController:
             # won't see a recompute cache hit.
             if zone_key == "opponent" and bboxes:
                 try:
-                    from backend import enemy_pipeline
+                    from backend import pipeline as enemy_pipeline
                     img = ocr.capture_region(bboxes[0])
                     if img is not None:
                         e_stats, e_prof, _ = enemy_pipeline.recompute_from_capture(
@@ -429,7 +429,7 @@ class GameController:
             # up via consume_player_weapon() on the next fight.
             elif zone_key == "player_weapon" and bboxes:
                 try:
-                    from backend import player_weapon_scanner
+                    from backend.scanner import weapon as player_weapon_scanner
                     img = ocr.capture_region(bboxes[0])
                     if img is not None:
                         scan = player_weapon_scanner.scan_player_weapon_image(img)
@@ -458,7 +458,7 @@ class GameController:
             # cache here -- the persisted dict IS the source of truth.
             elif zone_key == "player_equipment" and bboxes:
                 try:
-                    from backend import player_equipment_scanner
+                    from backend.scanner import player_equipment as player_equipment_scanner
                     img = ocr.capture_region(bboxes[0])
                     if img is not None:
                         eq_dict = player_equipment_scanner.scan_player_equipment_image(img)
@@ -478,6 +478,80 @@ class GameController:
             self._dispatch(callback, text, status)
 
         threading.Thread(target=_run, daemon=True).start()
+
+    # ── Wiki-grid scan (icon recognition / library calibration) ──
+    #
+    # Capture the in-game wiki popup (a 4×2 item grid), template-match
+    # each cell against data/icons/equipment/{Age}/{Slot}/, OCR the name
+    # beneath each icon, and dispatch the results back on the Tk thread.
+    # The caller (Equipment Comparator → Calibrate icons) can then let
+    # the user validate selectively before persisting via apply_wiki_results.
+
+    def scan_wiki_grid(
+        self,
+        age: int,
+        slot: str,
+        threshold: float,
+        callback: Callable[[List, str], None],
+    ) -> None:
+        """Capture the wiki_grid zone + run icon recognition.
+
+        Dispatches (matches: list[CellMatch], status: str) on the Tk thread.
+        Status: "ok" / "zone_not_configured" / "ocr_unavailable" /
+        "capture_failed" / "scan_error".
+        """
+        z = self._zones.get("wiki_grid")
+        if z is None:
+            self._dispatch(callback, [], "zone_not_configured")
+            return
+
+        bboxes = [tuple(b) for b in (z.get("bboxes") or [])]
+        if not bboxes or all(all(c == 0 for c in b) for b in bboxes):
+            self._dispatch(callback, [], "zone_not_configured")
+            return
+
+        def _run() -> None:
+            from backend.scanner import ocr  # type: ignore
+            from backend.scanner import icon_recognition  # type: ignore
+            if not ocr.is_available():
+                self._dispatch(callback, [], "ocr_unavailable")
+                return
+            try:
+                img = ocr.capture_region(bboxes[0])
+                if img is None:
+                    self._dispatch(callback, [], "capture_failed")
+                    return
+                matches = icon_recognition.scan_grid(
+                    img, age=age, slot=slot, threshold=threshold,
+                )
+                self._dispatch(callback, matches, "ok")
+            except Exception:
+                log.exception("scan_wiki_grid: failed")
+                self._dispatch(callback, [], "scan_error")
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def apply_wiki_results(
+        self,
+        matches: List,
+        age: int,
+        slot: str,
+        selected_indices: List[int],
+        threshold: float,
+        dry_run: bool = False,
+    ):
+        """Persist user-validated matches: rename PNGs + update
+        AutoItemMapping. Synchronous (cheap disk ops).
+
+        Returns the ApplyReport from icon_recognition.
+        """
+        from backend.scanner import icon_recognition  # type: ignore
+        return icon_recognition.apply_results(
+            matches, age=age, slot=slot,
+            threshold=threshold,
+            selected_indices=selected_indices,
+            dry_run=dry_run,
+        )
 
     # ── Main simulation (opponent = pasted build) ───────────
 
@@ -1128,6 +1202,4 @@ class GameController:
             ("ranged_pct",     "⚔  Ranged %",           False),
             ("attack_speed",   "⚡ Attack Speed",        False),
             ("skill_damage",   "✨ Skill Damage",        False),
-            ("skill_cooldown", "⏱  Skill Cooldown",     False),
-            ("health_pct",     "❤  Health %",           False),
-        ]
+            

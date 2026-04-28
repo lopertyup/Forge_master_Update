@@ -1,11 +1,11 @@
-"""End-to-end smoke tests for backend.enemy_pipeline (Phase 3 glue)."""
+"""End-to-end smoke tests for backend.pipeline (Phase 3 glue)."""
 
 from __future__ import annotations
 
 from PIL import Image
 
-from backend import enemy_pipeline as p
-from backend.enemy_ocr_types import EnemyComputedStats, EnemyIdentifiedProfile
+from backend import pipeline as p
+from backend.scanner.ocr_types import EnemyComputedStats, EnemyIdentifiedProfile
 
 
 SAMPLE_OCR_TEXT = """\

@@ -1,0 +1,152 @@
+{
+  "{'Rarity': 'Common', 'Id': 0}": {
+    "Rarity": "Common",
+    "Id": 0,
+    "PetName": "Chicken",
+    "SpriteName": "Chicken"
+  },
+  "{'Rarity': 'Common', 'Id': 1}": {
+    "Rarity": "Common",
+    "Id": 1,
+    "PetName": "Dog",
+    "SpriteName": "Dog"
+  },
+  "{'Rarity': 'Common', 'Id': 2}": {
+    "Rarity": "Common",
+    "Id": 2,
+    "PetName": "Cat",
+    "SpriteName": "Cat"
+  },
+  "{'Rarity': 'Common', 'Id': 3}": {
+    "Rarity": "Common",
+    "Id": 3,
+    "PetName": "Snail",
+    "SpriteName": "Snail"
+  },
+  "{'Rarity': 'Common', 'Id': 4}": {
+    "Rarity": "Common",
+    "Id": 4,
+    "PetName": "Mouse",
+    "SpriteName": "Mouse"
+  },
+  "{'Rarity': 'Common', 'Id': 5}": {
+    "Rarity": "Common",
+    "Id": 5,
+    "PetName": "Turtle",
+    "SpriteName": "Turtle"
+  },
+  "{'Rarity': 'Rare', 'Id': 0}": {
+    "Rarity": "Rare",
+    "Id": 0,
+    "PetName": "Hedgehog",
+    "SpriteName": "Hedgehog"
+  },
+  "{'Rarity': 'Rare', 'Id': 1}": {
+    "Rarity": "Rare",
+    "Id": 1,
+    "PetName": "Bear",
+    "SpriteName": "Bear"
+  },
+  "{'Rarity': 'Rare', 'Id': 2}": {
+    "Rarity": "Rare",
+    "Id": 2,
+    "PetName": "Ostrich",
+    "SpriteName": "Ostrich"
+  },
+  "{'Rarity': 'Rare', 'Id': 3}": {
+    "Rarity": "Rare",
+    "Id": 3,
+    "PetName": "Spider",
+    "SpriteName": "Spider"
+  },
+  "{'Rarity': 'Rare', 'Id': 4}": {
+    "Rarity": "Rare",
+    "Id": 4,
+    "PetName": "Scorpion",
+    "SpriteName": "Scorpion"
+  },
+  "{'Rarity': 'Epic', 'Id': 0}": {
+    "Rarity": "Epic",
+    "Id": 0,
+    "PetName": "Griffin",
+    "SpriteName": "Griffin"
+  },
+  "{'Rarity': 'Epic', 'Id': 1}": {
+    "Rarity": "Epic",
+    "Id": 1,
+    "PetName": "Saber Tooth",
+    "SpriteName": "Saber Tooth"
+  },
+  "{'Rarity': 'Epic', 'Id': 2}": {
+    "Rarity": "Epic",
+    "Id": 2,
+    "PetName": "Unicorn",
+    "SpriteName": "Unicorn"
+  },
+  "{'Rarity': 'Epic', 'Id': 3}": {
+    "Rarity": "Epic",
+    "Id": 3,
+    "PetName": "Tiger",
+    "SpriteName": "Tiger"
+  },
+  "{'Rarity': 'Epic', 'Id': 4}": {
+    "Rarity": "Epic",
+    "Id": 4,
+    "PetName": "Panda",
+    "SpriteName": "Panda"
+  },
+  "{'Rarity': 'Legendary', 'Id': 0}": {
+    "Rarity": "Legendary",
+    "Id": 0,
+    "PetName": "Serpent",
+    "SpriteName": "Serpent"
+  },
+  "{'Rarity': 'Legendary', 'Id': 1}": {
+    "Rarity": "Legendary",
+    "Id": 1,
+    "PetName": "Cerberus",
+    "SpriteName": "Cerberus"
+  },
+  "{'Rarity': 'Legendary', 'Id': 2}": {
+    "Rarity": "Legendary",
+    "Id": 2,
+    "PetName": "Kitsune",
+    "SpriteName": "Kitsune"
+  },
+  "{'Rarity': 'Ultimate', 'Id': 0}": {
+    "Rarity": "Ultimate",
+    "Id": 0,
+    "PetName": "Electry",
+    "SpriteName": "Electry"
+  },
+  "{'Rarity': 'Ultimate', 'Id': 1}": {
+    "Rarity": "Ultimate",
+    "Id": 1,
+    "PetName": "Treant",
+    "SpriteName": "Treant"
+  },
+  "{'Rarity': 'Ultimate', 'Id': 2}": {
+    "Rarity": "Ultimate",
+    "Id": 2,
+    "PetName": "Enchanted Elk",
+    "SpriteName": "Enchanted Elk"
+  },
+  "{'Rarity': 'Mythic', 'Id': 0}": {
+    "Rarity": "Mythic",
+    "Id": 0,
+    "PetName": "Baby Dragon",
+    "SpriteName": "Baby Dragon"
+  },
+  "{'Rarity': 'Mythic', 'Id': 1}": {
+    "Rarity": "Mythic",
+    "Id": 1,
+    "PetName": "Genie",
+    "SpriteName": "Genie"
+  },
+  "{'Rarity': 'Mythic', 'Id': 2}": {
+    "Rarity": "Mythic",
+    "Id": 2,
+    "PetName": "Spectral Tiger",
+    "SpriteName": "Spectral Tiger"
+  }
+}

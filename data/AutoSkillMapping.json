@@ -1,0 +1,92 @@
+{
+  "Arrows": {
+    "Type": "Arrows",
+    "Rarity": "Common",
+    "SpriteName": "Arrows"
+  },
+  "Meat": {
+    "Type": "Meat",
+    "Rarity": "Common",
+    "SpriteName": "Meat"
+  },
+  "Shout": {
+    "Type": "Shout",
+    "Rarity": "Common",
+    "SpriteName": "Shout"
+  },
+  "Berserk": {
+    "Type": "Berserk",
+    "Rarity": "Rare",
+    "SpriteName": "Berserk"
+  },
+  "Cannon Barrage": {
+    "Type": "Cannon Barrage",
+    "Rarity": "Rare",
+    "SpriteName": "Cannon Barrage"
+  },
+  "Shuriken": {
+    "Type": "Shuriken",
+    "Rarity": "Rare",
+    "SpriteName": "Shurikens"
+  },
+  "Buff": {
+    "Type": "Buff",
+    "Rarity": "Epic",
+    "SpriteName": "Buff"
+  },
+  "Rain Of Arrows": {
+    "Type": "Rain Of Arrows",
+    "Rarity": "Epic",
+    "SpriteName": "Rain Of Arrows"
+  },
+  "Thorns": {
+    "Type": "Thorns",
+    "Rarity": "Epic",
+    "SpriteName": "Thorns"
+  },
+  "Bomb": {
+    "Type": "Bomb",
+    "Rarity": "Legendary",
+    "SpriteName": "Bomb"
+  },
+  "Meteorite": {
+    "Type": "Meteorite",
+    "Rarity": "Legendary",
+    "SpriteName": "Meteorite"
+  },
+  "Morale": {
+    "Type": "Morale",
+    "Rarity": "Legendary",
+    "SpriteName": "Morale"
+  },
+  "Lightning": {
+    "Type": "Lightning",
+    "Rarity": "Ultimate",
+    "SpriteName": "Lightning"
+  },
+  "Stampede": {
+    "Type": "Stampede",
+    "Rarity": "Ultimate",
+    "SpriteName": "Stampede"
+  },
+  "Worm": {
+    "Type": "Worm",
+    "Rarity": "Ultimate",
+    "SpriteName": "Worm"
+  },
+  "Drone": {
+    "Type": "Drone",
+    "Rarity": "Mythic",
+    "SpriteName": "Drone"
+  },
+  "Higher Morale": {
+    "Type": "Higher Morale",
+    "Rarity": "Mythic",
+    "SpriteName": "Higher Morale"
+  },
+  "Strafe Run": {
+    "Type": "Strafe Run",
+    "Rarity": "Mythic",
+    "SpriteName": "Strafe Run"
+  }
+}

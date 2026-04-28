@@ -17,7 +17,7 @@ try:
 except ImportError:
     pytest = None  # type: ignore
 
-from backend.stats import apply_change, apply_change_flat_only
+from backend.calculator.stats import apply_change, apply_change_flat_only
 
 
 def _make_profile():

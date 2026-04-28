@@ -36,8 +36,8 @@ except ImportError:
     pytest = _PT()  # type: ignore
 
 from backend.constants import PVP_HP_MULTIPLIER
-from backend.simulation import Fighter, simulate
-from backend.stats import combat_stats
+from backend.simulation.engine import Fighter, simulate
+from backend.calculator.stats import combat_stats
 
 
 def _stats(**over):

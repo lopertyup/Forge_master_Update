@@ -20,7 +20,7 @@ from typing import Dict, List
 
 import customtkinter as ctk
 
-from backend.optimizer import (
+from backend.calculator.optimizer import (
     SUBSTATS_POOL,
     VERDICT_DECREASE,
     VERDICT_INCREASE,

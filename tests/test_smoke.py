@@ -37,7 +37,7 @@ class TestImports(unittest.TestCase):
     def test_ocr_module_is_importable_without_engine(self):
         # ocr.py uses lazy imports: importing it must NOT require
         # Pillow / rapidocr to be installed.
-        from backend import ocr
+        from backend.scanner import ocr
         # is_available() is allowed to return False — we only check
         # that it doesn't raise.
         self.assertIsInstance(ocr.is_available(), bool)
@@ -45,7 +45,7 @@ class TestImports(unittest.TestCase):
 
 class TestParseFlat(unittest.TestCase):
     def test_k_m_b_suffixes(self):
-        from backend.parser import parse_flat
+        from backend.scanner.text_parser import parse_flat
         self.assertEqual(parse_flat("42"),     42.0)
         self.assertEqual(parse_flat("1k"),     1_000.0)
         self.assertEqual(parse_flat("2.5m"),   2_500_000.0)
@@ -54,7 +54,7 @@ class TestParseFlat(unittest.TestCase):
         self.assertEqual(parse_flat("1,5k"),   1_500.0)
 
     def test_empty_or_junk_returns_zero(self):
-        from backend.parser import parse_flat
+        from backend.scanner.text_parser import parse_flat
         self.assertEqual(parse_flat(""),       0.0)
         self.assertEqual(parse_flat("junk"),   0.0)
 
@@ -63,7 +63,7 @@ class TestFixOcrNormalise(unittest.TestCase):
     """Past regressions — adding a test for each keeps them dead."""
 
     def _norm(self, line: str) -> str:
-        from backend.fix_ocr import _normalize_line
+        from backend.scanner.fix_ocr import _normalize_line
         return _normalize_line(line)
 
     # --- Bracket labels ------------------------------------------------
@@ -120,7 +120,7 @@ class TestParseProfile(unittest.TestCase):
     )
 
     def test_parse_profile_basic_fields(self):
-        from backend.parser import parse_profile_text
+        from backend.scanner.text_parser import parse_profile_text
         p = parse_profile_text(self.SAMPLE)
         self.assertAlmostEqual(p["hp_total"],     42_000_000.0)
         self.assertAlmostEqual(p["attack_total"], 318_000.0)
@@ -130,7 +130,7 @@ class TestParseProfile(unittest.TestCase):
         self.assertAlmostEqual(p["lifesteal"],    8.13)
 
     def test_parse_profile_missing_fields_default_zero(self):
-        from backend.parser import parse_profile_text
+        from backend.scanner.text_parser import parse_profile_text
         p = parse_profile_text("")
         self.assertEqual(p["hp_total"],    0.0)
         self.assertEqual(p["crit_chance"], 0.0)
@@ -146,7 +146,7 @@ class TestSimulationAvailable(unittest.TestCase):
     """
 
     def test_simulate_batch_is_callable(self):
-        from backend.simulation import simulate_batch
+        from backend.simulation.engine import simulate_batch
         self.assertTrue(callable(simulate_batch))
 
 
@@ -158,7 +158,7 @@ class TestComputeHpBuckets(unittest.TestCase):
     """
 
     def test_legacy_subtraction_path(self):
-        from backend.stats import compute_hp_buckets
+        from backend.calculator.stats import compute_hp_buckets
         b = compute_hp_buckets(
             {"hp_base": 1000.0, "health_pct": 50.0},
             pets={}, mount={}, skills=[],
@@ -169,7 +169,7 @@ class TestComputeHpBuckets(unittest.TestCase):
         self.assertEqual(b["hp_skill_passive"], 0.0)
 
     def test_equipment_known_path_uses_piece_sum(self):
-        from backend.stats import compute_hp_buckets
+        from backend.calculator.stats import compute_hp_buckets
         equip = {
             "EQUIP_HELMET":   {"hp_flat": 100.0},
             "EQUIP_BODY":     {"hp_flat": 200.0},
@@ -188,7 +188,7 @@ class TestComputeHpBuckets(unittest.TestCase):
         self.assertAlmostEqual(b["hp_equip"], 870.0)
 
     def test_empty_equipment_falls_back_to_legacy(self):
-        from backend.stats import compute_hp_buckets
+        from backend.calculator.stats import compute_hp_buckets
         empty = {f"EQUIP_{s}": {"hp_flat": 0.0}
                  for s in ("HELMET","BODY","GLOVES","NECKLACE",
                            "RING","WEAPON","SHOE","BELT")}

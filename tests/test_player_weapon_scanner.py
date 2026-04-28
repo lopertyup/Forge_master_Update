@@ -1,5 +1,5 @@
 """
-Tests for backend.player_weapon_scanner.
+Tests for backend.scanner.weapon.
 
 These tests focus on the OFFLINE / pure parts:
   * the scanner returns None when given garbage input
@@ -27,9 +27,7 @@ except ImportError:
 
 from PIL import Image
 
-from backend import player_weapon_scanner as pws
-
-
+from backend.scanner import weapon as pws
 def _blank_img(size=64, color=(0, 0, 0, 255)):
     return Image.new("RGBA", (size, size), color)
 
@@ -80,7 +78,7 @@ def test_scan_pulls_weapon_fields_from_library(monkeypatch):
     assert out["projectile_speed"] == pytest.approx(25.0)
     # PvP travel uses PVP_COMBAT_DISTANCE (~1.5 u), NOT the weapon's
     # nominal AttackRange (7.0). Both fighters close in before firing.
-    from backend.weapon_projectiles import PVP_COMBAT_DISTANCE
+    from backend.weapon.projectiles import PVP_COMBAT_DISTANCE
     assert out["projectile_travel_time"] == pytest.approx(
         PVP_COMBAT_DISTANCE / 25.0, abs=1e-6)
 

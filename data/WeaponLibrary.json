@@ -1,4 +1,256 @@
 {
+  "{'Age': 999, 'Type': 'Weapon', 'Idx': 5}": {
+    "ItemId": {
+      "Age": 999,
+      "Type": "Weapon",
+      "Idx": 5
+    },
+    "AttackRange": 0.30000000004656613,
+    "WindupTime": 0.6666667000390589,
+    "AttackDuration": 1.5,
+    "IsRanged": 0,
+    "IsAiming": 0,
+    "ProjectileId": 0,
+    "Hand": {
+      "X": 0.0,
+      "Y": 0.0
+    },
+    "Offset": {
+      "X": 0.0,
+      "Y": 0.0
+    }
+  },
+  "{'Age': 1000, 'Type': 'Weapon', 'Idx': 5}": {
+    "ItemId": {
+      "Age": 1000,
+      "Type": "Weapon",
+      "Idx": 5
+    },
+    "AttackRange": 7.0,
+    "WindupTime": 0.9499999999534339,
+    "AttackDuration": 1.5,
+    "IsRanged": 0,
+    "IsAiming": 0,
+    "ProjectileId": 0,
+    "Hand": {
+      "X": 0.0,
+      "Y": 0.0
+    },
+    "Offset": {
+      "X": 0.0,
+      "Y": 0.0
+    }
+  },
+  "{'Age': 999, 'Type': 'Weapon', 'Idx': 4}": {
+    "ItemId": {
+      "Age": 999,
+      "Type": "Weapon",
+      "Idx": 4
+    },
+    "AttackRange": 0.30000000004656613,
+    "WindupTime": 0.7833334000315517,
+    "AttackDuration": 1.5,
+    "IsRanged": 0,
+    "IsAiming": 0,
+    "ProjectileId": 0,
+    "Hand": {
+      "X": 0.0,
+      "Y": 0.0
+    },
+    "Offset": {
+      "X": 0.0,
+      "Y": 0.0
+    }
+  },
+  "{'Age': 1000, 'Type': 'Weapon', 'Idx': 4}": {
+    "ItemId": {
+      "Age": 1000,
+      "Type": "Weapon",
+      "Idx": 4
+    },
+    "AttackRange": 7.0,
+    "WindupTime": 1.0,
+    "AttackDuration": 1.5,
+    "IsRanged": 0,
+    "IsAiming": 0,
+    "ProjectileId": 0,
+    "Hand": {
+      "X": 0.0,
+      "Y": 0.0
+    },
+    "Offset": {
+      "X": 0.0,
+      "Y": 0.0
+    }
+  },
+  "{'Age': 999, 'Type': 'Weapon', 'Idx': 3}": {
+    "ItemId": {
+      "Age": 999,
+      "Type": "Weapon",
+      "Idx": 3
+    },
+    "AttackRange": 0.30000000004656613,
+    "WindupTime": 0.31666669994592667,
+    "AttackDuration": 1.5,
+    "IsRanged": 0,
+    "IsAiming": 0,
+    "ProjectileId": 0,
+    "Hand": {
+      "X": 0.0,
+      "Y": 0.0
+    },
+    "Offset": {
+      "X": 0.0,
+      "Y": 0.0
+    }
+  },
+  "{'Age': 1000, 'Type': 'Weapon', 'Idx': 3}": {
+    "ItemId": {
+      "Age": 1000,
+      "Type": "Weapon",
+      "Idx": 3
+    },
+    "AttackRange": 7.0,
+    "WindupTime": 0.31666669994592667,
+    "AttackDuration": 1.5,
+    "IsRanged": 0,
+    "IsAiming": 0,
+    "ProjectileId": 0,
+    "Hand": {
+      "X": 0.0,
+      "Y": 0.0
+    },
+    "Offset": {
+      "X": 0.0,
+      "Y": 0.0
+    }
+  },
+  "{'Age': 999, 'Type': 'Weapon', 'Idx': 6}": {
+    "ItemId": {
+      "Age": 999,
+      "Type": "Weapon",
+      "Idx": 6
+    },
+    "AttackRange": 0.30000000004656613,
+    "WindupTime": 0.9333333000540733,
+    "AttackDuration": 1.5,
+    "IsRanged": 0,
+    "IsAiming": 0,
+    "ProjectileId": 0,
+    "Hand": {
+      "X": 0.0,
+      "Y": 0.0
+    },
+    "Offset": {
+      "X": 0.0,
+      "Y": 0.0
+    }
+  },
+  "{'Age': 1000, 'Type': 'Weapon', 'Idx': 6}": {
+    "ItemId": {
+      "Age": 1000,
+      "Type": "Weapon",
+      "Idx": 6
+    },
+    "AttackRange": 7.0,
+    "WindupTime": 0.9333333000540733,
+    "AttackDuration": 1.5,
+    "IsRanged": 0,
+    "IsAiming": 0,
+    "ProjectileId": 0,
+    "Hand": {
+      "X": 0.0,
+      "Y": 0.0
+    },
+    "Offset": {
+      "X": 0.0,
+      "Y": 0.0
+    }
+  },
+  "{'Age': 999, 'Type': 'Weapon', 'Idx': 7}": {
+    "ItemId": {
+      "Age": 999,
+      "Type": "Weapon",
+      "Idx": 7
+    },
+    "AttackRange": 0.30000000004656613,
+    "WindupTime": 0.7666666998993605,
+    "AttackDuration": 1.5,
+    "IsRanged": 0,
+    "IsAiming": 0,
+    "ProjectileId": 0,
+    "Hand": {
+      "X": 0.0,
+      "Y": 0.0
+    },
+    "Offset": {
+      "X": 0.0,
+      "Y": 0.0
+    }
+  },
+  "{'Age': 1000, 'Type': 'Weapon', 'Idx': 7}": {
+    "ItemId": {
+      "Age": 1000,
+      "Type": "Weapon",
+      "Idx": 7
+    },
+    "AttackRange": 7.0,
+    "WindupTime": 0.7666666998993605,
+    "AttackDuration": 1.5,
+    "IsRanged": 0,
+    "IsAiming": 0,
+    "ProjectileId": 0,
+    "Hand": {
+      "X": 0.0,
+      "Y": 0.0
+    },
+    "Offset": {
+      "X": 0.0,
+      "Y": 0.0
+    }
+  },
+  "{'Age': 999, 'Type': 'Weapon', 'Idx': 8}": {
+    "ItemId": {
+      "Age": 999,
+      "Type": "Weapon",
+      "Idx": 8
+    },
+    "AttackRange": 0.30000000004656613,
+    "WindupTime": 0.6666667000390589,
+    "AttackDuration": 1.5,
+    "IsRanged": 0,
+    "IsAiming": 0,
+    "ProjectileId": 0,
+    "Hand": {
+      "X": 0.0,
+      "Y": 0.0
+    },
+    "Offset": {
+      "X": 0.0,
+      "Y": 0.0
+    }
+  },
+  "{'Age': 1000, 'Type': 'Weapon', 'Idx': 8}": {
+    "ItemId": {
+      "Age": 1000,
+      "Type": "Weapon",
+      "Idx": 8
+    },
+    "AttackRange": 7.0,
+    "WindupTime": 0.6666667000390589,
+    "AttackDuration": 1.5,
+    "IsRanged": 0,
+    "IsAiming": 0,
+    "ProjectileId": 0,
+    "Hand": {
+      "X": 0.0,
+      "Y": 0.0
+    },
+    "Offset": {
+      "X": 0.0,
+      "Y": 0.0
+    }
+  },
   "{'Age': 10000, 'Type': 'Weapon', 'Idx': 0}": {
     "ItemId": {
       "Age": 10000,
@@ -39,7 +291,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 0, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -60,7 +313,8 @@
     "Offset": {
       "X": 0.6200000639073551,
       "Y": -7.380731403827667e-08
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 0, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -81,7 +335,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1833
   },
   "{'Age': 0, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -102,7 +357,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1333
   },
   "{'Age': 0, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -123,7 +379,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1833
   },
   "{'Age': 0, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -144,7 +401,8 @@
     "Offset": {
       "X": 0.0009999999310821295,
       "Y": 0.6019999999552965
-    }
+    },
+    "RealAttackDuration": 1.1833
   },
   "{'Age': 0, 'Type': 'Weapon', 'Idx': 6}": {
     "ItemId": {
@@ -165,7 +423,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 0}": {
     "ItemId": {
@@ -186,7 +445,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -207,7 +467,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.15
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -228,7 +489,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -249,7 +511,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1833
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -270,7 +533,8 @@
     "Offset": {
       "X": 0.004999999888241291,
       "Y": -0.01799999992363155
-    }
+    },
+    "RealAttackDuration": 1.1833
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -291,7 +555,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.2
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 6}": {
     "ItemId": {
@@ -312,7 +577,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1833
   },
   "{'Age': 2, 'Type': 'Weapon', 'Idx': 0}": {
     "ItemId": {
@@ -333,7 +599,8 @@
     "Offset": {
       "X": 1.1080000000074506,
       "Y": 0.1980000000912696
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 2, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -354,7 +621,8 @@
     "Offset": {
       "X": -0.018000001087784767,
       "Y": -0.004999998491257429
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 2, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -375,7 +643,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 2, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -396,7 +665,8 @@
     "Offset": {
       "X": -0.018000001087784767,
       "Y": -0.004999998491257429
-    }
+    },
+    "RealAttackDuration": 1.1333
   },
   "{'Age': 2, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -417,7 +687,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 2, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -438,7 +709,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 0}": {
     "ItemId": {
@@ -459,7 +731,8 @@
     "Offset": {
       "X": -0.018000001087784767,
       "Y": -0.004999998491257429
-    }
+    },
+    "RealAttackDuration": 1.1
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -480,7 +753,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1833
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -501,7 +775,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -522,7 +797,8 @@
     "Offset": {
       "X": -0.018594784662127495,
       "Y": -0.001798367127776146
-    }
+    },
+    "RealAttackDuration": 1.1
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -543,7 +819,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1333
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -564,7 +841,8 @@
     "Offset": {
       "X": -0.018000001087784767,
       "Y": -0.004999998491257429
-    }
+    },
+    "RealAttackDuration": 1.1333
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 6}": {
     "ItemId": {
@@ -585,7 +863,8 @@
     "Offset": {
       "X": -0.0182382483035326,
       "Y": -0.004045533481985331
-    }
+    },
+    "RealAttackDuration": 1.1333
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 7}": {
     "ItemId": {
@@ -606,7 +885,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1833
   },
   "{'Age': 4, 'Type': 'Weapon', 'Idx': 0}": {
     "ItemId": {
@@ -627,7 +907,8 @@
     "Offset": {
       "X": 0.1820000261068344,
       "Y": 0.007999979890882969
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 4, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -648,7 +929,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 4, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -669,7 +951,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1833
   },
   "{'Age': 4, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -690,7 +973,8 @@
     "Offset": {
       "X": -0.018367290031164885,
       "Y": -0.0034121659118682146
-    }
+    },
+    "RealAttackDuration": 1.1167
   },
   "{'Age': 4, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -711,7 +995,8 @@
     "Offset": {
       "X": 0.7011198999825865,
       "Y": 0.13139323890209198
-    }
+    },
+    "RealAttackDuration": 1.1167
   },
   "{'Age': 5, 'Type': 'Weapon', 'Idx': 0}": {
     "ItemId": {
@@ -732,7 +1017,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.15
   },
   "{'Age': 5, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -753,7 +1039,8 @@
     "Offset": {
       "X": -0.018000001087784767,
       "Y": -0.004999998491257429
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 5, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -774,7 +1061,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1167
   },
   "{'Age': 5, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -795,7 +1083,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.15
   },
   "{'Age': 5, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -816,7 +1105,8 @@
     "Offset": {
       "X": 1.330000160029158,
       "Y": -0.005000158911570907
-    }
+    },
+    "RealAttackDuration": 1.1333
   },
   "{'Age': 5, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -837,7 +1127,8 @@
     "Offset": {
       "X": 0.6230001449584961,
       "Y": 0.1549999420531094
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 6, 'Type': 'Weapon', 'Idx': 0}": {
     "ItemId": {
@@ -858,7 +1149,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.2
   },
   "{'Age': 6, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -879,7 +1171,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.2
   },
   "{'Age': 6, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -900,7 +1193,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.2
   },
   "{'Age': 6, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -921,7 +1215,8 @@
     "Offset": {
       "X": 0.004999999888241291,
       "Y": -0.01799999992363155
-    }
+    },
+    "RealAttackDuration": 1.1833
   },
   "{'Age': 6, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -942,7 +1237,8 @@
     "Offset": {
       "X": -0.018000001087784767,
       "Y": -0.004999998491257429
-    }
+    },
+    "RealAttackDuration": 1.1333
   },
   "{'Age': 6, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -963,7 +1259,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1833
   },
   "{'Age': 7, 'Type': 'Weapon', 'Idx': 0}": {
     "ItemId": {
@@ -984,7 +1281,8 @@
     "Offset": {
       "X": 0.004999999888241291,
       "Y": -0.01799999992363155
-    }
+    },
+    "RealAttackDuration": 1.1333
   },
   "{'Age': 7, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -1005,7 +1303,8 @@
     "Offset": {
       "X": -0.017495732754468918,
       "Y": -0.0065497723408043385
-    }
+    },
+    "RealAttackDuration": 1.1
   },
   "{'Age': 7, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -1026,7 +1325,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1
   },
   "{'Age': 7, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -1047,7 +1347,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.2
   },
   "{'Age': 7, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -1068,7 +1369,8 @@
     "Offset": {
       "X": 1.1945625499356538,
       "Y": -0.11454922007396817
-    }
+    },
+    "RealAttackDuration": 1.15
   },
   "{'Age': 7, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -1089,7 +1391,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 8, 'Type': 'Weapon', 'Idx': 0}": {
     "ItemId": {
@@ -1110,7 +1413,8 @@
     "Offset": {
       "X": 1.103000279981643,
       "Y": -0.005000395700335503
-    }
+    },
+    "RealAttackDuration": 1.1
   },
   "{'Age': 8, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -1131,7 +1435,8 @@
     "Offset": {
       "X": 0.7071432468947023,
       "Y": 1.5723069999366999
-    }
+    },
+    "RealAttackDuration": 1.1167
   },
   "{'Age': 8, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -1152,7 +1457,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1167
   },
   "{'Age': 8, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -1173,7 +1479,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.2
   },
   "{'Age': 8, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -1194,7 +1501,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1833
   },
   "{'Age': 9, 'Type': 'Weapon', 'Idx': 0}": {
     "ItemId": {
@@ -1215,7 +1523,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1667
   },
   "{'Age': 9, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -1224,7 +1533,7 @@
       "Idx": 1
     },
     "AttackRange": 0.30000000004656613,
-    "WindupTime": 0.8166666999459267,
+    "WindupTime": 0.7333333489950746,
     "AttackDuration": 1.5,
     "IsRanged": 0,
     "IsAiming": 0,
@@ -1236,7 +1545,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1333
   },
   "{'Age': 9, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -1257,7 +1567,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1333
   },
   "{'Age': 9, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -1278,7 +1589,8 @@
     "Offset": {
       "X": 0.0,
       "Y": 0.0
-    }
+    },
+    "RealAttackDuration": 1.1167
   },
   "{'Age': 9, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -1299,7 +1611,8 @@
     "Offset": {
       "X": 1.2149343499913812,
       "Y": -0.08822457492351532
-    }
+    },
+    "RealAttackDuration": 1.1333
   },
   "{'Age': 9, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -1320,6 +1633,7 @@
     "Offset": {
       "X": 0.0034602531231939793,
       "Y": -0.01835828460752964
-    }
+    },
+    "RealAttackDuration": 1.1167
   }
 }

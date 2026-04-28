@@ -30,7 +30,14 @@
         },
         "Value": 0.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.7166666390839964,
+      "attack_duration": 1.5,
+      "projectile_speed": null
+    }
   },
   "{'Age': 0, 'Type': 'Helmet', 'Idx': 0}": {
     "ItemId": {
@@ -303,7 +310,14 @@
         },
         "Value": 5.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.7666666510049254,
+      "attack_duration": 1.1667,
+      "projectile_speed": null
+    }
   },
   "{'Age': 0, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -324,7 +338,14 @@
         },
         "Value": 5.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.4666666688863188,
+      "attack_duration": 1.1667,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 0, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -345,7 +366,14 @@
         },
         "Value": 5.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.7833333609160036,
+      "attack_duration": 1.1833,
+      "projectile_speed": null
+    }
   },
   "{'Age': 0, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -366,7 +394,14 @@
         },
         "Value": 5.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.9333333370741457,
+      "attack_duration": 1.1333,
+      "projectile_speed": null
+    }
   },
   "{'Age': 0, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -387,7 +422,14 @@
         },
         "Value": 5.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.6833333370741457,
+      "attack_duration": 1.1833,
+      "projectile_speed": 15.0
+    }
   },
   "{'Age': 0, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -408,7 +450,14 @@
         },
         "Value": 5.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 1.0833333700429648,
+      "attack_duration": 1.1833,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 0, 'Type': 'Weapon', 'Idx': 6}": {
     "ItemId": {
@@ -429,7 +478,14 @@
         },
         "Value": 5.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.6000000000931323,
+      "attack_duration": 1.1,
+      "projectile_speed": null
+    }
   },
   "{'Age': 0, 'Type': 'Shoes', 'Idx': 0}": {
     "ItemId": {
@@ -819,7 +875,14 @@
         },
         "Value": 80.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.5666666629258543,
+      "attack_duration": 1.1667,
+      "projectile_speed": null
+    }
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -852,7 +915,14 @@
         },
         "Value": 80.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.6499999999068677,
+      "attack_duration": 1.15,
+      "projectile_speed": null
+    }
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -873,7 +943,14 @@
         },
         "Value": 20.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.5666666629258543,
+      "attack_duration": 1.1667,
+      "projectile_speed": null
+    }
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -894,7 +971,14 @@
         },
         "Value": 20.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.7833333609160036,
+      "attack_duration": 1.1833,
+      "projectile_speed": null
+    }
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -915,7 +999,14 @@
         },
         "Value": 20.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 1.0833333700429648,
+      "attack_duration": 1.1833,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -936,7 +1027,14 @@
         },
         "Value": 20.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.8999999999068677,
+      "attack_duration": 1.2,
+      "projectile_speed": null
+    }
   },
   "{'Age': 1, 'Type': 'Weapon', 'Idx': 6}": {
     "ItemId": {
@@ -957,7 +1055,14 @@
         },
         "Value": 20.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.6833333370741457,
+      "attack_duration": 1.1833,
+      "projectile_speed": 15.0
+    }
   },
   "{'Age': 1, 'Type': 'Shoes', 'Idx': 0}": {
     "ItemId": {
@@ -1335,7 +1440,14 @@
         },
         "Value": 80.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.5666666629258543,
+      "attack_duration": 1.1667,
+      "projectile_speed": 25.0
+    }
   },
   "{'Age': 2, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -1356,7 +1468,14 @@
         },
         "Value": 80.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.6666667000390589,
+      "attack_duration": 1.1667,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 2, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -1377,7 +1496,14 @@
         },
         "Value": 80.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.6666667000390589,
+      "attack_duration": 1.1667,
+      "projectile_speed": null
+    }
   },
   "{'Age': 2, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -1398,7 +1524,14 @@
         },
         "Value": 80.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.8333332999609411,
+      "attack_duration": 1.1333,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 2, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -1419,7 +1552,14 @@
         },
         "Value": 80.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.7666666510049254,
+      "attack_duration": 1.1667,
+      "projectile_speed": null
+    }
   },
   "{'Age': 2, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -1440,7 +1580,14 @@
         },
         "Value": 80.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.6666667000390589,
+      "attack_duration": 1.1667,
+      "projectile_speed": null
+    }
   },
   "{'Age': 2, 'Type': 'Shoes', 'Idx': 0}": {
     "ItemId": {
@@ -1860,7 +2007,14 @@
         },
         "Value": 320.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.5,
+      "attack_duration": 1.1,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -1881,7 +2035,14 @@
         },
         "Value": 320.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.5833332999609411,
+      "attack_duration": 1.1833,
+      "projectile_speed": null
+    }
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -1902,7 +2063,14 @@
         },
         "Value": 320.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.6666667000390589,
+      "attack_duration": 1.1667,
+      "projectile_speed": null
+    }
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -1923,7 +2091,14 @@
         },
         "Value": 320.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.5,
+      "attack_duration": 1.1,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -1956,7 +2131,14 @@
         },
         "Value": 1280.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.7333333489950746,
+      "attack_duration": 1.1333,
+      "projectile_speed": null
+    }
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -1977,7 +2159,14 @@
         },
         "Value": 320.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.8333332999609411,
+      "attack_duration": 1.1333,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 6}": {
     "ItemId": {
@@ -1998,7 +2187,14 @@
         },
         "Value": 320.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.33333334303461015,
+      "attack_duration": 1.1333,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 3, 'Type': 'Weapon', 'Idx': 7}": {
     "ItemId": {
@@ -2019,7 +2215,14 @@
         },
         "Value": 320.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.7833333609160036,
+      "attack_duration": 1.1833,
+      "projectile_speed": null
+    }
   },
   "{'Age': 3, 'Type': 'Shoes', 'Idx': 0}": {
     "ItemId": {
@@ -2376,7 +2579,14 @@
         },
         "Value": 1280.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.6666667000390589,
+      "attack_duration": 1.1667,
+      "projectile_speed": 25.0
+    }
   },
   "{'Age': 4, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -2397,7 +2607,14 @@
         },
         "Value": 1280.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.7666666510049254,
+      "attack_duration": 1.1667,
+      "projectile_speed": null
+    }
   },
   "{'Age': 4, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -2418,7 +2635,14 @@
         },
         "Value": 1280.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.7833333609160036,
+      "attack_duration": 1.1833,
+      "projectile_speed": null
+    }
   },
   "{'Age': 4, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -2439,7 +2663,14 @@
         },
         "Value": 1280.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.7166666390839964,
+      "attack_duration": 1.1167,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 4, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -2460,7 +2691,14 @@
         },
         "Value": 1280.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.9166667000390589,
+      "attack_duration": 1.1167,
+      "projectile_speed": 25.0
+    }
   },
   "{'Age': 4, 'Type': 'Shoes', 'Idx': 0}": {
     "ItemId": {
@@ -2859,7 +3097,14 @@
         },
         "Value": 5120.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.75,
+      "attack_duration": 1.15,
+      "projectile_speed": null
+    }
   },
   "{'Age': 5, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -2880,7 +3125,14 @@
         },
         "Value": 5120.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.6666667000390589,
+      "attack_duration": 1.1667,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 5, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -2901,7 +3153,14 @@
         },
         "Value": 5120.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.7166666390839964,
+      "attack_duration": 1.1167,
+      "projectile_speed": null
+    }
   },
   "{'Age': 5, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -2934,7 +3193,14 @@
         },
         "Value": 20480.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.75,
+      "attack_duration": 1.15,
+      "projectile_speed": null
+    }
   },
   "{'Age': 5, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -2955,7 +3221,14 @@
         },
         "Value": 5120.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.8333332999609411,
+      "attack_duration": 1.1333,
+      "projectile_speed": 25.0
+    }
   },
   "{'Age': 5, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -2976,7 +3249,14 @@
         },
         "Value": 5120.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.9666666390839964,
+      "attack_duration": 1.1667,
+      "projectile_speed": 25.0
+    }
   },
   "{'Age': 5, 'Type': 'Shoes', 'Idx': 0}": {
     "ItemId": {
@@ -3333,7 +3613,14 @@
         },
         "Value": 20480.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.6999999999534339,
+      "attack_duration": 1.2,
+      "projectile_speed": null
+    }
   },
   "{'Age': 6, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -3366,7 +3653,14 @@
         },
         "Value": 81920.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.6999999999534339,
+      "attack_duration": 1.2,
+      "projectile_speed": null
+    }
   },
   "{'Age': 6, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -3387,7 +3681,14 @@
         },
         "Value": 20480.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.6999999999534339,
+      "attack_duration": 1.2,
+      "projectile_speed": null
+    }
   },
   "{'Age': 6, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -3408,7 +3709,14 @@
         },
         "Value": 20480.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 1.0833333700429648,
+      "attack_duration": 1.1833,
+      "projectile_speed": 25.0
+    }
   },
   "{'Age': 6, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -3429,7 +3737,14 @@
         },
         "Value": 20480.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.8333332999609411,
+      "attack_duration": 1.1333,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 6, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -3450,7 +3765,14 @@
         },
         "Value": 20480.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.8833333000075072,
+      "attack_duration": 1.1833,
+      "projectile_speed": null
+    }
   },
   "{'Age': 6, 'Type': 'Shoes', 'Idx': 0}": {
     "ItemId": {
@@ -3828,7 +4150,14 @@
         },
         "Value": 81920.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.8333332999609411,
+      "attack_duration": 1.1333,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 7, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -3849,7 +4178,14 @@
         },
         "Value": 81920.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 1.0,
+      "attack_duration": 1.1,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 7, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -3870,7 +4206,14 @@
         },
         "Value": 81920.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 1.1000000000931323,
+      "attack_duration": 1.1,
+      "projectile_speed": null
+    }
   },
   "{'Age': 7, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -3891,7 +4234,14 @@
         },
         "Value": 81920.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.8999999999068677,
+      "attack_duration": 1.2,
+      "projectile_speed": null
+    }
   },
   "{'Age': 7, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -3912,7 +4262,14 @@
         },
         "Value": 81920.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.9499999999534339,
+      "attack_duration": 1.15,
+      "projectile_speed": 30.0
+    }
   },
   "{'Age': 7, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -3945,7 +4302,14 @@
         },
         "Value": 327680.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.5666666629258543,
+      "attack_duration": 1.1667,
+      "projectile_speed": null
+    }
   },
   "{'Age': 7, 'Type': 'Shoes', 'Idx': 0}": {
     "ItemId": {
@@ -4323,7 +4687,14 @@
         },
         "Value": 491520.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 1.0,
+      "attack_duration": 1.1,
+      "projectile_speed": 30.0
+    }
   },
   "{'Age': 8, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -4344,7 +4715,14 @@
         },
         "Value": 491520.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.8166666629258543,
+      "attack_duration": 1.1167,
+      "projectile_speed": 30.0
+    }
   },
   "{'Age': 8, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -4365,7 +4743,14 @@
         },
         "Value": 491520.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.8166666629258543,
+      "attack_duration": 1.1167,
+      "projectile_speed": null
+    }
   },
   "{'Age': 8, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -4386,7 +4771,14 @@
         },
         "Value": 491520.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.8999999999068677,
+      "attack_duration": 1.2,
+      "projectile_speed": null
+    }
   },
   "{'Age': 8, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -4407,7 +4799,14 @@
         },
         "Value": 491520.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.3833333249203861,
+      "attack_duration": 1.1833,
+      "projectile_speed": null
+    }
   },
   "{'Age': 8, 'Type': 'Shoes', 'Idx': 0}": {
     "ItemId": {
@@ -4764,7 +5163,14 @@
         },
         "Value": 3932160.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.6666667000390589,
+      "attack_duration": 1.1667,
+      "projectile_speed": null
+    }
   },
   "{'Age': 9, 'Type': 'Weapon', 'Idx': 1}": {
     "ItemId": {
@@ -4785,7 +5191,14 @@
         },
         "Value": 3932160.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.7333333489950746,
+      "attack_duration": 1.1333,
+      "projectile_speed": null
+    }
   },
   "{'Age': 9, 'Type': 'Weapon', 'Idx': 2}": {
     "ItemId": {
@@ -4806,7 +5219,14 @@
         },
         "Value": 3932160.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.7333333489950746,
+      "attack_duration": 1.1333,
+      "projectile_speed": null
+    }
   },
   "{'Age': 9, 'Type': 'Weapon', 'Idx': 3}": {
     "ItemId": {
@@ -4827,7 +5247,14 @@
         },
         "Value": 3932160.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": false,
+      "attack_range": 0.30000000004656613,
+      "windup_time": 0.3166666629258543,
+      "attack_duration": 1.1167,
+      "projectile_speed": null
+    }
   },
   "{'Age': 9, 'Type': 'Weapon', 'Idx': 4}": {
     "ItemId": {
@@ -4848,7 +5275,14 @@
         },
         "Value": 3932160.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.8333332999609411,
+      "attack_duration": 1.1333,
+      "projectile_speed": 30.0
+    }
   },
   "{'Age': 9, 'Type': 'Weapon', 'Idx': 5}": {
     "ItemId": {
@@ -4869,7 +5303,14 @@
         },
         "Value": 3932160.0
       }
-    ]
+    ],
+    "weapon_meta": {
+      "is_ranged": true,
+      "attack_range": 7.0,
+      "windup_time": 0.7166666390839964,
+      "attack_duration": 1.1167,
+      "projectile_speed": 20.0
+    }
   },
   "{'Age': 9, 'Type': 'Shoes', 'Idx': 0}": {
     "ItemId": {

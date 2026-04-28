@@ -1,0 +1,241 @@
+# FORGE MASTER — État du chantier (fin avril 2026)
+
+Ce fichier remplace l'ancien plan. Il documente où on en est et ce qui reste à faire.
+
+---
+
+## 1. Ce qui est fait ✅
+
+### 1.1 Dossier `data/` complètement réorganisé et synchronisé sur le patch du 22/04/2026
+
+```
+data/
+├── AutoItemMapping.json          (~50 KB) — items du jeu
+├── AutoPetMapping.json           (~3 KB)  — 25 pets (rarity, id → nom)
+├── AutoMountMapping.json         (~2 KB)  — 15 mounts
+├── AutoSkillMapping.json         (~1 KB)  — 18 skills
+├── ItemBalancingLibrary.json     (~108 KB) — stats des items + weapon_meta dérivé
+├── WeaponLibrary.json            (~31 KB) — windup/range/projectile par arme
+├── StatConfigLibrary.json        (~3 KB)  — defaults par stat (AttackSpeed mult=1.0, etc.)
+├── AscensionConfigsLibrary.json  (~12 KB) — ascension trees
+├── PetLibrary.json               (~3 KB)  — id → type (Balanced/Damage/Health)
+├── PetBalancingLibrary.json      (~0.5 KB, 3 entrées) — multipliers Balanced/Damage/Health
+├── PetUpgradeLibrary.json        (~490 KB) — stats par level
+├── MountLibrary.json             (~1 KB)  — id → metadata
+├── MountUpgradeLibrary.json      (~491 KB) — stats par level
+├── SkillLibrary.json             (~36 KB) — 18 skills × 100 levels
+├── SkillPassiveLibrary.json      (~58 KB) — passifs reformatés (rarity → levels)
+├── icons/                        — equipment/pets/mount/skills (PNG)
+├── _archive/                     — vieux fichiers à supprimer manuellement
+└── _reference/                   — fichiers de réf gardés pour analyse de patches
+```
+
+**À NOTER** : `WindupTimeLibrary.json` est SUPPRIMÉ (devenu inutile, le calcul se fait à la volée
+depuis `WeaponLibrary.WindupTime` + `attack_speed_calculator.py`).
+
+### 1.2 Outils pipeline OCR + matching
+
+- `backend/icon_recognition.py` — scanner wiki avec auto-crop + OCR + assignment greedy.
+  ORB → multi-métrique ensemble → enfin hybride visuel + texte. Marche très bien (7/7 sur Primitive Weapons réelles).
+  Layout configurable via constantes `*_PCT` en haut du fichier (ASCII diagram inclus).
+  CLI : `python -m backend.icon_recognition <img> <age_int> <slot> [--show-bboxes] [--apply]`
+- UI dans `ui/views/wiki_calibration.py` (popup ouverte depuis Equipment Comparator → 🔍 Calibrate icons → wiki).
+- Zone de capture `wiki_grid` ajoutée dans `zones.json` + onglet Zones.
+
+### 1.3 Calculateur d'attack speed
+
+- `backend/attack_speed_calculator.py` — réécrit pour mimer EXACTEMENT
+  `BreakpointTables.tsx` + `statEngine.ts` du jeu officiel.
+- Pas de dépendance à un fichier de table préc-alculée — tout dérivé de
+  `WeaponLibrary.WindupTime` et `AttackDuration` à la volée.
+- API publique :
+  - `compute_real_cycle(age, idx, as_pct)` → cycle réel (windup/recovery/total/double)
+  - `compute_dps_factor(age, idx, as_pct, dd_pct)` → APS pondéré factoring Double Damage
+  - `compute_breakpoint_tables(age, idx, as_pct)` → 3 tables wiki (primary/windup/double)
+- CLI : `python -m backend.attack_speed_calculator 9 3 73.4 69.1 [--tables] [--ad-override 1.10]`
+- Validation : reproduit le wiki à 0.1% près sur Siren Song (les seuls écarts sont des
+  arrondis flottants entre JS et Python sur le binary search 20-iter).
+
+### 1.4 Ancien code à éliminer
+
+Ces fichiers backend sont obsolètes et peuvent être supprimés/archivés à la prochaine
+refacto :
+- `backend/weapon_breakpoints.py` (remplacé par `attack_speed_calculator.py`)
+- `backend/player_weapon_scanner.py` (les armes sont scannées via le pipeline d'équipement)
+- Tests dans `tests/` — la majorité sont écrits sur l'ancienne API et ne passent plus.
+
+---
+
+## 2. Décisions importantes prises pendant le chantier
+
+1. **`data/` est l'unique source de vérité au runtime**. `2026_04_22/` est juste un dump
+   de patch pour comparer/extraire — pas lu directement par le code.
+2. **`WeaponLibrary.AttackDuration` vaut 1.5 dans le JSON pour TOUTES les armes**, mais
+   le wiki UI utilise des valeurs plus petites par arme (~1.10 pour Siren Song).
+   Le code `BreakpointTables.tsx` consomme `weaponAttackDuration` comme paramètre, pas
+   depuis le JSON directement. Donc le calculateur doit accepter un override.
+3. **`PetBalancingLibrary` n'a que 3 entrées** (Balanced/Damage/Health), pas 18.
+   Le scaling de rarity vit dans `PetUpgradeLibrary.LevelInfo[]`.
+4. **L'attack speed est un MULTIPLIER** : `attackSpeedMultiplier = 1 + Σ(+X% AS / 100)`.
+   Discrétisation en 0.1s au niveau de chaque phase (windup, recovery, double-delay)
+   APRÈS division par le multiplier.
+5. **Cycle minimum = 0.4s** (hard cap) ; **overhead +0.2s** ajouté à chaque cycle.
+6. **Skin weapons (Age 999/1000)** : 12 nouvelles armes ajoutées au patch. On les a
+   importées dans `WeaponLibrary.json` et `ItemBalancingLibrary.json`. Les noms in-game
+   sont à renseigner manuellement plus tard (TODO).
+
+---
+
+## 3. Prochaine étape : réécrire le backend
+
+Maintenant que `data/` est figé et que les calculateurs principaux sont en place,
+le backend doit être refactoré pour s'adapter à la nouvelle architecture. Liste des
+modules à toucher :
+
+### 3.1 `backend/enemy_libraries.py`
+- Mettre à jour `_LIB_FILES` :
+  - **AJOUTER** : `auto_pet_mapping`, `auto_mount_mapping`, `auto_skill_mapping`,
+    `stat_config_library`, `weapon_library`, `pet_balancing_library`,
+    `ascension_configs_library`
+  - **SUPPRIMER** : `secondary_stat_library`, `pvp_base_config`, `manual_sprite_mapping`
+    (déjà archivés depuis `data/`)
+  - Vérifier que tous les fichiers actuellement dans `data/` sont déclarés
+- Supprimer le bloc hardcodé `_PET_BALANCING_DEFAULT` (incorrect, on a maintenant le bon).
+
+### 3.2 `backend/enemy_icon_identifier.py`
+- Pointer vers `data/icons/equipment/` (déjà à jour) au lieu de `icons_checker/`.
+- Supprimer le code atlas legacy (`pets_atlas_path`, `mounts_atlas_path`, etc. — on
+  utilise les PNG individuels).
+- Charger `AutoPetMapping`, `AutoMountMapping`, `AutoSkillMapping` au lieu de
+  `ManualSpriteMapping`.
+
+### 3.3 `backend/enemy_pipeline.py`
+- Adapter `_build_profile()` pour utiliser les nouveaux mappings (récupérer le rarity/id
+  depuis le filename matché par `icon_recognition` ou par template-matching).
+
+### 3.4 `backend/enemy_stat_calculator.py`
+- `_aggregate_pets()` : déjà OK (utilise `pet_type` directement, qui matche le nouveau
+  PetBalancingLibrary à 3 entrées).
+- `_aggregate_mount()` : forcer le traitement flat (ignorer `StatNature`).
+- Brancher `attack_speed_calculator.compute_dps_factor()` pour le calcul du DPS.
+
+### 3.5 `backend/simulation.py`
+- Remplacer `ATTACK_INTERVAL = 0.25` constant par un appel à `compute_real_cycle()` qui
+  prend l'arme en compte.
+- Implémenter la machine à 3 phases (IDLE → CHARGING → RECOVERING) comme dans
+  `BattleEngine.ts`.
+- Ajouter le mécanisme de double-attack séquentiel (timer 0.25/speed_mult discrétisé).
+
+### 3.6 `ui/views/build_view.py`
+- Ajouter un onglet "Build" pour scanner pièce par pièce avec l'OCR de
+  `equipment_compare` (la popup d'item seul). Sauve les substats individuels par pièce
+  dans `equipment.txt`.
+- Afficher les breakpoint tables (output de `compute_breakpoint_tables`) sous le slot
+  Weapon pour aider l'utilisateur à viser le prochain palier.
+
+### 3.7 `ui/views/wiki_calibration.py`
+- Ajouter un champ Entry éditable pour la colonne "OCR'd name" (utile quand l'OCR
+  loupe une lettre, ex: "Sslinger" → "Slinger").
+- Idéalement : si l'utilisateur édite, le score visuel doit recalculer pour refléter
+  le nouveau text similarity.
+
+### 3.8 Tests
+- Supprimer `tests/*.py` (obsolètes).
+- Réécrire un pack minimal :
+  - `test_attack_speed_calculator.py` : valider la formule contre les valeurs wiki
+  - `test_icon_recognition.py` : valider sur quelques captures réelles
+  - `test_libraries.py` : intégrité des 3 mappings + pet balancing
+  - `test_enemy_pipeline.py` : pipeline complet sur une capture adversaire
+  - `test_smoke.py` : import sans crash de tous les modules
+
+---
+
+## 4. Détails techniques utiles pour la suite
+
+### 4.1 Formule complète attack speed (référence rapide)
+
+```python
+# Inputs
+base_windup    = WeaponLibrary[key]["WindupTime"]
+base_duration  = WeaponLibrary[key]["AttackDuration"]   # 1.5 dans le JSON,
+                                                          # mais wiki UI override
+speed_mult     = max(0.1, 1 + attack_speed_pct / 100)
+d_chance       = min(double_damage_pct / 100, 1.0)
+
+# Stepped phases (0.1s discrétisation)
+base_recovery  = max(0, base_duration - base_windup)
+sw = floor(base_windup   / speed_mult * 10) / 10
+sr = floor(base_recovery / speed_mult * 10) / 10
+cycle = max(0.4, sw + sr + 0.2)
+
+# Double Attack
+sd = floor(0.25 / speed_mult * 10) / 10
+double_cycle = cycle + sd
+
+# Weighted APS (APS réel pondéré par chance double)
+avg_cycle = (1 - d_chance) * cycle + d_chance * double_cycle
+weighted_aps = (1 + d_chance) / avg_cycle
+
+# Final DPS
+crit_mult = 1 + min(crit_chance, 1) * (crit_damage - 1)
+real_dps = total_damage * weighted_aps * crit_mult
+```
+
+### 4.2 Constantes (depuis statEngine.ts)
+
+| Constante | Valeur | Description |
+|---|---|---|
+| `FRAME_QUANT_S` | 0.1 | Discrétisation par frame |
+| `MIN_CYCLE_S` | 0.4 | Cycle minimum (hard cap) |
+| `CYCLE_OVERHEAD_S` | 0.2 | Overhead fixe par cycle |
+| `DOUBLE_HIT_BASE_DELAY_S` | 0.25 | Délai base double attack |
+| `MIN_SPEED_MULT` | 0.1 | Floor du multiplier de vitesse |
+| `PlayerBaseDamage` | 10.0 | Base damage joueur |
+| `PlayerBaseHealth` | 80.0 | Base health joueur |
+| `PlayerMeleeDamageMultiplier` | 1.6 | Multiplier melee × base damage |
+| `PlayerBaseCritDamage` | 0.20 | +20% crit damage de base |
+| `LevelScalingBase` | 1.01 | Scaling par niveau d'item |
+| `ItemBaseMaxLevel` | 98 | Cap level d'item (peut monter via TechTree) |
+
+### 4.3 Conventions de nommage des sprites
+
+Tous les noms doivent avoir :
+- **espace entre les mots** ("Saber Tooth", "Cannon Barrage", "Brown Horse")
+- **majuscule en première lettre de chaque mot**
+- correspondance EXACTE avec les filenames PNG dans `data/icons/`
+
+Les `Auto*Mapping.json` files sont la source de vérité pour ces noms.
+
+### 4.4 Source de vérité par domaine
+
+| Domaine | Source |
+|---|---|
+| Stats armes (windup, range) | `WeaponLibrary.json` |
+| Stats items (HP/DMG par level) | `ItemBalancingLibrary.json` (via `EquipmentStats`) |
+| Multipliers pet | `PetBalancingLibrary.json` (3 entrées) + `PetUpgradeLibrary` |
+| Stats pet par level | `PetUpgradeLibrary.json` |
+| Stats mount par level | `MountUpgradeLibrary.json` (StatNature à ignorer, traiter flat) |
+| Stats skills | `SkillLibrary.json` (DamagePerLevel/HealthPerLevel) |
+| Passifs skills | `SkillPassiveLibrary.json` (notre format reformaté) |
+| Defaults stat | `StatConfigLibrary.json` |
+| Mapping nom→id pets/mounts/skills | `Auto{Pet,Mount,Skill}Mapping.json` |
+| Calcul attack speed | `attack_speed_calculator.py` (PAS de fichier de table) |
+
+---
+
+## 5. Ce qui reste à faire (TODO)
+
+1. **Refacto backend** (sections 3.1 – 3.5) — la plus grosse étape.
+2. **UI Build view** (section 3.6) — pour le scan pièce par pièce.
+3. **Edit OCR field dans wiki_calibration** (section 3.7) — petit fix UX.
+4. **Tests** (section 3.8) — repartir de zéro avec un pack minimal.
+5. **Renseigner les noms des skin weapons** (Age 999/1000, 12 entrées dans
+   `AutoItemMapping`).
+6. **TechTree** — gros morceau, explique 10–15% d'écart sur HP/DMG. Pour plus tard.
+7. **Sets bonuses** (2-pieces, 4-pieces) — pour plus tard.
+8. **Supprimer manuellement** : `data/_archive/` (impossible côté code, le mount FUSE
+   ne permet pas l'unlink — passer par Windows Explorer).
+
+---
+
+*Dernière mise à jour : fin avril 2026, après finalisation du dossier `data/`.*

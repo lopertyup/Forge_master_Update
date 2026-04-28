@@ -42,6 +42,10 @@ ZONE_DEFAULTS = {
     # matching pipeline as the opponent profile. Drives the per-piece
     # tracking saved in equipment.txt.
     "player_equipment": {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
+    # In-game wiki popup with the 4×2 item grid (used by the icon
+    # recognition tool to refresh AutoItemMapping with up-to-date
+    # in-game ItemNames after game updates rename items).
+    "wiki_grid":        {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
 }
 
 # ── Simulation parameters ───────────────────────────────────
@@ -201,3 +205,34 @@ PERCENT_STATS_KEYS = [
     "skill_cooldown", "block_chance",
     "health_pct", "damage_pct", "melee_pct", "ranged_pct",
 ]
+
+# ── Game balance constants ──────────────────────────────────
+# Source: data/_reference/ItemBalancingConfig.json (patch 22/04/2026).
+# These values almost never change between patches, so we hardcode them
+# here rather than reading the JSON at runtime. If a future patch shifts
+# them, edit these constants in place.
+PLAYER_BASE_DAMAGE                = 10.0
+PLAYER_BASE_HEALTH                = 80.0
+PLAYER_BASE_CRIT_DAMAGE           = 0.20    # +20% base crit damage
+PLAYER_MELEE_DAMAGE_MULTIPLIER    = 1.6     # melee dmg = base × 1.6
+PLAYER_POWER_DAMAGE_MULTIPLIER    = 8.0
+LEVEL_SCALING_BASE                = 1.01    # per-level item stat scaling
+ITEM_BASE_MAX_LEVEL               = 98      # raisable via TechTree
+SELL_BASE_PRICE                   = 20.0
+ENEMY_RANGED_DAMAGE_MULTIPLIER    = 0.67    # enemies do less damage at range
+
+
+# ── Game balance constants ──────────────────────────────────
+# Source: data/_reference/ItemBalancingConfig.json (patch 22/04/2026).
+# These values almost never change between patches, so we hardcode them
+# here rather than reading the JSON at runtime. If a future patch shifts
+# them, edit these constants in place.
+PLAYER_BASE_DAMAGE                = 10.0
+PLAYER_BASE_HEALTH                = 80.0
+PLAYER_BASE_CRIT_DAMAGE           = 0.20    # +20% base crit damage
+PLAYER_MELEE_DAMAGE_MULTIPLIER    = 1.6     # melee dmg = base × 1.6
+PLAYER_POWER_DAMAGE_MULTIPLIER    = 8.0
+LEVEL_SCALING_BASE                = 1.01    # per-level item stat scaling
+ITEM_BASE_MAX_LEVEL               = 98      # raisable via TechTree
+SELL_BASE_PRICE                   = 20.0
+ENEMY_RANGED_DAMAGE_MULTIPLIER    = 0.67    # enemies do less damage at range

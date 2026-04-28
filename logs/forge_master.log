@@ -47,3 +47,96 @@
 20:16:21 [INFO   ] backend.simulation: simulate_batch: process pool ready (7 workers)
 06:31:41 [INFO   ] __main__: Starting Forge Master UI
 06:36:06 [INFO   ] __main__: Starting Forge Master UI
+06:38:46 [INFO   ] __main__: Starting Forge Master UI
+06:38:47 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=8
+06:39:46 [INFO   ] backend.zone_store: zone_store: player_equipment set to [[1401, 188, 1800, 860]]
+06:39:54 [INFO   ] backend.zone_store: zone_store: player_weapon set to [[1443, 503, 1502, 560]]
+06:40:03 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+06:40:05 [INFO   ] backend.enemy_libraries: enemy_libraries: loaded 15 libraries from C:\Users\lprud\Downloads\forge_master_UI_Chantier\data
+06:40:07 [INFO   ] game_controller: player_equipment: 8 slots scanned, persisted to equipment.txt
+15:08:23 [INFO   ] __main__: Starting Forge Master UI
+15:08:24 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=8
+15:36:04 [INFO   ] __main__: Starting Forge Master UI
+15:36:04 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=8
+15:36:27 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+15:36:27 [INFO   ] backend.enemy_libraries: enemy_libraries: loaded 15 libraries from C:\Users\lprud\Downloads\forge_master_UI_Chantier\data
+15:36:27 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\icons_checker\Primitive\Headgear — fill helper/icons_organized for age=0 slot=Helmet
+15:36:27 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\icons_checker\Space\Armor — fill helper/icons_organized for age=4 slot=Body
+15:36:27 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\icons_checker\Primitive\Glove — fill helper/icons_organized for age=0 slot=Gloves
+15:36:27 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\icons_checker\Space\Neck — fill helper/icons_organized for age=4 slot=Necklace
+15:36:27 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\icons_checker\Space\Ring — fill helper/icons_organized for age=4 slot=Ring
+15:36:27 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\icons_checker\Space\Weapon — fill helper/icons_organized for age=4 slot=Weapon
+15:36:27 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\icons_checker\Space\Foot — fill helper/icons_organized for age=4 slot=Shoe
+15:36:27 [WARNING] backend.enemy_icon_identifier: identify_item: missing folder C:\Users\lprud\Downloads\forge_master_UI_Chantier\icons_checker\Space\Belt — fill helper/icons_organized for age=4 slot=Belt
+15:36:29 [INFO   ] game_controller: player_equipment: 8 slots scanned, persisted to equipment.txt
+17:45:37 [INFO   ] __main__: Starting Forge Master UI
+17:45:37 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=8
+17:46:13 [INFO   ] backend.zone_store: zone_store: player_equipment set to [[1077, 358, 1882, 745]]
+18:13:17 [INFO   ] __main__: Starting Forge Master UI
+18:13:17 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+18:13:36 [INFO   ] backend.zone_store: zone_store: wiki_grid set to [[1192, 362, 1891, 710]]
+18:14:06 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+18:14:10 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (row=0 col=0) score=0.832 < 0.850, ocr='Axe' best='IconPrimitiveWeaponBranch' candidates=[('IconPrimitiveWeaponBranch', 0.832), ('IconPrimitiveWeaponBlowgun', 0.826), ('IconPrimitiveWeaponSlinger', 0.82)]
+18:14:48 [INFO   ] backend.icon_recognition: apply_results: DRY RUN — no files will be touched
+18:21:41 [INFO   ] __main__: Starting Forge Master UI
+18:21:41 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+18:22:08 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+18:29:43 [INFO   ] __main__: Starting Forge Master UI
+18:29:44 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+18:38:47 [INFO   ] __main__: Starting Forge Master UI
+18:38:47 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+18:39:06 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+08:57:13 [INFO   ] __main__: Starting Forge Master UI
+08:57:14 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+08:58:02 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+08:58:03 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.032 < 0.100, ocr='' best='IconPrimitiveWeaponBranch' candidates=[('IconPrimitiveWeaponBranch', 0.032), ('IconPrimitiveWeaponSlinger', 0.006), ('IconPrimitiveWeaponAxe', 0.0)]
+08:58:03 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 1 (r0c1) score=0.000 < 0.100, ocr='' best='IconPrimitiveWeaponAxe' candidates=[('IconPrimitiveWeaponAxe', 0.0), ('IconPrimitiveWeaponBlowgun', 0.0), ('IconPrimitiveWeaponBone', 0.0)]
+08:58:03 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 2 (r0c2) score=0.000 < 0.100, ocr='Palnt' best='IconPrimitiveWeaponAxe' candidates=[('IconPrimitiveWeaponAxe', 0.0), ('IconPrimitiveWeaponBlowgun', 0.0), ('IconPrimitiveWeaponBone', 0.0)]
+08:58:03 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 3 (r0c3) score=0.027 < 0.100, ocr='' best='IconPrimitiveWeaponBone' candidates=[('IconPrimitiveWeaponBone', 0.027), ('IconPrimitiveWeaponBranch', 0.016), ('IconPrimitiveWeaponBlowgun', 0.011)]
+08:58:13 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.062 < 0.100, ocr='' best='IconPrimitiveHeadgearBeard' candidates=[('IconPrimitiveHeadgearBeard', 0.062), ('IconPrimitiveHeadgearMask', 0.006), ('IconPrimitiveHeadgearPaint', 0.0)]
+08:58:13 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 1 (r0c1) score=0.000 < 0.100, ocr='' best='IconPrimitiveHeadgearBeard' candidates=[('IconPrimitiveHeadgearBeard', 0.0), ('IconPrimitiveHeadgearMask', 0.0), ('IconPrimitiveHeadgearPaint', 0.0)]
+08:58:13 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 2 (r0c2) score=0.000 < 0.100, ocr='Palnt' best='IconPrimitiveHeadgearBeard' candidates=[('IconPrimitiveHeadgearBeard', 0.0), ('IconPrimitiveHeadgearMask', 0.0), ('IconPrimitiveHeadgearPaint', 0.0)]
+08:58:13 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 3 (r0c3) score=0.071 < 0.100, ocr='' best='IconPrimitiveHeadgearMask' candidates=[('IconPrimitiveHeadgearMask', 0.071), ('IconPrimitiveHeadgearBeard', 0.011), ('IconPrimitiveHeadgearSkull', 0.008)]
+09:18:20 [INFO   ] __main__: Starting Forge Master UI
+09:18:20 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+09:18:45 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+09:18:45 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.046 < 0.100, ocr='Beard' best='IconPrimitiveHeadgearBeard' candidates=[('IconPrimitiveHeadgearBeard', 0.046), ('IconPrimitiveHeadgearPaint', 0.01), ('IconPrimitiveHeadgearMask', 0.0)]
+09:18:45 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 1 (r0c1) score=0.000 < 0.100, ocr='Fa' best='IconPrimitiveHeadgearBeard' candidates=[('IconPrimitiveHeadgearBeard', 0.0), ('IconPrimitiveHeadgearMask', 0.0), ('IconPrimitiveHeadgearPaint', 0.0)]
+09:18:45 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 2 (r0c2) score=0.000 < 0.100, ocr='Paint' best='IconPrimitiveHeadgearBeard' candidates=[('IconPrimitiveHeadgearBeard', 0.0), ('IconPrimitiveHeadgearMask', 0.0), ('IconPrimitiveHeadgearPaint', 0.0)]
+09:18:45 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 3 (r0c3) score=0.022 < 0.100, ocr='Mask' best='IconPrimitiveHeadgearMask' candidates=[('IconPrimitiveHeadgearMask', 0.022), ('IconPrimitiveHeadgearBeard', 0.021), ('IconPrimitiveHeadgearSkull', 0.004)]
+09:34:24 [INFO   ] __main__: Starting Forge Master UI
+09:34:24 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+09:35:50 [INFO   ] backend.zone_store: zone_store: wiki_grid set to [[991, 368, 1886, 729]]
+09:36:10 [INFO   ] backend.zone_store: zone_store: wiki_grid set to [[988, 361, 1886, 758]]
+09:36:34 [INFO   ] backend.zone_store: zone_store: wiki_grid set to [[994, 366, 1888, 721]]
+09:36:53 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+09:40:29 [INFO   ] __main__: Starting Forge Master UI
+09:40:29 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+09:40:56 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+09:45:55 [INFO   ] __main__: Starting Forge Master UI
+09:45:55 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+09:46:15 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+09:47:19 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.229 < 0.300, ocr='War Mask' best='IconMultiverseHeadgearFirewallmask' candidates=[('IconMultiverseHeadgearFirewallmask', 0.229), ('IconMultiverseHeadgearStalkerhelm', 0.163), ('IconMultiverseHeadgearSpeedrunnercasquette', 0.144)]
+09:47:19 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 1 (r0c1) score=0.245 < 0.300, ocr='Casquette' best='IconMultiverseHeadgearSpeedrunnercasquette' candidates=[('IconMultiverseHeadgearSpeedrunnercasquette', 0.245), ('IconMultiverseHeadgearVirtualhelmet', 0.167), ('IconMultiverseHeadgearStalkerhelm', 0.119)]
+09:47:19 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 2 (r0c2) score=0.172 < 0.300, ocr='Iron Holo' best='IconMultiverseHeadgearStalkerhelm' candidates=[('IconMultiverseHeadgearVirtualhelmet', 0.208), ('IconMultiverseHeadgearFirewallmask', 0.197), ('IconMultiverseHeadgearStalkerhelm', 0.172)]
+09:47:39 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 2 (r0c2) score=0.172 < 0.200, ocr='Iron Holo' best='IconMultiverseHeadgearStalkerhelm' candidates=[('Virtual Helmet', 0.208), ('IconMultiverseHeadgearFirewallmask', 0.197), ('IconMultiverseHeadgearStalkerhelm', 0.172)]
+10:01:27 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.041 < 0.100, ocr='' best='IconInterstellarGloveManualimpactors' candidates=[('IconInterstellarGlovePalmimplants', 0.054), ('IconInterstellarGloveManualimpactors', 0.041)]
+10:02:43 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.041 < 0.100, ocr='' best='IconInterstellarGloveManualimpactors' candidates=[('IconInterstellarGlovePalmimplants', 0.054), ('IconInterstellarGloveManualimpactors', 0.041)]
+10:03:10 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.041 < 0.100, ocr='' best='IconInterstellarGloveManualimpactors' candidates=[('IconInterstellarGlovePalmimplants', 0.054), ('IconInterstellarGloveManualimpactors', 0.041)]
+10:03:13 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.041 < 0.100, ocr='' best='IconInterstellarGloveManualimpactors' candidates=[('IconInterstellarGlovePalmimplants', 0.054), ('IconInterstellarGloveManualimpactors', 0.041)]
+10:19:19 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 1 (r0c1) score=0.000 < 0.100, ocr='Riding Boots' best=None candidates=[('IconEarlymodernFootLeatherboots', 0.264)]
+10:21:35 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 1 (r0c1) score=0.000 < 0.100, ocr='Riding Boots' best=None candidates=[('IconEarlymodernFootLeatherboots', 0.264)]
+10:21:53 [INFO   ] __main__: Starting Forge Master UI
+10:21:53 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+10:22:12 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+10:22:25 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.000 < 0.300, ocr='Combat Boots.' best=None candidates=[('IconModernFootVeteranboots', 0.219)]
+10:23:54 [INFO   ] __main__: Starting Forge Master UI
+10:23:54 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+10:24:14 [INFO   ] backend.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+10:24:15 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.193 < 0.300, ocr='Combat Boots.' best='Rock' candidates=[('Rock', 0.193), ('Club', 0.169), ('Bone', 0.161)]
+10:24:15 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 1 (r0c1) score=0.134 < 0.300, ocr='Veteran Boots' best='Branch' candidates=[('Rock', 0.176), ('Branch', 0.134), ('Bone', 0.101)]
+10:27:36 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.187 < 0.300, ocr='Boneskirt' best='IconMedievalBeltBeltofbaltazar' candidates=[('IconMedievalBeltBeltofbaltazar', 0.187), ('IconMedievalBeltBeltpouch', 0.13)]
+10:27:36 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 1 (r0c1) score=0.149 < 0.300, ocr='Waisttie' best='IconMedievalBeltBeltpouch' candidates=[('IconMedievalBeltBeltpouch', 0.149), ('IconMedievalBeltBeltofbaltazar', 0.115)]
+10:27:51 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.229 < 0.300, ocr='Hamess' best='IconEarlymodernBeltHaroldsharness' candidates=[('IconEarlymodernBeltHaroldsharness', 0.229), ('IconEarlymodernBeltLeatherbelt', 0.148)]
+10:29:26 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.184 < 0.200, ocr='Black Belt' best='IconQuantumBeltUncertaintybelt' candidates=[('IconQuantumBeltUncertaintybelt', 0.184), ('IconQuantumBeltNeutrinobelt', 0.142)]
+10:29:29 [WARNING] backend.icon_recognition: icon_recognition: low confidence on cell 0 (r0c0) score=0.184 < 0.200, ocr='Black Belt' best='IconQuantumBeltUncertaintybelt' candidates=[('IconQuantumBeltUncertaintybelt', 0.184), ('IconQuantumBeltNeutrinobelt', 0.142)]

@@ -1,0 +1,158 @@
+## Instructions de réorganisation du dossier `data/`
+
+### 1. Fichiers à garder tels quels ✅
+
+- `AutoItemMapping.json` — complet, cohérent
+- `ItemBalancingLibrary.json` — complet, cohérent
+- `WeaponLibrary.json` — source de vérité pour le windup/attack speed, cohérent
+- `StatConfigLibrary.json` — complet
+- `AscensionConfigsLibrary.json` — cohérent (les `Cost: null` sont volontaires selon toi)
+- `PetLibrary.json` — complet
+- `PetBalancingLibrary.json` — complet
+- `PetUpgradeLibrary.json` — complet
+- `MountLibrary.json` — complet
+- `MountUpgradeLibrary.json` — complet
+- `SkillLibrary.json` — complet
+- `SkillPassiveLibrary.json` — complet
+
+---
+
+### 2. Fichier à supprimer 🗑️
+
+WindupTimeLibrary.json n'est pas utiles car il peut être remplacé par BreakpointTables.tsx et statEngine.ts (a réécrire pour qu'il s'intègre bien au code dans backend, remplace attack_speed_calculator.py qui est désormais erroné). L'objectif ici est de pouvoir calculer les breakpoint a partir du windup de chaque armes, normalement faisable. L'objectif sera ensuite après ces changements (prochaine étapes) de reconfigurer le système de combats pour qu'il intègres ces valeurs.
+
+Voila un résumé du fonctionnement de l'attaque speed pour que les changements ce fasse correctement : 
+
+
+
+---
+
+### 3. Fichiers à créer 🆕
+
+#### `AutoPetMapping.json`
+Modèle à suivre : même structure que `AutoItemMapping.json`.
+```json
+{
+  "{'Rarity': 'Common', 'Id': 0}": {
+    "Rarity": "Common", "Id": 0,
+    "PetName": "Chicken", "SpriteName": "Chicken"
+  },
+  ...
+}
+```
+Contenu complet à injecter (25 pets, tout est vérifié ✅) :
+
+| Rarity | Id | PetName | SpriteName |
+|---|---|---|---|
+| Common | 0 | Chicken | Chicken |
+| Common | 1 | Dog | Dog |
+| Common | 2 | Cat | Cat |
+| Common | 3 | Snail | Snail |
+| Common | 4 | Mouse | Mouse |
+| Common | 5 | Turtle | Turtle |
+| Rare | 0 | Hedgehog | Hedgehog |
+| Rare | 1 | Bear | Bear |
+| Rare | 2 | Ostrich | Ostrich |
+| Rare | 3 | Spider | Spider |
+| Rare | 4 | Scorpion | Scorpion |
+| Epic | 0 | Griffin | Griffin |
+| Epic | 1 | Saber Tooth | Saber Tooth |
+| Epic | 2 | Unicorn | Unicorn |
+| Epic | 3 | Tiger | Tiger |
+| Epic | 4 | Panda | Panda |
+| Legendary | 0 | Serpent | Serpent |
+| Legendary | 1 | Cerberus | Cerberus |
+| Legendary | 2 | Kitsune | Kitsune |
+| Ultimate | 0 | Electry | Electry |
+| Ultimate | 1 | Treant | Treant |
+| Ultimate | 2 | Enchanted Elk | Enchanted Elk |
+| Mythic | 0 | Baby Dragon | Baby Dragon |
+| Mythic | 1 | Genie | Genie |
+| Mythic | 2 | Spectral Tiger | Spectral Tiger |
+
+---
+
+#### `AutoMountMapping.json`
+Même structure. Contenu (15 mounts, tout vérifié ✅) :
+
+| Rarity | Id | MountName | SpriteName |
+|---|---|---|---|
+| Common | 0 | Lily Pad | Lily Pad |
+| Common | 1 | Lily Leaf | Lily Leaf |
+| Common | 2 | Brown Leaf | Brown Leaf |
+| Rare | 0 | Brown Horse | Brow nHorse |
+| Rare | 1 | Dino | Dino |
+| Rare | 2 | Crab | Crab |
+| Rare | 3 | Turtle | Turtle |
+| Epic | 0 | Pig | Pig |
+| Epic | 1 | Goat | Goat |
+| Legendary | 0 | Bike | Bike |
+| Legendary | 1 | Giant Bee | Giant Bee |
+| Ultimate | 0 | One Wheel Droid | One Wheel Droid |
+| Ultimate | 1 | Mini Dragon | Mini Dragon |
+| Mythic | 0 | Hover Disk | Hover Disk |
+| Mythic | 1 | Hover Board | Hover Board |
+
+---
+
+#### `AutoSkillMapping.json`
+La clé naturelle est le `Type` (qui est déjà l'identifiant unique dans `SkillLibrary`). Structure simple :
+```json
+{
+  "Arrows":       { "Type": "Arrows",       "Rarity": "Common",    "SpriteName": "Arrows" },
+  "Meat":         { "Type": "Meat",         "Rarity": "Common",    "SpriteName": "Meat" },
+  ...
+}
+```
+
+Tableau complet (18 skills) :
+
+| Type (clé) | Rarity | SpriteName |
+|---|---|---|
+| Arrows | Common | Arrows |
+| Meat | Common | Meat |
+| Shout | Common | Shout |
+| Berserk | Rare | Berserk |
+| Cannon Barrage | Rare | Cannon Barrage |
+| Shuriken | Rare | Shurikens |
+| Buff | Epic | Buff |
+| Rain Of Arrows | Epic | Rain Of Arrows |
+| Thorns | Epic | Thorns |
+| Bomb | Legendary | Bomb |
+| Meteorite | Legendary | Meteorite |
+| Morale | Legendary | Morale |
+| Lightning | Ultimate | Lightning |
+| Stampede | Ultimate | Stampede |
+| Worm | Ultimate | Worm |
+| Drone | Mythic | Drone |
+| Higher Morale | Mythic | Higher Morale |
+| Strafe Run | Mythic | Strafe Run |
+
+Règle a respecter : pour les noms, espace requis et majuscule devant chaque mots.
+
+---
+
+### 4. Récapitulatif final
+
+```
+data/
+├── AutoItemMapping.json          ✅ garder
+├── AutoPetMapping.json           🆕 créer
+├── AutoMountMapping.json         🆕 créer
+├── AutoSkillMapping.json         🆕 créer
+├── ItemBalancingLibrary.json     ✅ garder
+├── WeaponLibrary.json            ✅ garder
+├── WindupTimeLibrary.json        🗑️ supprimer
+├── StatConfigLibrary.json        ✅ garder
+├── AscensionConfigsLibrary.json  ✅ garder
+├── PetLibrary.json               ✅ garder
+├── PetBalancingLibrary.json      ✅ garder
+├── PetUpgradeLibrary.json        ✅ garder
+├── MountLibrary.json             ✅ garder
+├── MountUpgradeLibrary.json      ✅ garder
+├── SkillLibrary.json             ✅ garder
+└── SkillPassiveLibrary.json      ✅ garder
+```
+### 5. Préparation
+
+La prochaine étape (une fois le dossier data clôturer) sera de commencer a réécrire le dossier backend pour qu'il s'adapte a toutes les modifications, il faudra donc que tu edit le fichier Instruction nouveau chat totalement pour y résumer ce qu'on a fait et y annoncer la prochaine étape (tout ce qui y est présent actuellement n'est plus utile, tu peux le supprimer).

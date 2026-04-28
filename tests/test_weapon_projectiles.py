@@ -27,9 +27,7 @@ except ImportError:           # graceful fallback for the sandbox
             return _Approx(v, abs_=abs)
     pytest = _PT()  # type: ignore
 
-from backend import weapon_projectiles as wp
-
-
+from backend.weapon import projectiles as wp
 # ============================================================
 #  Range-based shortcuts
 # ============================================================

@@ -1,0 +1,478 @@
+================================================================================
+  FORGE MASTER — Plan d'architecture & chantier de refactoring
+  Rédigé après lecture complète de tous les fichiers backend
+  Date : avril 2026
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+0. VISION PRODUIT (rappel)
+────────────────────────────────────────────────────────────────────────────────
+
+L'app est un assistant PvP pour un jeu mobile. Le jeu s'affiche à droite de
+l'écran, l'interface Forge Master à gauche. L'objectif central est de simuler
+des combats avec un maximum de précision pour aider le joueur à prendre des
+décisions (quel équipement garder, quel pet monter, etc.).
+
+Sections de l'app :
+
+  1. Profile / Dashboard — toutes les infos du joueur (stats, pets, équipement,
+     monture, skills avec leurs substats). Source de vérité du profil.
+
+  2. Simulator — scanne un ennemi, identifie ses stats depuis les JSON du jeu,
+     simule 1 000 combats PvP et affiche un pourcentage de victoire.
+
+  3. Equipment — sauvegarde l'équipement joueur. Quand il change une pièce,
+     simule ancien vs nouveau et donne la recommandation.
+
+  4. Pets / Mount / Skills — même logique qu'Equipment : swap simulation
+     comparant la situation actuelle vs un candidat.
+
+  INVARIANT GLOBAL : toute simulation utilise les stats PvP officielles
+  (multiplicateurs PvP sur les HP, formule de cycle d'attaque discrète,
+  délai de départ de combat, délai initial de skill). Aucune approximation.
+
+────────────────────────────────────────────────────────────────────────────────
+1. INVENTAIRE COMPLET DES FICHIERS ACTUELS
+────────────────────────────────────────────────────────────────────────────────
+
+  33 fichiers Python répartis en :
+    — backend/ (racine, tout en vrac)
+    — backend/persistence/ (déjà bien structuré)
+
+  RACINE backend/
+  ┌─────────────────────────────────────┬──────────────────────────────────────┐
+  │ Fichier                             │ Rôle                                 │
+  ├─────────────────────────────────────┼──────────────────────────────────────┤
+  │ constants.py                        │ Toutes les constantes partagées      │
+  │ parser.py                           │ Parsers texte → dict (profil/equip)  │
+  │ stats.py                            │ Maths PvP pures (swing, regen, HP)   │
+  │ simulation.py                       │ Moteur de combat tick-by-tick        │
+  │ optimizer.py                        │ Analyse marginale des stats          │
+  │ attack_speed_calculator.py          │ Formule breakpoints attack speed     │
+  │ weapon_projectiles.py               │ Vitesse projectiles + travel time    │
+  │ weapon_breakpoints.py               │ Tables breakpoints par arme (JSON)   │
+  │ ocr.py                              │ RapidOCR : capture + inférence       │
+  │ fix_ocr.py                          │ Recoloriage image + correction texte │
+  │ debug_scan.py                       │ Dumps debug des scans OCR            │
+  │ zone_store.py                       │ Logique métier zones OCR             │
+  │ library_ops.py                      │ Opérations sur libs pets/mount/skill │
+  │ enemy_pipeline.py                   │ Orchestrateur OCR→stats (ennemi)     │
+  │ enemy_ocr_types.py                  │ Dataclasses OCR (3 couches)          │
+  │ enemy_ocr_parser.py                 │ Parser texte → EnemyIdentifiedProfile│
+  │ enemy_icon_identifier.py            │ Template matching (SAD 32×32)        │
+  │ enemy_icon_offsets.py               │ Ratios de sous-zones (ennemi)        │
+  │ enemy_stat_calculator.py            │ Recompute stats ennemi depuis JSON   │
+  │ enemy_libraries.py                  │ Lazy-loader des JSON du jeu          │
+  │ equipment_pipeline.py               │ Identification panel équipement      │
+  │ player_equipment_offsets.py         │ Ratios de sous-zones (joueur)        │
+  │ player_equipment_scanner.py         │ Scanner équipement joueur            │
+  │ player_weapon_scanner.py            │ Scanner arme joueur                  │
+  │ icon_recognition.py                 │ Calibration ORB (outil admin)        │
+  │ forge_master.py                     │ Shim de compatibilité (re-exports)   │
+  └─────────────────────────────────────┴──────────────────────────────────────┘
+
+  SOUS-DOSSIER backend/persistence/ — DÉJÀ PROPRE, NE PAS TOUCHER
+  ┌─────────────────────────────────────┬──────────────────────────────────────┐
+  │ _io.py                              │ Helpers bas niveau (paths, empty)    │
+  │ profile.py                          │ profile.txt I/O                      │
+  │ companions.py                       │ pets.txt + mount.txt I/O             │
+  │ skills.py                           │ skills.txt I/O                       │
+  │ equipment.py                        │ equipment.txt I/O                    │
+  │ libraries.py                        │ pets_library/mount_library/skills_lib│
+  │ zones.py                            │ zones.json I/O                       │
+  │ window.py                           │ window.json I/O                      │
+  └─────────────────────────────────────┴──────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────
+2. PROBLÈMES IDENTIFIÉS
+────────────────────────────────────────────────────────────────────────────────
+
+  P1 — Nommage trompeur "enemy_*"
+       enemy_icon_identifier, enemy_icon_offsets, enemy_libraries, etc. sont
+       TOUS utilisés par le pipeline joueur aussi. Le préfixe "enemy" cache
+       le fait que c'est du code générique.
+
+  P2 — Couplage croisé privé→privé
+       player_equipment_scanner et player_weapon_scanner importent _item_key()
+       et _stat_type() depuis enemy_stat_calculator — deux fonctions privées
+       (underscore) qui traversent une frontière de module. Fragile.
+
+  P3 — "Dieu module" enemy_pipeline
+       enemy_pipeline.py importe depuis 7 modules différents et orchestre
+       tout. Trop de couplage en un seul endroit.
+
+  P4 — Flat plat de 25 fichiers
+       Impossible de savoir d'un coup d'œil ce qui est "calcul pur" vs "I/O
+       image" vs "simulation". Navigation difficile pour un nouveau contributeur.
+
+  P5 — forge_master.py shim inutile
+       Ce fichier ne sert qu'à éviter de mettre à jour les imports. Il masque
+       la vraie structure et doit être supprimé.
+
+  P6 — attack_speed_calculator charge WeaponLibrary lui-même
+       Il a son propre cache _wl_cache au lieu d'utiliser le chargeur central
+       (enemy_libraries / data/libraries.py). Deux chemins de lecture du même
+       fichier JSON.
+
+  P7 — weapon_breakpoints charge ses propres fichiers JSON
+       Même problème : chargeur isolé sans passer par le module data central.
+
+────────────────────────────────────────────────────────────────────────────────
+3. ARCHITECTURE CIBLE
+────────────────────────────────────────────────────────────────────────────────
+
+  backend/
+  │
+  ├── constants.py                  ← INCHANGÉ
+  ├── pipeline.py                   ← ex enemy_pipeline.py (renommé + allégé)
+  ├── zone_store.py                 ← INCHANGÉ (logique métier UI)
+  │
+  ├── persistence/                  ← INTOUCHÉ (déjà propre)
+  │   ├── _io.py
+  │   ├── profile.py
+  │   ├── companions.py
+  │   ├── skills.py
+  │   ├── equipment.py
+  │   ├── libraries.py
+  │   ├── zones.py
+  │   └── window.py
+  │
+  ├── data/                         ← chargement des JSON du jeu
+  │   ├── __init__.py
+  │   └── libraries.py              ← ex enemy_libraries.py (renommé)
+  │
+  ├── calculator/                   ← calcul pur, zéro I/O
+  │   ├── __init__.py
+  │   ├── stats.py                  ← ex stats.py (déplacé)
+  │   ├── combat.py                 ← ex enemy_stat_calculator.py (renommé)
+  │   ├── attack_speed.py           ← ex attack_speed_calculator.py (renommé)
+  │   ├── item_keys.py              ← NOUVEAU : _item_key + _stat_type rendus publics
+  │   └── optimizer.py              ← ex optimizer.py (déplacé)
+  │
+  ├── scanner/                      ← tout ce qui touche à l'image / OCR
+  │   ├── __init__.py
+  │   ├── ocr.py                    ← INCHANGÉ (déplacé)
+  │   ├── fix_ocr.py                ← INCHANGÉ (déplacé)
+  │   ├── debug_scan.py             ← INCHANGÉ (déplacé)
+  │   ├── icon_matcher.py           ← ex enemy_icon_identifier.py (renommé)
+  │   ├── icon_recognition.py       ← INCHANGÉ (déplacé, outil admin)
+  │   ├── ocr_types.py              ← ex enemy_ocr_types.py (renommé)
+  │   ├── ocr_parser.py             ← ex enemy_ocr_parser.py (renommé)
+  │   ├── panel.py                  ← ex equipment_pipeline.py (renommé)
+  │   ├── player_equipment.py       ← ex player_equipment_scanner.py (renommé)
+  │   ├── weapon.py                 ← ex player_weapon_scanner.py (renommé)
+  │   └── offsets/
+  │       ├── __init__.py
+  │       ├── opponent.py           ← ex enemy_icon_offsets.py (renommé)
+  │       └── player.py             ← ex player_equipment_offsets.py (renommé)
+  │
+  ├── simulation/                   ← moteur de combat isolé
+  │   ├── __init__.py
+  │   └── engine.py                 ← ex simulation.py (déplacé)
+  │
+  └── weapon/                       ← physique des armes
+      ├── __init__.py
+      ├── projectiles.py            ← ex weapon_projectiles.py (renommé)
+      └── breakpoints.py            ← ex weapon_breakpoints.py (renommé)
+
+  À SUPPRIMER :
+      backend/forge_master.py       ← shim obsolète, remplacé par imports directs
+      backend/parser.py             ← voir section 4
+
+────────────────────────────────────────────────────────────────────────────────
+4. SORT DE CHAQUE FICHIER (décision + raison)
+────────────────────────────────────────────────────────────────────────────────
+
+  GARDE SANS MODIFICATION (déplacé seulement) :
+  ─────────────────────────────────────────────
+  constants.py           → backend/constants.py         (racine, inchangé)
+  zone_store.py          → backend/zone_store.py         (logique UI, inchangé)
+  ocr.py                 → backend/scanner/ocr.py        (déplacé)
+  fix_ocr.py             → backend/scanner/fix_ocr.py    (déplacé, 937 lignes,
+                                                           pas touche)
+  debug_scan.py          → backend/scanner/debug_scan.py (déplacé)
+  icon_recognition.py    → backend/scanner/icon_recognition.py (outil admin)
+  simulation.py          → backend/simulation/engine.py  (déplacé)
+  library_ops.py         → backend/data/library_ops.py   (déplacé, opérations
+                                                           sur libs user)
+  persistence/           → INTOUCHÉ
+
+  RENOMMÉ (déplacé + import mis à jour, logique inchangée) :
+  ───────────────────────────────────────────────────────────
+  enemy_libraries.py         → data/libraries.py
+  enemy_icon_identifier.py   → scanner/icon_matcher.py
+  enemy_icon_offsets.py      → scanner/offsets/opponent.py
+  player_equipment_offsets.py→ scanner/offsets/player.py
+  enemy_ocr_types.py         → scanner/ocr_types.py
+  enemy_ocr_parser.py        → scanner/ocr_parser.py
+  equipment_pipeline.py      → scanner/panel.py
+  player_equipment_scanner.py→ scanner/player_equipment.py
+  player_weapon_scanner.py   → scanner/weapon.py
+  enemy_pipeline.py          → pipeline.py  (+ allégé, voir section 5)
+  stats.py                   → calculator/stats.py
+  enemy_stat_calculator.py   → calculator/combat.py
+  attack_speed_calculator.py → calculator/attack_speed.py
+  optimizer.py               → calculator/optimizer.py
+  weapon_projectiles.py      → weapon/projectiles.py
+  weapon_breakpoints.py      → weapon/breakpoints.py
+
+  MODIFIÉ (logique retouchée) :
+  ──────────────────────────────
+  calculator/item_keys.py    ← NOUVEAU FICHIER extrait de combat.py
+                               Contient _item_key() et _stat_type() rendus
+                               publics (item_key() et stat_type()) pour que
+                               scanner/player_equipment.py et scanner/weapon.py
+                               puissent les importer sans toucher aux internals
+                               de calculator/combat.py.
+
+  calculator/attack_speed.py ← Supprimer son propre cache _wl_cache.
+                               Injecter weapon_library via paramètre ou via
+                               data/libraries.load_libs(). Un seul chargeur.
+
+  weapon/breakpoints.py      ← Même correction : passer par data/libraries
+                               au lieu de son propre chargeur isolé.
+
+  pipeline.py                ← Allégé à ~60 lignes. Son seul rôle :
+                               appeler scanner → calculator dans l'ordre.
+                               Toute logique métier déjà dans les sous-modules.
+
+  SUPPRIMÉ :
+  ──────────
+  forge_master.py            ← Shim de compat. Remplacé par imports directs
+                               dans les modules qui l'utilisent encore.
+
+  parser.py                  ← Cas particulier, voir ci-dessous.
+
+────────────────────────────────────────────────────────────────────────────────
+5. CAS PARTICULIER : parser.py
+────────────────────────────────────────────────────────────────────────────────
+
+  parser.py contient deux choses distinctes :
+
+  a) Des parsers de texte OCR (parse_profile_text, parse_companion,
+     parse_equipment, parse_skill_meta…) — c'est de la logique scanner.
+     → Déplacer dans scanner/text_parser.py
+
+  b) Des utilitaires bas niveau (parse_flat, extract, extract_flat) —
+     utilisés partout, y compris dans enemy_ocr_parser.
+     → Déplacer dans un module utilitaire scanner/utils.py
+     (ou rester dans scanner/text_parser.py et être importés depuis là).
+
+  L'import parse_flat dans enemy_ocr_parser.py devient :
+      from .text_parser import parse_flat   # (ou from ..scanner.utils)
+
+  Le module parser.py est ensuite SUPPRIMÉ. Tous les appelants
+  (persistence, controller, UI) mettent à jour leurs imports.
+
+────────────────────────────────────────────────────────────────────────────────
+6. PLAN DE MIGRATION EN 6 PHASES (ordre recommandé)
+────────────────────────────────────────────────────────────────────────────────
+
+  Chaque phase est indépendante et livrable seule. On ne casse rien entre
+  les phases si on met à jour les imports à la fin de chacune.
+
+  ── PHASE 1 : data/ et weapon/ ──────────────────────────────────────────────
+  Aucune logique modifiée. Que du renommage + mise à jour d'imports.
+
+  Actions :
+    1. Créer backend/data/__init__.py
+    2. Copier enemy_libraries.py → data/libraries.py
+       Supprimer le préfixe "enemy" dans les commentaires internes.
+    3. Créer backend/weapon/__init__.py
+    4. Copier weapon_projectiles.py → weapon/projectiles.py
+    5. Copier weapon_breakpoints.py → weapon/breakpoints.py
+    6. Mettre à jour tous les "from .enemy_libraries import" dans les autres
+       fichiers → "from .data.libraries import"
+    7. Supprimer les 3 fichiers originaux.
+
+  Fichiers à mettre à jour (imports) :
+    enemy_pipeline.py, enemy_icon_identifier.py, enemy_stat_calculator.py,
+    player_equipment_scanner.py, player_weapon_scanner.py,
+    equipment_pipeline.py, attack_speed_calculator.py
+
+  ── PHASE 2 : calculator/item_keys.py ────────────────────────────────────────
+  Crée l'API publique pour les fonctions clés, élimine le couplage privé.
+
+  Actions :
+    1. Créer backend/calculator/__init__.py
+    2. Créer backend/calculator/item_keys.py avec :
+         def item_key(age, type_name, idx) -> str   ← ex _item_key()
+         def pet_key(rarity, pet_id) -> str         ← ex _pet_key()
+         def stat_type(stat_node) -> str             ← ex _stat_type()
+         def level_info_for(upgrade_data, level)     ← ex _level_info_for()
+    3. Dans enemy_stat_calculator.py : les fonctions privées deviennent des
+       alias vers calculator/item_keys pour assurer la compat interne.
+    4. Dans player_equipment_scanner.py : remplacer
+         "from .enemy_stat_calculator import _item_key, _stat_type"
+         par "from .calculator.item_keys import item_key, stat_type"
+    5. Idem dans player_weapon_scanner.py.
+
+  ── PHASE 3 : calculator/ (déplacements) ─────────────────────────────────────
+  Déplacer stats.py, enemy_stat_calculator.py, optimizer.py,
+  attack_speed_calculator.py dans calculator/.
+
+  Actions :
+    1. stats.py → calculator/stats.py (imports internes : constants → ..constants)
+    2. enemy_stat_calculator.py → calculator/combat.py
+       Renommer les imports internes (enemy_ocr_types → scanner.ocr_types, etc.)
+    3. attack_speed_calculator.py → calculator/attack_speed.py
+       CORRECTION : supprimer _wl_cache local, recevoir weapon_library en
+       paramètre (ou appeler data/libraries.load_libs() directement).
+    4. optimizer.py → calculator/optimizer.py
+       Mettre à jour : "from .simulation import" → "from ..simulation.engine import"
+    5. Mettre à jour tous les appelants externes (simulation.py, UI, etc.)
+
+  ── PHASE 4 : scanner/offsets/ ────────────────────────────────────────────────
+  Actions :
+    1. Créer backend/scanner/offsets/__init__.py
+    2. enemy_icon_offsets.py → scanner/offsets/opponent.py
+    3. player_equipment_offsets.py → scanner/offsets/player.py
+    4. Mettre à jour les imports dans enemy_pipeline.py, equipment_pipeline.py,
+       player_equipment_scanner.py.
+
+  ── PHASE 5 : scanner/ (cœur) ─────────────────────────────────────────────────
+  Actions :
+    1. Créer backend/scanner/__init__.py
+    2. Déplacer + renommer :
+         ocr.py                     → scanner/ocr.py
+         fix_ocr.py                 → scanner/fix_ocr.py
+         debug_scan.py              → scanner/debug_scan.py
+         icon_recognition.py        → scanner/icon_recognition.py
+         enemy_icon_identifier.py   → scanner/icon_matcher.py
+         enemy_ocr_types.py         → scanner/ocr_types.py
+         enemy_ocr_parser.py        → scanner/ocr_parser.py
+         equipment_pipeline.py      → scanner/panel.py
+         player_equipment_scanner.py→ scanner/player_equipment.py
+         player_weapon_scanner.py   → scanner/weapon.py
+    3. parser.py : scinder en scanner/text_parser.py + supprimer l'original.
+       Mettre à jour tous les appelants (persistence/profile.py utilise
+       parse_companion_meta via library_ops.py, etc.)
+    4. Dans chaque fichier déplacé, corriger les imports relatifs
+       (. → scanner. ou .. selon la profondeur).
+
+  ── PHASE 6 : pipeline.py + simulation/ + nettoyage final ────────────────────
+  Actions :
+    1. Créer backend/simulation/__init__.py
+    2. simulation.py → simulation/engine.py
+       Corriger imports : "from .stats import" → "from ..calculator.stats import"
+    3. enemy_pipeline.py → pipeline.py (racine de backend)
+       Allégé : ne garde que l'orchestration scanner → calculator.
+       Cible ~60 lignes, tout le code métier déjà dans les sous-modules.
+    4. Supprimer forge_master.py
+       Mettre à jour tous les "from .forge_master import" → import direct.
+    5. Vérifier que zone_store.py importe depuis persistence.zones (déjà fait).
+
+────────────────────────────────────────────────────────────────────────────────
+7. POINTS DE VIGILANCE TECHNIQUE
+────────────────────────────────────────────────────────────────────────────────
+
+  V1 — PvP stats : invariant critique
+       Toute simulation DOIT utiliser pvp_hp_total() (calculator/stats.py) et
+       les multiplicateurs PvP de constants.py. Aucun code ne doit utiliser
+       hp_total brut en combat. À vérifier dans engine.py après déplacement.
+
+  V2 — Chargeur JSON unique
+       Après les phases 1-3, il ne doit exister QU'UN chargeur JSON actif :
+       data/libraries.load_libs(). Les caches isolés dans attack_speed_calculator
+       et weapon_breakpoints doivent être supprimés ou branchés sur load_libs().
+
+  V3 — Imports relatifs
+       Après réorganisation, tous les imports DOIVENT être relatifs (from . ou
+       from ..). Aucun "from backend.xxx import" dans le code interne — cela
+       casse dès qu'on renomme un dossier.
+
+  V4 — debug_scan chemin root
+       debug_scan.py calcule _ROOT_DIR en remontant depuis backend/. Après
+       déplacement dans scanner/, il faudra remonter d'un niveau supplémentaire
+       (parent.parent au lieu de parent).
+
+  V5 — icon_recognition.py chemin DATA_DIR
+       Même problème de chemin relatif. Vérifier après déplacement dans scanner/.
+
+  V6 — forge_master.py : identifier tous les consommateurs avant suppression
+       Chercher "from .forge_master import" ou "from backend.forge_master import"
+       dans toute la codebase (UI comprise) avant de supprimer.
+
+  V7 — Skill cooldown négatif
+       Dans constants.py et optimizer.py, skill_cooldown est un stat dont les
+       valeurs négatives signifient "réduction". Le simulateur doit traiter ça
+       correctement. Vérifier que engine.py lit le bon champ après déplacement.
+
+────────────────────────────────────────────────────────────────────────────────
+8. CE QUI NE CHANGE PAS (hors périmètre)
+────────────────────────────────────────────────────────────────────────────────
+
+  — persistence/ : architecture déjà correcte, intouchée.
+  — data/ (dossier JSON/PNG) : source de vérité runtime, intouché.
+  — Logique interne de fix_ocr.py (937 lignes, très spécialisé, ça marche).
+  — Logique interne de icon_recognition.py (outil admin, stable).
+  — Logique interne de simulation/engine.py (moteur validé).
+  — Format des fichiers .txt utilisateur (profile.txt, equipment.txt, etc.).
+  — Formule d'attack speed (1611/1611 breakpoints validés, ne pas toucher).
+  — Les constantes PvP dans constants.py.
+
+────────────────────────────────────────────────────────────────────────────────
+9. TABLEAU RÉCAPITULATIF PAR FICHIER
+────────────────────────────────────────────────────────────────────────────────
+
+  Fichier actuel                   │ Décision   │ Destination
+  ─────────────────────────────────┼────────────┼──────────────────────────────
+  constants.py                     │ GARDE      │ backend/constants.py
+  parser.py                        │ SCINDÉ     │ scanner/text_parser.py
+  stats.py                         │ DÉPLACÉ    │ calculator/stats.py
+  simulation.py                    │ DÉPLACÉ    │ simulation/engine.py
+  optimizer.py                     │ DÉPLACÉ    │ calculator/optimizer.py
+  attack_speed_calculator.py       │ DÉPLACÉ+   │ calculator/attack_speed.py
+                                   │ MODIFIÉ    │ (suppr. cache isolé)
+  weapon_projectiles.py            │ DÉPLACÉ    │ weapon/projectiles.py
+  weapon_breakpoints.py            │ DÉPLACÉ+   │ weapon/breakpoints.py
+                                   │ MODIFIÉ    │ (suppr. cache isolé)
+  ocr.py                           │ DÉPLACÉ    │ scanner/ocr.py
+  fix_ocr.py                       │ DÉPLACÉ    │ scanner/fix_ocr.py
+  debug_scan.py                    │ DÉPLACÉ+   │ scanner/debug_scan.py
+                                   │ MODIFIÉ    │ (corriger chemin root)
+  zone_store.py                    │ GARDE      │ backend/zone_store.py
+  library_ops.py                   │ DÉPLACÉ    │ data/library_ops.py
+  enemy_pipeline.py                │ RENOMMÉ+   │ backend/pipeline.py
+                                   │ ALLÉGÉ     │ (~60 lignes)
+  enemy_ocr_types.py               │ RENOMMÉ    │ scanner/ocr_types.py
+  enemy_ocr_parser.py              │ RENOMMÉ    │ scanner/ocr_parser.py
+  enemy_icon_identifier.py         │ RENOMMÉ    │ scanner/icon_matcher.py
+  enemy_icon_offsets.py            │ RENOMMÉ    │ scanner/offsets/opponent.py
+  enemy_stat_calculator.py         │ RENOMMÉ    │ calculator/combat.py
+  enemy_libraries.py               │ RENOMMÉ    │ data/libraries.py
+  equipment_pipeline.py            │ RENOMMÉ    │ scanner/panel.py
+  player_equipment_offsets.py      │ RENOMMÉ    │ scanner/offsets/player.py
+  player_equipment_scanner.py      │ RENOMMÉ    │ scanner/player_equipment.py
+  player_weapon_scanner.py         │ RENOMMÉ    │ scanner/weapon.py
+  icon_recognition.py              │ DÉPLACÉ    │ scanner/icon_recognition.py
+  forge_master.py                  │ SUPPRIMÉ   │ —
+  ─────────────────────────────────┼────────────┼──────────────────────────────
+  [NOUVEAU]                        │ CRÉÉ       │ calculator/item_keys.py
+  [NOUVEAU]                        │ CRÉÉ       │ scanner/text_parser.py
+  ─────────────────────────────────┼────────────┼──────────────────────────────
+  persistence/ (8 fichiers)        │ INTOUCHÉ   │ persistence/ (inchangé)
+
+────────────────────────────────────────────────────────────────────────────────
+10. ORDRE DE TRAVAIL RECOMMANDÉ PAR SESSION
+────────────────────────────────────────────────────────────────────────────────
+
+  Session 1 → Phase 1 (data/ + weapon/)
+              La plus rapide, zéro risque, donne de l'élan.
+
+  Session 2 → Phase 2 (calculator/item_keys.py)
+              Élimine le couplage privé le plus dangereux.
+
+  Session 3 → Phase 3 (calculator/ complet)
+              Le cœur du refactoring. Tester après chaque déplacement.
+
+  Session 4 → Phase 4 + 5 (scanner/ + offsets/)
+              Le plus de fichiers à bouger, mais la logique ne change pas.
+
+  Session 5 → Phase 6 (pipeline.py + simulation/ + nettoyage)
+              Allégement de pipeline.py, suppression de forge_master.py,
+              vérification finale de tous les imports.
+
+================================================================================
+  Fin du document
+================================================================================

@@ -28,16 +28,14 @@ except ImportError:           # graceful fallback for the sandbox
             return _Approx(v, abs_=abs)
     pytest = _PT()  # type: ignore
 
-from backend.stats import (
+from backend.calculator.stats import (
     swing_time,
     swing_time_discrete,
     swing_time_double,
     POST_ATTACK_FIXED,
     DOUBLE_ATTACK_GAP,
 )
-from backend import weapon_breakpoints as wb
-
-
+from backend.weapon import breakpoints as wb
 # ============================================================
 #  swing_time_discrete
 # ============================================================
@@ -200,7 +198,7 @@ def test_weapon_key_returns_empty_when_no_match():
 # ============================================================
 
 def test_fighter_uses_discrete_when_weapon_windup_present():
-    from backend.simulation import Fighter
+    from backend.simulation.engine import Fighter
     stats = {
         "hp_total": 100, "attack_total": 50, "attack_speed": 0.0,
         "crit_chance": 0, "crit_damage": 0, "block_chance": 0,
@@ -215,7 +213,7 @@ def test_fighter_uses_discrete_when_weapon_windup_present():
 
 
 def test_fighter_falls_back_to_legacy_when_no_weapon_data():
-    from backend.simulation import Fighter
+    from backend.simulation.engine import Fighter
     stats = {
         "hp_total": 100, "attack_total": 50, "attack_speed": 50.0,
         "crit_chance": 0, "crit_damage": 0, "block_chance": 0,

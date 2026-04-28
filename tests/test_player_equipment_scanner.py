@@ -1,5 +1,5 @@
 """
-Tests for backend.player_equipment_scanner.
+Tests for backend.scanner.player_equipment.
 
 We avoid requiring the real OCR backend by:
   * mocking identify_equipment_panel to return a deterministic set
@@ -30,9 +30,9 @@ except ImportError:
 
 from PIL import Image
 
-from backend import player_equipment_scanner as pes
+from backend.scanner import player_equipment as pes
 from backend.constants import EQUIPMENT_SLOTS
-from backend.enemy_ocr_types import IdentifiedItem
+from backend.scanner.ocr_types import IdentifiedItem
 
 
 def _blank_img(size=(800, 400)):

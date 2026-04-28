@@ -21,7 +21,7 @@ from typing import Callable, Optional, Tuple
 
 import customtkinter as ctk
 
-from backend.fix_ocr import fix_ocr
+from backend.scanner.fix_ocr import fix_ocr
 
 from .theme import (
     C,

@@ -12,8 +12,8 @@ import logging
 import customtkinter as ctk
 
 from backend.constants import N_SIMULATIONS
-from backend.parser import parse_profile_text
-from backend.stats import finalize_bases, combat_stats
+from backend.scanner.text_parser import parse_profile_text
+from backend.calculator.stats import finalize_bases, combat_stats
 
 from ui.theme import (
     C,
@@ -345,7 +345,7 @@ class SimulatorView(ctk.CTkFrame):
             # so the actual gap a projectile crosses is far below
             # AttackRange. Real-combat measurement: Speed-20 weapons
             # land impacts at ~0.075 s, not 0.35 s.
-            from backend.weapon_projectiles import PVP_COMBAT_DISTANCE
+            from backend.weapon.projectiles import PVP_COMBAT_DISTANCE
             travel = 0.0
             if recomputed.is_ranged_weapon:
                 speed = float(recomputed.projectile_speed or 0.0)

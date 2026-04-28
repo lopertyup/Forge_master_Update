@@ -1,0 +1,9038 @@
+{
+  "Common": {
+    "rarity": "Common",
+    "max_level": 300,
+    "levels": [
+      {
+        "level": 1,
+        "base_damage": 10.0,
+        "base_health": 80.0
+      },
+      {
+        "level": 2,
+        "base_damage": 13.0,
+        "base_health": 104.0
+      },
+      {
+        "level": 3,
+        "base_damage": 16.0,
+        "base_health": 128.0
+      },
+      {
+        "level": 4,
+        "base_damage": 19.0,
+        "base_health": 152.0
+      },
+      {
+        "level": 5,
+        "base_damage": 22.0,
+        "base_health": 176.0
+      },
+      {
+        "level": 6,
+        "base_damage": 25.0,
+        "base_health": 200.0
+      },
+      {
+        "level": 7,
+        "base_damage": 28.0,
+        "base_health": 224.0
+      },
+      {
+        "level": 8,
+        "base_damage": 31.0,
+        "base_health": 248.0
+      },
+      {
+        "level": 9,
+        "base_damage": 34.0,
+        "base_health": 272.0
+      },
+      {
+        "level": 10,
+        "base_damage": 37.0,
+        "base_health": 296.0
+      },
+      {
+        "level": 11,
+        "base_damage": 40.0,
+        "base_health": 320.0
+      },
+      {
+        "level": 12,
+        "base_damage": 43.0,
+        "base_health": 344.0
+      },
+      {
+        "level": 13,
+        "base_damage": 46.0,
+        "base_health": 368.0
+      },
+      {
+        "level": 14,
+        "base_damage": 49.0,
+        "base_health": 392.0
+      },
+      {
+        "level": 15,
+        "base_damage": 52.0,
+        "base_health": 416.0
+      },
+      {
+        "level": 16,
+        "base_damage": 55.0,
+        "base_health": 440.0
+      },
+      {
+        "level": 17,
+        "base_damage": 58.0,
+        "base_health": 464.0
+      },
+      {
+        "level": 18,
+        "base_damage": 61.0,
+        "base_health": 488.0
+      },
+      {
+        "level": 19,
+        "base_damage": 64.0,
+        "base_health": 512.0
+      },
+      {
+        "level": 20,
+        "base_damage": 67.0,
+        "base_health": 536.0
+      },
+      {
+        "level": 21,
+        "base_damage": 70.0,
+        "base_health": 560.0
+      },
+      {
+        "level": 22,
+        "base_damage": 73.0,
+        "base_health": 584.0
+      },
+      {
+        "level": 23,
+        "base_damage": 76.0,
+        "base_health": 608.0
+      },
+      {
+        "level": 24,
+        "base_damage": 79.0,
+        "base_health": 632.0
+      },
+      {
+        "level": 25,
+        "base_damage": 82.0,
+        "base_health": 656.0
+      },
+      {
+        "level": 26,
+        "base_damage": 85.0,
+        "base_health": 680.0
+      },
+      {
+        "level": 27,
+        "base_damage": 88.0,
+        "base_health": 704.0
+      },
+      {
+        "level": 28,
+        "base_damage": 91.0,
+        "base_health": 728.0
+      },
+      {
+        "level": 29,
+        "base_damage": 94.0,
+        "base_health": 752.0
+      },
+      {
+        "level": 30,
+        "base_damage": 97.0,
+        "base_health": 776.0
+      },
+      {
+        "level": 31,
+        "base_damage": 100.0,
+        "base_health": 800.0
+      },
+      {
+        "level": 32,
+        "base_damage": 103.0,
+        "base_health": 824.0
+      },
+      {
+        "level": 33,
+        "base_damage": 106.0,
+        "base_health": 848.0
+      },
+      {
+        "level": 34,
+        "base_damage": 109.0,
+        "base_health": 872.0
+      },
+      {
+        "level": 35,
+        "base_damage": 112.0,
+        "base_health": 896.0
+      },
+      {
+        "level": 36,
+        "base_damage": 115.0,
+        "base_health": 920.0
+      },
+      {
+        "level": 37,
+        "base_damage": 118.0,
+        "base_health": 944.0
+      },
+      {
+        "level": 38,
+        "base_damage": 121.0,
+        "base_health": 968.0
+      },
+      {
+        "level": 39,
+        "base_damage": 124.0,
+        "base_health": 992.0
+      },
+      {
+        "level": 40,
+        "base_damage": 127.0,
+        "base_health": 1016.0
+      },
+      {
+        "level": 41,
+        "base_damage": 130.0,
+        "base_health": 1040.0
+      },
+      {
+        "level": 42,
+        "base_damage": 133.0,
+        "base_health": 1064.0
+      },
+      {
+        "level": 43,
+        "base_damage": 136.0,
+        "base_health": 1088.0
+      },
+      {
+        "level": 44,
+        "base_damage": 139.0,
+        "base_health": 1112.0
+      },
+      {
+        "level": 45,
+        "base_damage": 142.0,
+        "base_health": 1136.0
+      },
+      {
+        "level": 46,
+        "base_damage": 145.0,
+        "base_health": 1160.0
+      },
+      {
+        "level": 47,
+        "base_damage": 148.0,
+        "base_health": 1184.0
+      },
+      {
+        "level": 48,
+        "base_damage": 151.0,
+        "base_health": 1208.0
+      },
+      {
+        "level": 49,
+        "base_damage": 154.0,
+        "base_health": 1232.0
+      },
+      {
+        "level": 50,
+        "base_damage": 157.0,
+        "base_health": 1256.0
+      },
+      {
+        "level": 51,
+        "base_damage": 160.0,
+        "base_health": 1280.0
+      },
+      {
+        "level": 52,
+        "base_damage": 163.0,
+        "base_health": 1304.0
+      },
+      {
+        "level": 53,
+        "base_damage": 166.0,
+        "base_health": 1328.0
+      },
+      {
+        "level": 54,
+        "base_damage": 169.0,
+        "base_health": 1352.0
+      },
+      {
+        "level": 55,
+        "base_damage": 172.0,
+        "base_health": 1376.0
+      },
+      {
+        "level": 56,
+        "base_damage": 175.0,
+        "base_health": 1400.0
+      },
+      {
+        "level": 57,
+        "base_damage": 178.0,
+        "base_health": 1424.0
+      },
+      {
+        "level": 58,
+        "base_damage": 181.0,
+        "base_health": 1448.0
+      },
+      {
+        "level": 59,
+        "base_damage": 184.0,
+        "base_health": 1472.0
+      },
+      {
+        "level": 60,
+        "base_damage": 187.0,
+        "base_health": 1496.0
+      },
+      {
+        "level": 61,
+        "base_damage": 190.0,
+        "base_health": 1520.0
+      },
+      {
+        "level": 62,
+        "base_damage": 193.0,
+        "base_health": 1544.0
+      },
+      {
+        "level": 63,
+        "base_damage": 196.0,
+        "base_health": 1568.0
+      },
+      {
+        "level": 64,
+        "base_damage": 199.0,
+        "base_health": 1592.0
+      },
+      {
+        "level": 65,
+        "base_damage": 202.0,
+        "base_health": 1616.0
+      },
+      {
+        "level": 66,
+        "base_damage": 205.0,
+        "base_health": 1640.0
+      },
+      {
+        "level": 67,
+        "base_damage": 208.0,
+        "base_health": 1664.0
+      },
+      {
+        "level": 68,
+        "base_damage": 211.0,
+        "base_health": 1688.0
+      },
+      {
+        "level": 69,
+        "base_damage": 214.0,
+        "base_health": 1712.0
+      },
+      {
+        "level": 70,
+        "base_damage": 217.0,
+        "base_health": 1736.0
+      },
+      {
+        "level": 71,
+        "base_damage": 220.0,
+        "base_health": 1760.0
+      },
+      {
+        "level": 72,
+        "base_damage": 223.0,
+        "base_health": 1784.0
+      },
+      {
+        "level": 73,
+        "base_damage": 226.0,
+        "base_health": 1808.0
+      },
+      {
+        "level": 74,
+        "base_damage": 229.0,
+        "base_health": 1832.0
+      },
+      {
+        "level": 75,
+        "base_damage": 232.0,
+        "base_health": 1856.0
+      },
+      {
+        "level": 76,
+        "base_damage": 235.0,
+        "base_health": 1880.0
+      },
+      {
+        "level": 77,
+        "base_damage": 238.0,
+        "base_health": 1904.0
+      },
+      {
+        "level": 78,
+        "base_damage": 241.0,
+        "base_health": 1928.0
+      },
+      {
+        "level": 79,
+        "base_damage": 244.0,
+        "base_health": 1952.0
+      },
+      {
+        "level": 80,
+        "base_damage": 247.0,
+        "base_health": 1976.0
+      },
+      {
+        "level": 81,
+        "base_damage": 250.0,
+        "base_health": 2000.0
+      },
+      {
+        "level": 82,
+        "base_damage": 253.0,
+        "base_health": 2024.0
+      },
+      {
+        "level": 83,
+        "base_damage": 256.0,
+        "base_health": 2048.0
+      },
+      {
+        "level": 84,
+        "base_damage": 259.0,
+        "base_health": 2072.0
+      },
+      {
+        "level": 85,
+        "base_damage": 262.0,
+        "base_health": 2096.0
+      },
+      {
+        "level": 86,
+        "base_damage": 265.0,
+        "base_health": 2120.0
+      },
+      {
+        "level": 87,
+        "base_damage": 268.0,
+        "base_health": 2144.0
+      },
+      {
+        "level": 88,
+        "base_damage": 271.0,
+        "base_health": 2168.0
+      },
+      {
+        "level": 89,
+        "base_damage": 274.0,
+        "base_health": 2192.0
+      },
+      {
+        "level": 90,
+        "base_damage": 277.0,
+        "base_health": 2216.0
+      },
+      {
+        "level": 91,
+        "base_damage": 280.0,
+        "base_health": 2240.0
+      },
+      {
+        "level": 92,
+        "base_damage": 283.0,
+        "base_health": 2264.0
+      },
+      {
+        "level": 93,
+        "base_damage": 286.0,
+        "base_health": 2288.0
+      },
+      {
+        "level": 94,
+        "base_damage": 289.0,
+        "base_health": 2312.0
+      },
+      {
+        "level": 95,
+        "base_damage": 292.0,
+        "base_health": 2336.0
+      },
+      {
+        "level": 96,
+        "base_damage": 295.0,
+        "base_health": 2360.0
+      },
+      {
+        "level": 97,
+        "base_damage": 298.0,
+        "base_health": 2384.0
+      },
+      {
+        "level": 98,
+        "base_damage": 301.0,
+        "base_health": 2408.0
+      },
+      {
+        "level": 99,
+        "base_damage": 304.0,
+        "base_health": 2432.0
+      },
+      {
+        "level": 100,
+        "base_damage": 307.0,
+        "base_health": 2456.0
+      },
+      {
+        "level": 101,
+        "base_damage": 310.0,
+        "base_health": 2480.0
+      },
+      {
+        "level": 102,
+        "base_damage": 313.0,
+        "base_health": 2504.0
+      },
+      {
+        "level": 103,
+        "base_damage": 316.0,
+        "base_health": 2528.0
+      },
+      {
+        "level": 104,
+        "base_damage": 319.0,
+        "base_health": 2552.0
+      },
+      {
+        "level": 105,
+        "base_damage": 322.0,
+        "base_health": 2576.0
+      },
+      {
+        "level": 106,
+        "base_damage": 325.0,
+        "base_health": 2600.0
+      },
+      {
+        "level": 107,
+        "base_damage": 328.0,
+        "base_health": 2624.0
+      },
+      {
+        "level": 108,
+        "base_damage": 331.0,
+        "base_health": 2648.0
+      },
+      {
+        "level": 109,
+        "base_damage": 334.0,
+        "base_health": 2672.0
+      },
+      {
+        "level": 110,
+        "base_damage": 337.0,
+        "base_health": 2696.0
+      },
+      {
+        "level": 111,
+        "base_damage": 340.0,
+        "base_health": 2720.0
+      },
+      {
+        "level": 112,
+        "base_damage": 343.0,
+        "base_health": 2744.0
+      },
+      {
+        "level": 113,
+        "base_damage": 346.0,
+        "base_health": 2768.0
+      },
+      {
+        "level": 114,
+        "base_damage": 349.0,
+        "base_health": 2792.0
+      },
+      {
+        "level": 115,
+        "base_damage": 352.0,
+        "base_health": 2816.0
+      },
+      {
+        "level": 116,
+        "base_damage": 355.0,
+        "base_health": 2840.0
+      },
+      {
+        "level": 117,
+        "base_damage": 358.0,
+        "base_health": 2864.0
+      },
+      {
+        "level": 118,
+        "base_damage": 361.0,
+        "base_health": 2888.0
+      },
+      {
+        "level": 119,
+        "base_damage": 364.0,
+        "base_health": 2912.0
+      },
+      {
+        "level": 120,
+        "base_damage": 367.0,
+        "base_health": 2936.0
+      },
+      {
+        "level": 121,
+        "base_damage": 370.0,
+        "base_health": 2960.0
+      },
+      {
+        "level": 122,
+        "base_damage": 373.0,
+        "base_health": 2984.0
+      },
+      {
+        "level": 123,
+        "base_damage": 376.0,
+        "base_health": 3008.0
+      },
+      {
+        "level": 124,
+        "base_damage": 379.0,
+        "base_health": 3032.0
+      },
+      {
+        "level": 125,
+        "base_damage": 382.0,
+        "base_health": 3056.0
+      },
+      {
+        "level": 126,
+        "base_damage": 385.0,
+        "base_health": 3080.0
+      },
+      {
+        "level": 127,
+        "base_damage": 388.0,
+        "base_health": 3104.0
+      },
+      {
+        "level": 128,
+        "base_damage": 391.0,
+        "base_health": 3128.0
+      },
+      {
+        "level": 129,
+        "base_damage": 394.0,
+        "base_health": 3152.0
+      },
+      {
+        "level": 130,
+        "base_damage": 397.0,
+        "base_health": 3176.0
+      },
+      {
+        "level": 131,
+        "base_damage": 400.0,
+        "base_health": 3200.0
+      },
+      {
+        "level": 132,
+        "base_damage": 403.0,
+        "base_health": 3224.0
+      },
+      {
+        "level": 133,
+        "base_damage": 406.0,
+        "base_health": 3248.0
+      },
+      {
+        "level": 134,
+        "base_damage": 409.0,
+        "base_health": 3272.0
+      },
+      {
+        "level": 135,
+        "base_damage": 412.0,
+        "base_health": 3296.0
+      },
+      {
+        "level": 136,
+        "base_damage": 415.0,
+        "base_health": 3320.0
+      },
+      {
+        "level": 137,
+        "base_damage": 418.0,
+        "base_health": 3344.0
+      },
+      {
+        "level": 138,
+        "base_damage": 421.0,
+        "base_health": 3368.0
+      },
+      {
+        "level": 139,
+        "base_damage": 424.0,
+        "base_health": 3392.0
+      },
+      {
+        "level": 140,
+        "base_damage": 427.0,
+        "base_health": 3416.0
+      },
+      {
+        "level": 141,
+        "base_damage": 430.0,
+        "base_health": 3440.0
+      },
+      {
+        "level": 142,
+        "base_damage": 433.0,
+        "base_health": 3464.0
+      },
+      {
+        "level": 143,
+        "base_damage": 436.0,
+        "base_health": 3488.0
+      },
+      {
+        "level": 144,
+        "base_damage": 439.0,
+        "base_health": 3512.0
+      },
+      {
+        "level": 145,
+        "base_damage": 442.0,
+        "base_health": 3536.0
+      },
+      {
+        "level": 146,
+        "base_damage": 445.0,
+        "base_health": 3560.0
+      },
+      {
+        "level": 147,
+        "base_damage": 448.0,
+        "base_health": 3584.0
+      },
+      {
+        "level": 148,
+        "base_damage": 451.0,
+        "base_health": 3608.0
+      },
+      {
+        "level": 149,
+        "base_damage": 454.0,
+        "base_health": 3632.0
+      },
+      {
+        "level": 150,
+        "base_damage": 457.0,
+        "base_health": 3656.0
+      },
+      {
+        "level": 151,
+        "base_damage": 460.0,
+        "base_health": 3680.0
+      },
+      {
+        "level": 152,
+        "base_damage": 463.0,
+        "base_health": 3704.0
+      },
+      {
+        "level": 153,
+        "base_damage": 466.0,
+        "base_health": 3728.0
+      },
+      {
+        "level": 154,
+        "base_damage": 469.0,
+        "base_health": 3752.0
+      },
+      {
+        "level": 155,
+        "base_damage": 472.0,
+        "base_health": 3776.0
+      },
+      {
+        "level": 156,
+        "base_damage": 475.0,
+        "base_health": 3800.0
+      },
+      {
+        "level": 157,
+        "base_damage": 478.0,
+        "base_health": 3824.0
+      },
+      {
+        "level": 158,
+        "base_damage": 481.0,
+        "base_health": 3848.0
+      },
+      {
+        "level": 159,
+        "base_damage": 484.0,
+        "base_health": 3872.0
+      },
+      {
+        "level": 160,
+        "base_damage": 487.0,
+        "base_health": 3896.0
+      },
+      {
+        "level": 161,
+        "base_damage": 490.0,
+        "base_health": 3920.0
+      },
+      {
+        "level": 162,
+        "base_damage": 493.0,
+        "base_health": 3944.0
+      },
+      {
+        "level": 163,
+        "base_damage": 496.0,
+        "base_health": 3968.0
+      },
+      {
+        "level": 164,
+        "base_damage": 499.0,
+        "base_health": 3992.0
+      },
+      {
+        "level": 165,
+        "base_damage": 502.0,
+        "base_health": 4016.0
+      },
+      {
+        "level": 166,
+        "base_damage": 505.0,
+        "base_health": 4040.0
+      },
+      {
+        "level": 167,
+        "base_damage": 508.0,
+        "base_health": 4064.0
+      },
+      {
+        "level": 168,
+        "base_damage": 511.0,
+        "base_health": 4088.0
+      },
+      {
+        "level": 169,
+        "base_damage": 514.0,
+        "base_health": 4112.0
+      },
+      {
+        "level": 170,
+        "base_damage": 517.0,
+        "base_health": 4136.0
+      },
+      {
+        "level": 171,
+        "base_damage": 520.0,
+        "base_health": 4160.0
+      },
+      {
+        "level": 172,
+        "base_damage": 523.0,
+        "base_health": 4184.0
+      },
+      {
+        "level": 173,
+        "base_damage": 526.0,
+        "base_health": 4208.0
+      },
+      {
+        "level": 174,
+        "base_damage": 529.0,
+        "base_health": 4232.0
+      },
+      {
+        "level": 175,
+        "base_damage": 532.0,
+        "base_health": 4256.0
+      },
+      {
+        "level": 176,
+        "base_damage": 535.0,
+        "base_health": 4280.0
+      },
+      {
+        "level": 177,
+        "base_damage": 538.0,
+        "base_health": 4304.0
+      },
+      {
+        "level": 178,
+        "base_damage": 541.0,
+        "base_health": 4328.0
+      },
+      {
+        "level": 179,
+        "base_damage": 544.0,
+        "base_health": 4352.0
+      },
+      {
+        "level": 180,
+        "base_damage": 547.0,
+        "base_health": 4376.0
+      },
+      {
+        "level": 181,
+        "base_damage": 550.0,
+        "base_health": 4400.0
+      },
+      {
+        "level": 182,
+        "base_damage": 553.0,
+        "base_health": 4424.0
+      },
+      {
+        "level": 183,
+        "base_damage": 556.0,
+        "base_health": 4448.0
+      },
+      {
+        "level": 184,
+        "base_damage": 559.0,
+        "base_health": 4472.0
+      },
+      {
+        "level": 185,
+        "base_damage": 562.0,
+        "base_health": 4496.0
+      },
+      {
+        "level": 186,
+        "base_damage": 565.0,
+        "base_health": 4520.0
+      },
+      {
+        "level": 187,
+        "base_damage": 568.0,
+        "base_health": 4544.0
+      },
+      {
+        "level": 188,
+        "base_damage": 571.0,
+        "base_health": 4568.0
+      },
+      {
+        "level": 189,
+        "base_damage": 574.0,
+        "base_health": 4592.0
+      },
+      {
+        "level": 190,
+        "base_damage": 577.0,
+        "base_health": 4616.0
+      },
+      {
+        "level": 191,
+        "base_damage": 580.0,
+        "base_health": 4640.0
+      },
+      {
+        "level": 192,
+        "base_damage": 583.0,
+        "base_health": 4664.0
+      },
+      {
+        "level": 193,
+        "base_damage": 586.0,
+        "base_health": 4688.0
+      },
+      {
+        "level": 194,
+        "base_damage": 589.0,
+        "base_health": 4712.0
+      },
+      {
+        "level": 195,
+        "base_damage": 592.0,
+        "base_health": 4736.0
+      },
+      {
+        "level": 196,
+        "base_damage": 595.0,
+        "base_health": 4760.0
+      },
+      {
+        "level": 197,
+        "base_damage": 598.0,
+        "base_health": 4784.0
+      },
+      {
+        "level": 198,
+        "base_damage": 601.0,
+        "base_health": 4808.0
+      },
+      {
+        "level": 199,
+        "base_damage": 604.0,
+        "base_health": 4832.0
+      },
+      {
+        "level": 200,
+        "base_damage": 607.0,
+        "base_health": 4856.0
+      },
+      {
+        "level": 201,
+        "base_damage": 610.0,
+        "base_health": 4880.0
+      },
+      {
+        "level": 202,
+        "base_damage": 613.0,
+        "base_health": 4904.0
+      },
+      {
+        "level": 203,
+        "base_damage": 616.0,
+        "base_health": 4928.0
+      },
+      {
+        "level": 204,
+        "base_damage": 619.0,
+        "base_health": 4952.0
+      },
+      {
+        "level": 205,
+        "base_damage": 622.0,
+        "base_health": 4976.0
+      },
+      {
+        "level": 206,
+        "base_damage": 625.0,
+        "base_health": 5000.0
+      },
+      {
+        "level": 207,
+        "base_damage": 628.0,
+        "base_health": 5024.0
+      },
+      {
+        "level": 208,
+        "base_damage": 631.0,
+        "base_health": 5048.0
+      },
+      {
+        "level": 209,
+        "base_damage": 634.0,
+        "base_health": 5072.0
+      },
+      {
+        "level": 210,
+        "base_damage": 637.0,
+        "base_health": 5096.0
+      },
+      {
+        "level": 211,
+        "base_damage": 640.0,
+        "base_health": 5120.0
+      },
+      {
+        "level": 212,
+        "base_damage": 643.0,
+        "base_health": 5144.0
+      },
+      {
+        "level": 213,
+        "base_damage": 646.0,
+        "base_health": 5168.0
+      },
+      {
+        "level": 214,
+        "base_damage": 649.0,
+        "base_health": 5192.0
+      },
+      {
+        "level": 215,
+        "base_damage": 652.0,
+        "base_health": 5216.0
+      },
+      {
+        "level": 216,
+        "base_damage": 655.0,
+        "base_health": 5240.0
+      },
+      {
+        "level": 217,
+        "base_damage": 658.0,
+        "base_health": 5264.0
+      },
+      {
+        "level": 218,
+        "base_damage": 661.0,
+        "base_health": 5288.0
+      },
+      {
+        "level": 219,
+        "base_damage": 664.0,
+        "base_health": 5312.0
+      },
+      {
+        "level": 220,
+        "base_damage": 667.0,
+        "base_health": 5336.0
+      },
+      {
+        "level": 221,
+        "base_damage": 670.0,
+        "base_health": 5360.0
+      },
+      {
+        "level": 222,
+        "base_damage": 673.0,
+        "base_health": 5384.0
+      },
+      {
+        "level": 223,
+        "base_damage": 676.0,
+        "base_health": 5408.0
+      },
+      {
+        "level": 224,
+        "base_damage": 679.0,
+        "base_health": 5432.0
+      },
+      {
+        "level": 225,
+        "base_damage": 682.0,
+        "base_health": 5456.0
+      },
+      {
+        "level": 226,
+        "base_damage": 685.0,
+        "base_health": 5480.0
+      },
+      {
+        "level": 227,
+        "base_damage": 688.0,
+        "base_health": 5504.0
+      },
+      {
+        "level": 228,
+        "base_damage": 691.0,
+        "base_health": 5528.0
+      },
+      {
+        "level": 229,
+        "base_damage": 694.0,
+        "base_health": 5552.0
+      },
+      {
+        "level": 230,
+        "base_damage": 697.0,
+        "base_health": 5576.0
+      },
+      {
+        "level": 231,
+        "base_damage": 700.0,
+        "base_health": 5600.0
+      },
+      {
+        "level": 232,
+        "base_damage": 703.0,
+        "base_health": 5624.0
+      },
+      {
+        "level": 233,
+        "base_damage": 706.0,
+        "base_health": 5648.0
+      },
+      {
+        "level": 234,
+        "base_damage": 709.0,
+        "base_health": 5672.0
+      },
+      {
+        "level": 235,
+        "base_damage": 712.0,
+        "base_health": 5696.0
+      },
+      {
+        "level": 236,
+        "base_damage": 715.0,
+        "base_health": 5720.0
+      },
+      {
+        "level": 237,
+        "base_damage": 718.0,
+        "base_health": 5744.0
+      },
+      {
+        "level": 238,
+        "base_damage": 721.0,
+        "base_health": 5768.0
+      },
+      {
+        "level": 239,
+        "base_damage": 724.0,
+        "base_health": 5792.0
+      },
+      {
+        "level": 240,
+        "base_damage": 727.0,
+        "base_health": 5816.0
+      },
+      {
+        "level": 241,
+        "base_damage": 730.0,
+        "base_health": 5840.0
+      },
+      {
+        "level": 242,
+        "base_damage": 733.0,
+        "base_health": 5864.0
+      },
+      {
+        "level": 243,
+        "base_damage": 736.0,
+        "base_health": 5888.0
+      },
+      {
+        "level": 244,
+        "base_damage": 739.0,
+        "base_health": 5912.0
+      },
+      {
+        "level": 245,
+        "base_damage": 742.0,
+        "base_health": 5936.0
+      },
+      {
+        "level": 246,
+        "base_damage": 745.0,
+        "base_health": 5960.0
+      },
+      {
+        "level": 247,
+        "base_damage": 748.0,
+        "base_health": 5984.0
+      },
+      {
+        "level": 248,
+        "base_damage": 751.0,
+        "base_health": 6008.0
+      },
+      {
+        "level": 249,
+        "base_damage": 754.0,
+        "base_health": 6032.0
+      },
+      {
+        "level": 250,
+        "base_damage": 757.0,
+        "base_health": 6056.0
+      },
+      {
+        "level": 251,
+        "base_damage": 760.0,
+        "base_health": 6080.0
+      },
+      {
+        "level": 252,
+        "base_damage": 763.0,
+        "base_health": 6104.0
+      },
+      {
+        "level": 253,
+        "base_damage": 766.0,
+        "base_health": 6128.0
+      },
+      {
+        "level": 254,
+        "base_damage": 769.0,
+        "base_health": 6152.0
+      },
+      {
+        "level": 255,
+        "base_damage": 772.0,
+        "base_health": 6176.0
+      },
+      {
+        "level": 256,
+        "base_damage": 775.0,
+        "base_health": 6200.0
+      },
+      {
+        "level": 257,
+        "base_damage": 778.0,
+        "base_health": 6224.0
+      },
+      {
+        "level": 258,
+        "base_damage": 781.0,
+        "base_health": 6248.0
+      },
+      {
+        "level": 259,
+        "base_damage": 784.0,
+        "base_health": 6272.0
+      },
+      {
+        "level": 260,
+        "base_damage": 787.0,
+        "base_health": 6296.0
+      },
+      {
+        "level": 261,
+        "base_damage": 790.0,
+        "base_health": 6320.0
+      },
+      {
+        "level": 262,
+        "base_damage": 793.0,
+        "base_health": 6344.0
+      },
+      {
+        "level": 263,
+        "base_damage": 796.0,
+        "base_health": 6368.0
+      },
+      {
+        "level": 264,
+        "base_damage": 799.0,
+        "base_health": 6392.0
+      },
+      {
+        "level": 265,
+        "base_damage": 802.0,
+        "base_health": 6416.0
+      },
+      {
+        "level": 266,
+        "base_damage": 805.0,
+        "base_health": 6440.0
+      },
+      {
+        "level": 267,
+        "base_damage": 808.0,
+        "base_health": 6464.0
+      },
+      {
+        "level": 268,
+        "base_damage": 811.0,
+        "base_health": 6488.0
+      },
+      {
+        "level": 269,
+        "base_damage": 814.0,
+        "base_health": 6512.0
+      },
+      {
+        "level": 270,
+        "base_damage": 817.0,
+        "base_health": 6536.0
+      },
+      {
+        "level": 271,
+        "base_damage": 820.0,
+        "base_health": 6560.0
+      },
+      {
+        "level": 272,
+        "base_damage": 823.0,
+        "base_health": 6584.0
+      },
+      {
+        "level": 273,
+        "base_damage": 826.0,
+        "base_health": 6608.0
+      },
+      {
+        "level": 274,
+        "base_damage": 829.0,
+        "base_health": 6632.0
+      },
+      {
+        "level": 275,
+        "base_damage": 832.0,
+        "base_health": 6656.0
+      },
+      {
+        "level": 276,
+        "base_damage": 835.0,
+        "base_health": 6680.0
+      },
+      {
+        "level": 277,
+        "base_damage": 838.0,
+        "base_health": 6704.0
+      },
+      {
+        "level": 278,
+        "base_damage": 841.0,
+        "base_health": 6728.0
+      },
+      {
+        "level": 279,
+        "base_damage": 844.0,
+        "base_health": 6752.0
+      },
+      {
+        "level": 280,
+        "base_damage": 847.0,
+        "base_health": 6776.0
+      },
+      {
+        "level": 281,
+        "base_damage": 850.0,
+        "base_health": 6800.0
+      },
+      {
+        "level": 282,
+        "base_damage": 853.0,
+        "base_health": 6824.0
+      },
+      {
+        "level": 283,
+        "base_damage": 856.0,
+        "base_health": 6848.0
+      },
+      {
+        "level": 284,
+        "base_damage": 859.0,
+        "base_health": 6872.0
+      },
+      {
+        "level": 285,
+        "base_damage": 862.0,
+        "base_health": 6896.0
+      },
+      {
+        "level": 286,
+        "base_damage": 865.0,
+        "base_health": 6920.0
+      },
+      {
+        "level": 287,
+        "base_damage": 868.0,
+        "base_health": 6944.0
+      },
+      {
+        "level": 288,
+        "base_damage": 871.0,
+        "base_health": 6968.0
+      },
+      {
+        "level": 289,
+        "base_damage": 874.0,
+        "base_health": 6992.0
+      },
+      {
+        "level": 290,
+        "base_damage": 877.0,
+        "base_health": 7016.0
+      },
+      {
+        "level": 291,
+        "base_damage": 880.0,
+        "base_health": 7040.0
+      },
+      {
+        "level": 292,
+        "base_damage": 883.0,
+        "base_health": 7064.0
+      },
+      {
+        "level": 293,
+        "base_damage": 886.0,
+        "base_health": 7088.0
+      },
+      {
+        "level": 294,
+        "base_damage": 889.0,
+        "base_health": 7112.0
+      },
+      {
+        "level": 295,
+        "base_damage": 892.0,
+        "base_health": 7136.0
+      },
+      {
+        "level": 296,
+        "base_damage": 895.0,
+        "base_health": 7160.0
+      },
+      {
+        "level": 297,
+        "base_damage": 898.0,
+        "base_health": 7184.0
+      },
+      {
+        "level": 298,
+        "base_damage": 901.0,
+        "base_health": 7208.0
+      },
+      {
+        "level": 299,
+        "base_damage": 904.0,
+        "base_health": 7232.0
+      },
+      {
+        "level": 300,
+        "base_damage": 907.0,
+        "base_health": 7256.0
+      }
+    ]
+  },
+  "Rare": {
+    "rarity": "Rare",
+    "max_level": 300,
+    "levels": [
+      {
+        "level": 1,
+        "base_damage": 48.0,
+        "base_health": 384.0
+      },
+      {
+        "level": 2,
+        "base_damage": 54.0,
+        "base_health": 432.0
+      },
+      {
+        "level": 3,
+        "base_damage": 60.0,
+        "base_health": 480.0
+      },
+      {
+        "level": 4,
+        "base_damage": 66.0,
+        "base_health": 528.0
+      },
+      {
+        "level": 5,
+        "base_damage": 72.0,
+        "base_health": 576.0
+      },
+      {
+        "level": 6,
+        "base_damage": 78.0,
+        "base_health": 624.0
+      },
+      {
+        "level": 7,
+        "base_damage": 84.0,
+        "base_health": 672.0
+      },
+      {
+        "level": 8,
+        "base_damage": 90.0,
+        "base_health": 720.0
+      },
+      {
+        "level": 9,
+        "base_damage": 96.0,
+        "base_health": 768.0
+      },
+      {
+        "level": 10,
+        "base_damage": 102.0,
+        "base_health": 816.0
+      },
+      {
+        "level": 11,
+        "base_damage": 108.0,
+        "base_health": 864.0
+      },
+      {
+        "level": 12,
+        "base_damage": 114.0,
+        "base_health": 912.0
+      },
+      {
+        "level": 13,
+        "base_damage": 120.0,
+        "base_health": 960.0
+      },
+      {
+        "level": 14,
+        "base_damage": 126.0,
+        "base_health": 1008.0
+      },
+      {
+        "level": 15,
+        "base_damage": 132.0,
+        "base_health": 1056.0
+      },
+      {
+        "level": 16,
+        "base_damage": 138.0,
+        "base_health": 1104.0
+      },
+      {
+        "level": 17,
+        "base_damage": 144.0,
+        "base_health": 1152.0
+      },
+      {
+        "level": 18,
+        "base_damage": 150.0,
+        "base_health": 1200.0
+      },
+      {
+        "level": 19,
+        "base_damage": 156.0,
+        "base_health": 1248.0
+      },
+      {
+        "level": 20,
+        "base_damage": 162.0,
+        "base_health": 1296.0
+      },
+      {
+        "level": 21,
+        "base_damage": 168.0,
+        "base_health": 1344.0
+      },
+      {
+        "level": 22,
+        "base_damage": 174.0,
+        "base_health": 1392.0
+      },
+      {
+        "level": 23,
+        "base_damage": 180.0,
+        "base_health": 1440.0
+      },
+      {
+        "level": 24,
+        "base_damage": 186.0,
+        "base_health": 1488.0
+      },
+      {
+        "level": 25,
+        "base_damage": 192.0,
+        "base_health": 1536.0
+      },
+      {
+        "level": 26,
+        "base_damage": 198.0,
+        "base_health": 1584.0
+      },
+      {
+        "level": 27,
+        "base_damage": 204.0,
+        "base_health": 1632.0
+      },
+      {
+        "level": 28,
+        "base_damage": 210.0,
+        "base_health": 1680.0
+      },
+      {
+        "level": 29,
+        "base_damage": 216.0,
+        "base_health": 1728.0
+      },
+      {
+        "level": 30,
+        "base_damage": 222.0,
+        "base_health": 1776.0
+      },
+      {
+        "level": 31,
+        "base_damage": 228.0,
+        "base_health": 1824.0
+      },
+      {
+        "level": 32,
+        "base_damage": 234.0,
+        "base_health": 1872.0
+      },
+      {
+        "level": 33,
+        "base_damage": 240.0,
+        "base_health": 1920.0
+      },
+      {
+        "level": 34,
+        "base_damage": 246.0,
+        "base_health": 1968.0
+      },
+      {
+        "level": 35,
+        "base_damage": 252.0,
+        "base_health": 2016.0
+      },
+      {
+        "level": 36,
+        "base_damage": 258.0,
+        "base_health": 2064.0
+      },
+      {
+        "level": 37,
+        "base_damage": 264.0,
+        "base_health": 2112.0
+      },
+      {
+        "level": 38,
+        "base_damage": 270.0,
+        "base_health": 2160.0
+      },
+      {
+        "level": 39,
+        "base_damage": 276.0,
+        "base_health": 2208.0
+      },
+      {
+        "level": 40,
+        "base_damage": 282.0,
+        "base_health": 2256.0
+      },
+      {
+        "level": 41,
+        "base_damage": 288.0,
+        "base_health": 2304.0
+      },
+      {
+        "level": 42,
+        "base_damage": 294.0,
+        "base_health": 2352.0
+      },
+      {
+        "level": 43,
+        "base_damage": 300.0,
+        "base_health": 2400.0
+      },
+      {
+        "level": 44,
+        "base_damage": 306.0,
+        "base_health": 2448.0
+      },
+      {
+        "level": 45,
+        "base_damage": 312.0,
+        "base_health": 2496.0
+      },
+      {
+        "level": 46,
+        "base_damage": 318.0,
+        "base_health": 2544.0
+      },
+      {
+        "level": 47,
+        "base_damage": 324.0,
+        "base_health": 2592.0
+      },
+      {
+        "level": 48,
+        "base_damage": 330.0,
+        "base_health": 2640.0
+      },
+      {
+        "level": 49,
+        "base_damage": 336.0,
+        "base_health": 2688.0
+      },
+      {
+        "level": 50,
+        "base_damage": 342.0,
+        "base_health": 2736.0
+      },
+      {
+        "level": 51,
+        "base_damage": 348.0,
+        "base_health": 2784.0
+      },
+      {
+        "level": 52,
+        "base_damage": 354.0,
+        "base_health": 2832.0
+      },
+      {
+        "level": 53,
+        "base_damage": 360.0,
+        "base_health": 2880.0
+      },
+      {
+        "level": 54,
+        "base_damage": 366.0,
+        "base_health": 2928.0
+      },
+      {
+        "level": 55,
+        "base_damage": 372.0,
+        "base_health": 2976.0
+      },
+      {
+        "level": 56,
+        "base_damage": 378.0,
+        "base_health": 3024.0
+      },
+      {
+        "level": 57,
+        "base_damage": 384.0,
+        "base_health": 3072.0
+      },
+      {
+        "level": 58,
+        "base_damage": 390.0,
+        "base_health": 3120.0
+      },
+      {
+        "level": 59,
+        "base_damage": 396.0,
+        "base_health": 3168.0
+      },
+      {
+        "level": 60,
+        "base_damage": 402.0,
+        "base_health": 3216.0
+      },
+      {
+        "level": 61,
+        "base_damage": 408.0,
+        "base_health": 3264.0
+      },
+      {
+        "level": 62,
+        "base_damage": 414.0,
+        "base_health": 3312.0
+      },
+      {
+        "level": 63,
+        "base_damage": 420.0,
+        "base_health": 3360.0
+      },
+      {
+        "level": 64,
+        "base_damage": 426.0,
+        "base_health": 3408.0
+      },
+      {
+        "level": 65,
+        "base_damage": 432.0,
+        "base_health": 3456.0
+      },
+      {
+        "level": 66,
+        "base_damage": 438.0,
+        "base_health": 3504.0
+      },
+      {
+        "level": 67,
+        "base_damage": 444.0,
+        "base_health": 3552.0
+      },
+      {
+        "level": 68,
+        "base_damage": 450.0,
+        "base_health": 3600.0
+      },
+      {
+        "level": 69,
+        "base_damage": 456.0,
+        "base_health": 3648.0
+      },
+      {
+        "level": 70,
+        "base_damage": 462.0,
+        "base_health": 3696.0
+      },
+      {
+        "level": 71,
+        "base_damage": 468.0,
+        "base_health": 3744.0
+      },
+      {
+        "level": 72,
+        "base_damage": 474.0,
+        "base_health": 3792.0
+      },
+      {
+        "level": 73,
+        "base_damage": 480.0,
+        "base_health": 3840.0
+      },
+      {
+        "level": 74,
+        "base_damage": 486.0,
+        "base_health": 3888.0
+      },
+      {
+        "level": 75,
+        "base_damage": 492.0,
+        "base_health": 3936.0
+      },
+      {
+        "level": 76,
+        "base_damage": 498.0,
+        "base_health": 3984.0
+      },
+      {
+        "level": 77,
+        "base_damage": 504.0,
+        "base_health": 4032.0
+      },
+      {
+        "level": 78,
+        "base_damage": 510.0,
+        "base_health": 4080.0
+      },
+      {
+        "level": 79,
+        "base_damage": 516.0,
+        "base_health": 4128.0
+      },
+      {
+        "level": 80,
+        "base_damage": 522.0,
+        "base_health": 4176.0
+      },
+      {
+        "level": 81,
+        "base_damage": 528.0,
+        "base_health": 4224.0
+      },
+      {
+        "level": 82,
+        "base_damage": 534.0,
+        "base_health": 4272.0
+      },
+      {
+        "level": 83,
+        "base_damage": 540.0,
+        "base_health": 4320.0
+      },
+      {
+        "level": 84,
+        "base_damage": 546.0,
+        "base_health": 4368.0
+      },
+      {
+        "level": 85,
+        "base_damage": 552.0,
+        "base_health": 4416.0
+      },
+      {
+        "level": 86,
+        "base_damage": 558.0,
+        "base_health": 4464.0
+      },
+      {
+        "level": 87,
+        "base_damage": 564.0,
+        "base_health": 4512.0
+      },
+      {
+        "level": 88,
+        "base_damage": 570.0,
+        "base_health": 4560.0
+      },
+      {
+        "level": 89,
+        "base_damage": 576.0,
+        "base_health": 4608.0
+      },
+      {
+        "level": 90,
+        "base_damage": 582.0,
+        "base_health": 4656.0
+      },
+      {
+        "level": 91,
+        "base_damage": 588.0,
+        "base_health": 4704.0
+      },
+      {
+        "level": 92,
+        "base_damage": 594.0,
+        "base_health": 4752.0
+      },
+      {
+        "level": 93,
+        "base_damage": 600.0,
+        "base_health": 4800.0
+      },
+      {
+        "level": 94,
+        "base_damage": 606.0,
+        "base_health": 4848.0
+      },
+      {
+        "level": 95,
+        "base_damage": 612.0,
+        "base_health": 4896.0
+      },
+      {
+        "level": 96,
+        "base_damage": 618.0,
+        "base_health": 4944.0
+      },
+      {
+        "level": 97,
+        "base_damage": 624.0,
+        "base_health": 4992.0
+      },
+      {
+        "level": 98,
+        "base_damage": 630.0,
+        "base_health": 5040.0
+      },
+      {
+        "level": 99,
+        "base_damage": 636.0,
+        "base_health": 5088.0
+      },
+      {
+        "level": 100,
+        "base_damage": 642.0,
+        "base_health": 5136.0
+      },
+      {
+        "level": 101,
+        "base_damage": 648.0,
+        "base_health": 5184.0
+      },
+      {
+        "level": 102,
+        "base_damage": 654.0,
+        "base_health": 5232.0
+      },
+      {
+        "level": 103,
+        "base_damage": 660.0,
+        "base_health": 5280.0
+      },
+      {
+        "level": 104,
+        "base_damage": 666.0,
+        "base_health": 5328.0
+      },
+      {
+        "level": 105,
+        "base_damage": 672.0,
+        "base_health": 5376.0
+      },
+      {
+        "level": 106,
+        "base_damage": 678.0,
+        "base_health": 5424.0
+      },
+      {
+        "level": 107,
+        "base_damage": 684.0,
+        "base_health": 5472.0
+      },
+      {
+        "level": 108,
+        "base_damage": 690.0,
+        "base_health": 5520.0
+      },
+      {
+        "level": 109,
+        "base_damage": 696.0,
+        "base_health": 5568.0
+      },
+      {
+        "level": 110,
+        "base_damage": 702.0,
+        "base_health": 5616.0
+      },
+      {
+        "level": 111,
+        "base_damage": 708.0,
+        "base_health": 5664.0
+      },
+      {
+        "level": 112,
+        "base_damage": 714.0,
+        "base_health": 5712.0
+      },
+      {
+        "level": 113,
+        "base_damage": 720.0,
+        "base_health": 5760.0
+      },
+      {
+        "level": 114,
+        "base_damage": 726.0,
+        "base_health": 5808.0
+      },
+      {
+        "level": 115,
+        "base_damage": 732.0,
+        "base_health": 5856.0
+      },
+      {
+        "level": 116,
+        "base_damage": 738.0,
+        "base_health": 5904.0
+      },
+      {
+        "level": 117,
+        "base_damage": 744.0,
+        "base_health": 5952.0
+      },
+      {
+        "level": 118,
+        "base_damage": 750.0,
+        "base_health": 6000.0
+      },
+      {
+        "level": 119,
+        "base_damage": 756.0,
+        "base_health": 6048.0
+      },
+      {
+        "level": 120,
+        "base_damage": 762.0,
+        "base_health": 6096.0
+      },
+      {
+        "level": 121,
+        "base_damage": 768.0,
+        "base_health": 6144.0
+      },
+      {
+        "level": 122,
+        "base_damage": 774.0,
+        "base_health": 6192.0
+      },
+      {
+        "level": 123,
+        "base_damage": 780.0,
+        "base_health": 6240.0
+      },
+      {
+        "level": 124,
+        "base_damage": 786.0,
+        "base_health": 6288.0
+      },
+      {
+        "level": 125,
+        "base_damage": 792.0,
+        "base_health": 6336.0
+      },
+      {
+        "level": 126,
+        "base_damage": 798.0,
+        "base_health": 6384.0
+      },
+      {
+        "level": 127,
+        "base_damage": 804.0,
+        "base_health": 6432.0
+      },
+      {
+        "level": 128,
+        "base_damage": 810.0,
+        "base_health": 6480.0
+      },
+      {
+        "level": 129,
+        "base_damage": 816.0,
+        "base_health": 6528.0
+      },
+      {
+        "level": 130,
+        "base_damage": 822.0,
+        "base_health": 6576.0
+      },
+      {
+        "level": 131,
+        "base_damage": 828.0,
+        "base_health": 6624.0
+      },
+      {
+        "level": 132,
+        "base_damage": 834.0,
+        "base_health": 6672.0
+      },
+      {
+        "level": 133,
+        "base_damage": 840.0,
+        "base_health": 6720.0
+      },
+      {
+        "level": 134,
+        "base_damage": 846.0,
+        "base_health": 6768.0
+      },
+      {
+        "level": 135,
+        "base_damage": 852.0,
+        "base_health": 6816.0
+      },
+      {
+        "level": 136,
+        "base_damage": 858.0,
+        "base_health": 6864.0
+      },
+      {
+        "level": 137,
+        "base_damage": 864.0,
+        "base_health": 6912.0
+      },
+      {
+        "level": 138,
+        "base_damage": 870.0,
+        "base_health": 6960.0
+      },
+      {
+        "level": 139,
+        "base_damage": 876.0,
+        "base_health": 7008.0
+      },
+      {
+        "level": 140,
+        "base_damage": 882.0,
+        "base_health": 7056.0
+      },
+      {
+        "level": 141,
+        "base_damage": 888.0,
+        "base_health": 7104.0
+      },
+      {
+        "level": 142,
+        "base_damage": 894.0,
+        "base_health": 7152.0
+      },
+      {
+        "level": 143,
+        "base_damage": 900.0,
+        "base_health": 7200.0
+      },
+      {
+        "level": 144,
+        "base_damage": 906.0,
+        "base_health": 7248.0
+      },
+      {
+        "level": 145,
+        "base_damage": 912.0,
+        "base_health": 7296.0
+      },
+      {
+        "level": 146,
+        "base_damage": 918.0,
+        "base_health": 7344.0
+      },
+      {
+        "level": 147,
+        "base_damage": 924.0,
+        "base_health": 7392.0
+      },
+      {
+        "level": 148,
+        "base_damage": 930.0,
+        "base_health": 7440.0
+      },
+      {
+        "level": 149,
+        "base_damage": 936.0,
+        "base_health": 7488.0
+      },
+      {
+        "level": 150,
+        "base_damage": 942.0,
+        "base_health": 7536.0
+      },
+      {
+        "level": 151,
+        "base_damage": 948.0,
+        "base_health": 7584.0
+      },
+      {
+        "level": 152,
+        "base_damage": 954.0,
+        "base_health": 7632.0
+      },
+      {
+        "level": 153,
+        "base_damage": 960.0,
+        "base_health": 7680.0
+      },
+      {
+        "level": 154,
+        "base_damage": 966.0,
+        "base_health": 7728.0
+      },
+      {
+        "level": 155,
+        "base_damage": 972.0,
+        "base_health": 7776.0
+      },
+      {
+        "level": 156,
+        "base_damage": 978.0,
+        "base_health": 7824.0
+      },
+      {
+        "level": 157,
+        "base_damage": 984.0,
+        "base_health": 7872.0
+      },
+      {
+        "level": 158,
+        "base_damage": 990.0,
+        "base_health": 7920.0
+      },
+      {
+        "level": 159,
+        "base_damage": 996.0,
+        "base_health": 7968.0
+      },
+      {
+        "level": 160,
+        "base_damage": 1002.0,
+        "base_health": 8016.0
+      },
+      {
+        "level": 161,
+        "base_damage": 1008.0,
+        "base_health": 8064.0
+      },
+      {
+        "level": 162,
+        "base_damage": 1014.0,
+        "base_health": 8112.0
+      },
+      {
+        "level": 163,
+        "base_damage": 1020.0,
+        "base_health": 8160.0
+      },
+      {
+        "level": 164,
+        "base_damage": 1026.0,
+        "base_health": 8208.0
+      },
+      {
+        "level": 165,
+        "base_damage": 1032.0,
+        "base_health": 8256.0
+      },
+      {
+        "level": 166,
+        "base_damage": 1038.0,
+        "base_health": 8304.0
+      },
+      {
+        "level": 167,
+        "base_damage": 1044.0,
+        "base_health": 8352.0
+      },
+      {
+        "level": 168,
+        "base_damage": 1050.0,
+        "base_health": 8400.0
+      },
+      {
+        "level": 169,
+        "base_damage": 1056.0,
+        "base_health": 8448.0
+      },
+      {
+        "level": 170,
+        "base_damage": 1062.0,
+        "base_health": 8496.0
+      },
+      {
+        "level": 171,
+        "base_damage": 1068.0,
+        "base_health": 8544.0
+      },
+      {
+        "level": 172,
+        "base_damage": 1074.0,
+        "base_health": 8592.0
+      },
+      {
+        "level": 173,
+        "base_damage": 1080.0,
+        "base_health": 8640.0
+      },
+      {
+        "level": 174,
+        "base_damage": 1086.0,
+        "base_health": 8688.0
+      },
+      {
+        "level": 175,
+        "base_damage": 1092.0,
+        "base_health": 8736.0
+      },
+      {
+        "level": 176,
+        "base_damage": 1098.0,
+        "base_health": 8784.0
+      },
+      {
+        "level": 177,
+        "base_damage": 1104.0,
+        "base_health": 8832.0
+      },
+      {
+        "level": 178,
+        "base_damage": 1110.0,
+        "base_health": 8880.0
+      },
+      {
+        "level": 179,
+        "base_damage": 1116.0,
+        "base_health": 8928.0
+      },
+      {
+        "level": 180,
+        "base_damage": 1122.0,
+        "base_health": 8976.0
+      },
+      {
+        "level": 181,
+        "base_damage": 1128.0,
+        "base_health": 9024.0
+      },
+      {
+        "level": 182,
+        "base_damage": 1134.0,
+        "base_health": 9072.0
+      },
+      {
+        "level": 183,
+        "base_damage": 1140.0,
+        "base_health": 9120.0
+      },
+      {
+        "level": 184,
+        "base_damage": 1146.0,
+        "base_health": 9168.0
+      },
+      {
+        "level": 185,
+        "base_damage": 1152.0,
+        "base_health": 9216.0
+      },
+      {
+        "level": 186,
+        "base_damage": 1158.0,
+        "base_health": 9264.0
+      },
+      {
+        "level": 187,
+        "base_damage": 1164.0,
+        "base_health": 9312.0
+      },
+      {
+        "level": 188,
+        "base_damage": 1170.0,
+        "base_health": 9360.0
+      },
+      {
+        "level": 189,
+        "base_damage": 1176.0,
+        "base_health": 9408.0
+      },
+      {
+        "level": 190,
+        "base_damage": 1182.0,
+        "base_health": 9456.0
+      },
+      {
+        "level": 191,
+        "base_damage": 1188.0,
+        "base_health": 9504.0
+      },
+      {
+        "level": 192,
+        "base_damage": 1194.0,
+        "base_health": 9552.0
+      },
+      {
+        "level": 193,
+        "base_damage": 1200.0,
+        "base_health": 9600.0
+      },
+      {
+        "level": 194,
+        "base_damage": 1206.0,
+        "base_health": 9648.0
+      },
+      {
+        "level": 195,
+        "base_damage": 1212.0,
+        "base_health": 9696.0
+      },
+      {
+        "level": 196,
+        "base_damage": 1218.0,
+        "base_health": 9744.0
+      },
+      {
+        "level": 197,
+        "base_damage": 1224.0,
+        "base_health": 9792.0
+      },
+      {
+        "level": 198,
+        "base_damage": 1230.0,
+        "base_health": 9840.0
+      },
+      {
+        "level": 199,
+        "base_damage": 1236.0,
+        "base_health": 9888.0
+      },
+      {
+        "level": 200,
+        "base_damage": 1242.0,
+        "base_health": 9936.0
+      },
+      {
+        "level": 201,
+        "base_damage": 1248.0,
+        "base_health": 9984.0
+      },
+      {
+        "level": 202,
+        "base_damage": 1254.0,
+        "base_health": 10032.0
+      },
+      {
+        "level": 203,
+        "base_damage": 1260.0,
+        "base_health": 10080.0
+      },
+      {
+        "level": 204,
+        "base_damage": 1266.0,
+        "base_health": 10128.0
+      },
+      {
+        "level": 205,
+        "base_damage": 1272.0,
+        "base_health": 10176.0
+      },
+      {
+        "level": 206,
+        "base_damage": 1278.0,
+        "base_health": 10224.0
+      },
+      {
+        "level": 207,
+        "base_damage": 1284.0,
+        "base_health": 10272.0
+      },
+      {
+        "level": 208,
+        "base_damage": 1290.0,
+        "base_health": 10320.0
+      },
+      {
+        "level": 209,
+        "base_damage": 1296.0,
+        "base_health": 10368.0
+      },
+      {
+        "level": 210,
+        "base_damage": 1302.0,
+        "base_health": 10416.0
+      },
+      {
+        "level": 211,
+        "base_damage": 1308.0,
+        "base_health": 10464.0
+      },
+      {
+        "level": 212,
+        "base_damage": 1314.0,
+        "base_health": 10512.0
+      },
+      {
+        "level": 213,
+        "base_damage": 1320.0,
+        "base_health": 10560.0
+      },
+      {
+        "level": 214,
+        "base_damage": 1326.0,
+        "base_health": 10608.0
+      },
+      {
+        "level": 215,
+        "base_damage": 1332.0,
+        "base_health": 10656.0
+      },
+      {
+        "level": 216,
+        "base_damage": 1338.0,
+        "base_health": 10704.0
+      },
+      {
+        "level": 217,
+        "base_damage": 1344.0,
+        "base_health": 10752.0
+      },
+      {
+        "level": 218,
+        "base_damage": 1350.0,
+        "base_health": 10800.0
+      },
+      {
+        "level": 219,
+        "base_damage": 1356.0,
+        "base_health": 10848.0
+      },
+      {
+        "level": 220,
+        "base_damage": 1362.0,
+        "base_health": 10896.0
+      },
+      {
+        "level": 221,
+        "base_damage": 1368.0,
+        "base_health": 10944.0
+      },
+      {
+        "level": 222,
+        "base_damage": 1374.0,
+        "base_health": 10992.0
+      },
+      {
+        "level": 223,
+        "base_damage": 1380.0,
+        "base_health": 11040.0
+      },
+      {
+        "level": 224,
+        "base_damage": 1386.0,
+        "base_health": 11088.0
+      },
+      {
+        "level": 225,
+        "base_damage": 1392.0,
+        "base_health": 11136.0
+      },
+      {
+        "level": 226,
+        "base_damage": 1398.0,
+        "base_health": 11184.0
+      },
+      {
+        "level": 227,
+        "base_damage": 1404.0,
+        "base_health": 11232.0
+      },
+      {
+        "level": 228,
+        "base_damage": 1410.0,
+        "base_health": 11280.0
+      },
+      {
+        "level": 229,
+        "base_damage": 1416.0,
+        "base_health": 11328.0
+      },
+      {
+        "level": 230,
+        "base_damage": 1422.0,
+        "base_health": 11376.0
+      },
+      {
+        "level": 231,
+        "base_damage": 1428.0,
+        "base_health": 11424.0
+      },
+      {
+        "level": 232,
+        "base_damage": 1434.0,
+        "base_health": 11472.0
+      },
+      {
+        "level": 233,
+        "base_damage": 1440.0,
+        "base_health": 11520.0
+      },
+      {
+        "level": 234,
+        "base_damage": 1446.0,
+        "base_health": 11568.0
+      },
+      {
+        "level": 235,
+        "base_damage": 1452.0,
+        "base_health": 11616.0
+      },
+      {
+        "level": 236,
+        "base_damage": 1458.0,
+        "base_health": 11664.0
+      },
+      {
+        "level": 237,
+        "base_damage": 1464.0,
+        "base_health": 11712.0
+      },
+      {
+        "level": 238,
+        "base_damage": 1470.0,
+        "base_health": 11760.0
+      },
+      {
+        "level": 239,
+        "base_damage": 1476.0,
+        "base_health": 11808.0
+      },
+      {
+        "level": 240,
+        "base_damage": 1482.0,
+        "base_health": 11856.0
+      },
+      {
+        "level": 241,
+        "base_damage": 1488.0,
+        "base_health": 11904.0
+      },
+      {
+        "level": 242,
+        "base_damage": 1494.0,
+        "base_health": 11952.0
+      },
+      {
+        "level": 243,
+        "base_damage": 1500.0,
+        "base_health": 12000.0
+      },
+      {
+        "level": 244,
+        "base_damage": 1506.0,
+        "base_health": 12048.0
+      },
+      {
+        "level": 245,
+        "base_damage": 1512.0,
+        "base_health": 12096.0
+      },
+      {
+        "level": 246,
+        "base_damage": 1518.0,
+        "base_health": 12144.0
+      },
+      {
+        "level": 247,
+        "base_damage": 1524.0,
+        "base_health": 12192.0
+      },
+      {
+        "level": 248,
+        "base_damage": 1530.0,
+        "base_health": 12240.0
+      },
+      {
+        "level": 249,
+        "base_damage": 1536.0,
+        "base_health": 12288.0
+      },
+      {
+        "level": 250,
+        "base_damage": 1542.0,
+        "base_health": 12336.0
+      },
+      {
+        "level": 251,
+        "base_damage": 1548.0,
+        "base_health": 12384.0
+      },
+      {
+        "level": 252,
+        "base_damage": 1554.0,
+        "base_health": 12432.0
+      },
+      {
+        "level": 253,
+        "base_damage": 1560.0,
+        "base_health": 12480.0
+      },
+      {
+        "level": 254,
+        "base_damage": 1566.0,
+        "base_health": 12528.0
+      },
+      {
+        "level": 255,
+        "base_damage": 1572.0,
+        "base_health": 12576.0
+      },
+      {
+        "level": 256,
+        "base_damage": 1578.0,
+        "base_health": 12624.0
+      },
+      {
+        "level": 257,
+        "base_damage": 1584.0,
+        "base_health": 12672.0
+      },
+      {
+        "level": 258,
+        "base_damage": 1590.0,
+        "base_health": 12720.0
+      },
+      {
+        "level": 259,
+        "base_damage": 1596.0,
+        "base_health": 12768.0
+      },
+      {
+        "level": 260,
+        "base_damage": 1602.0,
+        "base_health": 12816.0
+      },
+      {
+        "level": 261,
+        "base_damage": 1608.0,
+        "base_health": 12864.0
+      },
+      {
+        "level": 262,
+        "base_damage": 1614.0,
+        "base_health": 12912.0
+      },
+      {
+        "level": 263,
+        "base_damage": 1620.0,
+        "base_health": 12960.0
+      },
+      {
+        "level": 264,
+        "base_damage": 1626.0,
+        "base_health": 13008.0
+      },
+      {
+        "level": 265,
+        "base_damage": 1632.0,
+        "base_health": 13056.0
+      },
+      {
+        "level": 266,
+        "base_damage": 1638.0,
+        "base_health": 13104.0
+      },
+      {
+        "level": 267,
+        "base_damage": 1644.0,
+        "base_health": 13152.0
+      },
+      {
+        "level": 268,
+        "base_damage": 1650.0,
+        "base_health": 13200.0
+      },
+      {
+        "level": 269,
+        "base_damage": 1656.0,
+        "base_health": 13248.0
+      },
+      {
+        "level": 270,
+        "base_damage": 1662.0,
+        "base_health": 13296.0
+      },
+      {
+        "level": 271,
+        "base_damage": 1668.0,
+        "base_health": 13344.0
+      },
+      {
+        "level": 272,
+        "base_damage": 1674.0,
+        "base_health": 13392.0
+      },
+      {
+        "level": 273,
+        "base_damage": 1680.0,
+        "base_health": 13440.0
+      },
+      {
+        "level": 274,
+        "base_damage": 1686.0,
+        "base_health": 13488.0
+      },
+      {
+        "level": 275,
+        "base_damage": 1692.0,
+        "base_health": 13536.0
+      },
+      {
+        "level": 276,
+        "base_damage": 1698.0,
+        "base_health": 13584.0
+      },
+      {
+        "level": 277,
+        "base_damage": 1704.0,
+        "base_health": 13632.0
+      },
+      {
+        "level": 278,
+        "base_damage": 1710.0,
+        "base_health": 13680.0
+      },
+      {
+        "level": 279,
+        "base_damage": 1716.0,
+        "base_health": 13728.0
+      },
+      {
+        "level": 280,
+        "base_damage": 1722.0,
+        "base_health": 13776.0
+      },
+      {
+        "level": 281,
+        "base_damage": 1728.0,
+        "base_health": 13824.0
+      },
+      {
+        "level": 282,
+        "base_damage": 1734.0,
+        "base_health": 13872.0
+      },
+      {
+        "level": 283,
+        "base_damage": 1740.0,
+        "base_health": 13920.0
+      },
+      {
+        "level": 284,
+        "base_damage": 1746.0,
+        "base_health": 13968.0
+      },
+      {
+        "level": 285,
+        "base_damage": 1752.0,
+        "base_health": 14016.0
+      },
+      {
+        "level": 286,
+        "base_damage": 1758.0,
+        "base_health": 14064.0
+      },
+      {
+        "level": 287,
+        "base_damage": 1764.0,
+        "base_health": 14112.0
+      },
+      {
+        "level": 288,
+        "base_damage": 1770.0,
+        "base_health": 14160.0
+      },
+      {
+        "level": 289,
+        "base_damage": 1776.0,
+        "base_health": 14208.0
+      },
+      {
+        "level": 290,
+        "base_damage": 1782.0,
+        "base_health": 14256.0
+      },
+      {
+        "level": 291,
+        "base_damage": 1788.0,
+        "base_health": 14304.0
+      },
+      {
+        "level": 292,
+        "base_damage": 1794.0,
+        "base_health": 14352.0
+      },
+      {
+        "level": 293,
+        "base_damage": 1800.0,
+        "base_health": 14400.0
+      },
+      {
+        "level": 294,
+        "base_damage": 1806.0,
+        "base_health": 14448.0
+      },
+      {
+        "level": 295,
+        "base_damage": 1812.0,
+        "base_health": 14496.0
+      },
+      {
+        "level": 296,
+        "base_damage": 1818.0,
+        "base_health": 14544.0
+      },
+      {
+        "level": 297,
+        "base_damage": 1824.0,
+        "base_health": 14592.0
+      },
+      {
+        "level": 298,
+        "base_damage": 1830.0,
+        "base_health": 14640.0
+      },
+      {
+        "level": 299,
+        "base_damage": 1836.0,
+        "base_health": 14688.0
+      },
+      {
+        "level": 300,
+        "base_damage": 1842.0,
+        "base_health": 14736.0
+      }
+    ]
+  },
+  "Epic": {
+    "rarity": "Epic",
+    "max_level": 300,
+    "levels": [
+      {
+        "level": 1,
+        "base_damage": 230.0,
+        "base_health": 1840.0
+      },
+      {
+        "level": 2,
+        "base_damage": 233.0,
+        "base_health": 1864.0
+      },
+      {
+        "level": 3,
+        "base_damage": 235.0,
+        "base_health": 1880.0
+      },
+      {
+        "level": 4,
+        "base_damage": 237.0,
+        "base_health": 1896.0
+      },
+      {
+        "level": 5,
+        "base_damage": 240.0,
+        "base_health": 1920.0
+      },
+      {
+        "level": 6,
+        "base_damage": 242.0,
+        "base_health": 1936.0
+      },
+      {
+        "level": 7,
+        "base_damage": 245.0,
+        "base_health": 1960.0
+      },
+      {
+        "level": 8,
+        "base_damage": 247.0,
+        "base_health": 1976.0
+      },
+      {
+        "level": 9,
+        "base_damage": 249.0,
+        "base_health": 1992.0
+      },
+      {
+        "level": 10,
+        "base_damage": 252.0,
+        "base_health": 2016.0
+      },
+      {
+        "level": 11,
+        "base_damage": 255.0,
+        "base_health": 2040.0
+      },
+      {
+        "level": 12,
+        "base_damage": 257.0,
+        "base_health": 2056.0
+      },
+      {
+        "level": 13,
+        "base_damage": 260.0,
+        "base_health": 2080.0
+      },
+      {
+        "level": 14,
+        "base_damage": 262.0,
+        "base_health": 2096.0
+      },
+      {
+        "level": 15,
+        "base_damage": 265.0,
+        "base_health": 2120.0
+      },
+      {
+        "level": 16,
+        "base_damage": 267.0,
+        "base_health": 2136.0
+      },
+      {
+        "level": 17,
+        "base_damage": 270.0,
+        "base_health": 2160.0
+      },
+      {
+        "level": 18,
+        "base_damage": 273.0,
+        "base_health": 2184.0
+      },
+      {
+        "level": 19,
+        "base_damage": 276.0,
+        "base_health": 2208.0
+      },
+      {
+        "level": 20,
+        "base_damage": 278.0,
+        "base_health": 2224.0
+      },
+      {
+        "level": 21,
+        "base_damage": 281.0,
+        "base_health": 2248.0
+      },
+      {
+        "level": 22,
+        "base_damage": 284.0,
+        "base_health": 2272.0
+      },
+      {
+        "level": 23,
+        "base_damage": 287.0,
+        "base_health": 2296.0
+      },
+      {
+        "level": 24,
+        "base_damage": 290.0,
+        "base_health": 2320.0
+      },
+      {
+        "level": 25,
+        "base_damage": 293.0,
+        "base_health": 2344.0
+      },
+      {
+        "level": 26,
+        "base_damage": 295.0,
+        "base_health": 2360.0
+      },
+      {
+        "level": 27,
+        "base_damage": 298.0,
+        "base_health": 2384.0
+      },
+      {
+        "level": 28,
+        "base_damage": 301.0,
+        "base_health": 2408.0
+      },
+      {
+        "level": 29,
+        "base_damage": 304.0,
+        "base_health": 2432.0
+      },
+      {
+        "level": 30,
+        "base_damage": 307.0,
+        "base_health": 2456.0
+      },
+      {
+        "level": 31,
+        "base_damage": 311.0,
+        "base_health": 2488.0
+      },
+      {
+        "level": 32,
+        "base_damage": 314.0,
+        "base_health": 2512.0
+      },
+      {
+        "level": 33,
+        "base_damage": 317.0,
+        "base_health": 2536.0
+      },
+      {
+        "level": 34,
+        "base_damage": 320.0,
+        "base_health": 2560.0
+      },
+      {
+        "level": 35,
+        "base_damage": 323.0,
+        "base_health": 2584.0
+      },
+      {
+        "level": 36,
+        "base_damage": 326.0,
+        "base_health": 2608.0
+      },
+      {
+        "level": 37,
+        "base_damage": 330.0,
+        "base_health": 2640.0
+      },
+      {
+        "level": 38,
+        "base_damage": 333.0,
+        "base_health": 2664.0
+      },
+      {
+        "level": 39,
+        "base_damage": 336.0,
+        "base_health": 2688.0
+      },
+      {
+        "level": 40,
+        "base_damage": 340.0,
+        "base_health": 2720.0
+      },
+      {
+        "level": 41,
+        "base_damage": 343.0,
+        "base_health": 2744.0
+      },
+      {
+        "level": 42,
+        "base_damage": 346.0,
+        "base_health": 2768.0
+      },
+      {
+        "level": 43,
+        "base_damage": 350.0,
+        "base_health": 2800.0
+      },
+      {
+        "level": 44,
+        "base_damage": 353.0,
+        "base_health": 2824.0
+      },
+      {
+        "level": 45,
+        "base_damage": 357.0,
+        "base_health": 2856.0
+      },
+      {
+        "level": 46,
+        "base_damage": 361.0,
+        "base_health": 2888.0
+      },
+      {
+        "level": 47,
+        "base_damage": 364.0,
+        "base_health": 2912.0
+      },
+      {
+        "level": 48,
+        "base_damage": 368.0,
+        "base_health": 2944.0
+      },
+      {
+        "level": 49,
+        "base_damage": 371.0,
+        "base_health": 2968.0
+      },
+      {
+        "level": 50,
+        "base_damage": 375.0,
+        "base_health": 3000.0
+      },
+      {
+        "level": 51,
+        "base_damage": 379.0,
+        "base_health": 3032.0
+      },
+      {
+        "level": 52,
+        "base_damage": 383.0,
+        "base_health": 3064.0
+      },
+      {
+        "level": 53,
+        "base_damage": 387.0,
+        "base_health": 3096.0
+      },
+      {
+        "level": 54,
+        "base_damage": 390.0,
+        "base_health": 3120.0
+      },
+      {
+        "level": 55,
+        "base_damage": 394.0,
+        "base_health": 3152.0
+      },
+      {
+        "level": 56,
+        "base_damage": 398.0,
+        "base_health": 3184.0
+      },
+      {
+        "level": 57,
+        "base_damage": 402.0,
+        "base_health": 3216.0
+      },
+      {
+        "level": 58,
+        "base_damage": 406.0,
+        "base_health": 3248.0
+      },
+      {
+        "level": 59,
+        "base_damage": 410.0,
+        "base_health": 3280.0
+      },
+      {
+        "level": 60,
+        "base_damage": 414.0,
+        "base_health": 3312.0
+      },
+      {
+        "level": 61,
+        "base_damage": 419.0,
+        "base_health": 3352.0
+      },
+      {
+        "level": 62,
+        "base_damage": 423.0,
+        "base_health": 3384.0
+      },
+      {
+        "level": 63,
+        "base_damage": 427.0,
+        "base_health": 3416.0
+      },
+      {
+        "level": 64,
+        "base_damage": 431.0,
+        "base_health": 3448.0
+      },
+      {
+        "level": 65,
+        "base_damage": 436.0,
+        "base_health": 3488.0
+      },
+      {
+        "level": 66,
+        "base_damage": 440.0,
+        "base_health": 3520.0
+      },
+      {
+        "level": 67,
+        "base_damage": 444.0,
+        "base_health": 3552.0
+      },
+      {
+        "level": 68,
+        "base_damage": 449.0,
+        "base_health": 3592.0
+      },
+      {
+        "level": 69,
+        "base_damage": 453.0,
+        "base_health": 3624.0
+      },
+      {
+        "level": 70,
+        "base_damage": 458.0,
+        "base_health": 3664.0
+      },
+      {
+        "level": 71,
+        "base_damage": 462.0,
+        "base_health": 3696.0
+      },
+      {
+        "level": 72,
+        "base_damage": 467.0,
+        "base_health": 3736.0
+      },
+      {
+        "level": 73,
+        "base_damage": 472.0,
+        "base_health": 3776.0
+      },
+      {
+        "level": 74,
+        "base_damage": 476.0,
+        "base_health": 3808.0
+      },
+      {
+        "level": 75,
+        "base_damage": 481.0,
+        "base_health": 3848.0
+      },
+      {
+        "level": 76,
+        "base_damage": 486.0,
+        "base_health": 3888.0
+      },
+      {
+        "level": 77,
+        "base_damage": 491.0,
+        "base_health": 3928.0
+      },
+      {
+        "level": 78,
+        "base_damage": 496.0,
+        "base_health": 3968.0
+      },
+      {
+        "level": 79,
+        "base_damage": 501.0,
+        "base_health": 4008.0
+      },
+      {
+        "level": 80,
+        "base_damage": 506.0,
+        "base_health": 4048.0
+      },
+      {
+        "level": 81,
+        "base_damage": 511.0,
+        "base_health": 4088.0
+      },
+      {
+        "level": 82,
+        "base_damage": 516.0,
+        "base_health": 4128.0
+      },
+      {
+        "level": 83,
+        "base_damage": 521.0,
+        "base_health": 4168.0
+      },
+      {
+        "level": 84,
+        "base_damage": 526.0,
+        "base_health": 4208.0
+      },
+      {
+        "level": 85,
+        "base_damage": 531.0,
+        "base_health": 4248.0
+      },
+      {
+        "level": 86,
+        "base_damage": 537.0,
+        "base_health": 4296.0
+      },
+      {
+        "level": 87,
+        "base_damage": 542.0,
+        "base_health": 4336.0
+      },
+      {
+        "level": 88,
+        "base_damage": 548.0,
+        "base_health": 4384.0
+      },
+      {
+        "level": 89,
+        "base_damage": 553.0,
+        "base_health": 4424.0
+      },
+      {
+        "level": 90,
+        "base_damage": 559.0,
+        "base_health": 4472.0
+      },
+      {
+        "level": 91,
+        "base_damage": 564.0,
+        "base_health": 4512.0
+      },
+      {
+        "level": 92,
+        "base_damage": 570.0,
+        "base_health": 4560.0
+      },
+      {
+        "level": 93,
+        "base_damage": 576.0,
+        "base_health": 4608.0
+      },
+      {
+        "level": 94,
+        "base_damage": 581.0,
+        "base_health": 4648.0
+      },
+      {
+        "level": 95,
+        "base_damage": 587.0,
+        "base_health": 4696.0
+      },
+      {
+        "level": 96,
+        "base_damage": 593.0,
+        "base_health": 4744.0
+      },
+      {
+        "level": 97,
+        "base_damage": 599.0,
+        "base_health": 4792.0
+      },
+      {
+        "level": 98,
+        "base_damage": 605.0,
+        "base_health": 4840.0
+      },
+      {
+        "level": 99,
+        "base_damage": 611.0,
+        "base_health": 4888.0
+      },
+      {
+        "level": 100,
+        "base_damage": 617.0,
+        "base_health": 4936.0
+      },
+      {
+        "level": 101,
+        "base_damage": 623.0,
+        "base_health": 4984.0
+      },
+      {
+        "level": 102,
+        "base_damage": 629.0,
+        "base_health": 5032.0
+      },
+      {
+        "level": 103,
+        "base_damage": 636.0,
+        "base_health": 5088.0
+      },
+      {
+        "level": 104,
+        "base_damage": 642.0,
+        "base_health": 5136.0
+      },
+      {
+        "level": 105,
+        "base_damage": 648.0,
+        "base_health": 5184.0
+      },
+      {
+        "level": 106,
+        "base_damage": 655.0,
+        "base_health": 5240.0
+      },
+      {
+        "level": 107,
+        "base_damage": 662.0,
+        "base_health": 5296.0
+      },
+      {
+        "level": 108,
+        "base_damage": 668.0,
+        "base_health": 5344.0
+      },
+      {
+        "level": 109,
+        "base_damage": 675.0,
+        "base_health": 5400.0
+      },
+      {
+        "level": 110,
+        "base_damage": 682.0,
+        "base_health": 5456.0
+      },
+      {
+        "level": 111,
+        "base_damage": 688.0,
+        "base_health": 5504.0
+      },
+      {
+        "level": 112,
+        "base_damage": 695.0,
+        "base_health": 5560.0
+      },
+      {
+        "level": 113,
+        "base_damage": 702.0,
+        "base_health": 5616.0
+      },
+      {
+        "level": 114,
+        "base_damage": 709.0,
+        "base_health": 5672.0
+      },
+      {
+        "level": 115,
+        "base_damage": 716.0,
+        "base_health": 5728.0
+      },
+      {
+        "level": 116,
+        "base_damage": 724.0,
+        "base_health": 5792.0
+      },
+      {
+        "level": 117,
+        "base_damage": 731.0,
+        "base_health": 5848.0
+      },
+      {
+        "level": 118,
+        "base_damage": 738.0,
+        "base_health": 5904.0
+      },
+      {
+        "level": 119,
+        "base_damage": 745.0,
+        "base_health": 5960.0
+      },
+      {
+        "level": 120,
+        "base_damage": 753.0,
+        "base_health": 6024.0
+      },
+      {
+        "level": 121,
+        "base_damage": 760.0,
+        "base_health": 6080.0
+      },
+      {
+        "level": 122,
+        "base_damage": 768.0,
+        "base_health": 6144.0
+      },
+      {
+        "level": 123,
+        "base_damage": 776.0,
+        "base_health": 6208.0
+      },
+      {
+        "level": 124,
+        "base_damage": 783.0,
+        "base_health": 6264.0
+      },
+      {
+        "level": 125,
+        "base_damage": 791.0,
+        "base_health": 6328.0
+      },
+      {
+        "level": 126,
+        "base_damage": 799.0,
+        "base_health": 6392.0
+      },
+      {
+        "level": 127,
+        "base_damage": 807.0,
+        "base_health": 6456.0
+      },
+      {
+        "level": 128,
+        "base_damage": 815.0,
+        "base_health": 6520.0
+      },
+      {
+        "level": 129,
+        "base_damage": 823.0,
+        "base_health": 6584.0
+      },
+      {
+        "level": 130,
+        "base_damage": 832.0,
+        "base_health": 6656.0
+      },
+      {
+        "level": 131,
+        "base_damage": 840.0,
+        "base_health": 6720.0
+      },
+      {
+        "level": 132,
+        "base_damage": 848.0,
+        "base_health": 6784.0
+      },
+      {
+        "level": 133,
+        "base_damage": 857.0,
+        "base_health": 6856.0
+      },
+      {
+        "level": 134,
+        "base_damage": 865.0,
+        "base_health": 6920.0
+      },
+      {
+        "level": 135,
+        "base_damage": 874.0,
+        "base_health": 6992.0
+      },
+      {
+        "level": 136,
+        "base_damage": 883.0,
+        "base_health": 7064.0
+      },
+      {
+        "level": 137,
+        "base_damage": 892.0,
+        "base_health": 7136.0
+      },
+      {
+        "level": 138,
+        "base_damage": 901.0,
+        "base_health": 7208.0
+      },
+      {
+        "level": 139,
+        "base_damage": 910.0,
+        "base_health": 7280.0
+      },
+      {
+        "level": 140,
+        "base_damage": 919.0,
+        "base_health": 7352.0
+      },
+      {
+        "level": 141,
+        "base_damage": 928.0,
+        "base_health": 7424.0
+      },
+      {
+        "level": 142,
+        "base_damage": 937.0,
+        "base_health": 7496.0
+      },
+      {
+        "level": 143,
+        "base_damage": 946.0,
+        "base_health": 7568.0
+      },
+      {
+        "level": 144,
+        "base_damage": 956.0,
+        "base_health": 7648.0
+      },
+      {
+        "level": 145,
+        "base_damage": 966.0,
+        "base_health": 7728.0
+      },
+      {
+        "level": 146,
+        "base_damage": 975.0,
+        "base_health": 7800.0
+      },
+      {
+        "level": 147,
+        "base_damage": 985.0,
+        "base_health": 7880.0
+      },
+      {
+        "level": 148,
+        "base_damage": 995.0,
+        "base_health": 7960.0
+      },
+      {
+        "level": 149,
+        "base_damage": 1005.0,
+        "base_health": 8040.0
+      },
+      {
+        "level": 150,
+        "base_damage": 1015.0,
+        "base_health": 8120.0
+      },
+      {
+        "level": 151,
+        "base_damage": 1025.0,
+        "base_health": 8200.0
+      },
+      {
+        "level": 152,
+        "base_damage": 1035.0,
+        "base_health": 8280.0
+      },
+      {
+        "level": 153,
+        "base_damage": 1046.0,
+        "base_health": 8368.0
+      },
+      {
+        "level": 154,
+        "base_damage": 1056.0,
+        "base_health": 8448.0
+      },
+      {
+        "level": 155,
+        "base_damage": 1067.0,
+        "base_health": 8536.0
+      },
+      {
+        "level": 156,
+        "base_damage": 1077.0,
+        "base_health": 8616.0
+      },
+      {
+        "level": 157,
+        "base_damage": 1088.0,
+        "base_health": 8704.0
+      },
+      {
+        "level": 158,
+        "base_damage": 1099.0,
+        "base_health": 8792.0
+      },
+      {
+        "level": 159,
+        "base_damage": 1110.0,
+        "base_health": 8880.0
+      },
+      {
+        "level": 160,
+        "base_damage": 1121.0,
+        "base_health": 8968.0
+      },
+      {
+        "level": 161,
+        "base_damage": 1132.0,
+        "base_health": 9056.0
+      },
+      {
+        "level": 162,
+        "base_damage": 1143.0,
+        "base_health": 9144.0
+      },
+      {
+        "level": 163,
+        "base_damage": 1155.0,
+        "base_health": 9240.0
+      },
+      {
+        "level": 164,
+        "base_damage": 1166.0,
+        "base_health": 9328.0
+      },
+      {
+        "level": 165,
+        "base_damage": 1178.0,
+        "base_health": 9424.0
+      },
+      {
+        "level": 166,
+        "base_damage": 1190.0,
+        "base_health": 9520.0
+      },
+      {
+        "level": 167,
+        "base_damage": 1202.0,
+        "base_health": 9616.0
+      },
+      {
+        "level": 168,
+        "base_damage": 1214.0,
+        "base_health": 9712.0
+      },
+      {
+        "level": 169,
+        "base_damage": 1226.0,
+        "base_health": 9808.0
+      },
+      {
+        "level": 170,
+        "base_damage": 1238.0,
+        "base_health": 9904.0
+      },
+      {
+        "level": 171,
+        "base_damage": 1251.0,
+        "base_health": 10008.0
+      },
+      {
+        "level": 172,
+        "base_damage": 1263.0,
+        "base_health": 10104.0
+      },
+      {
+        "level": 173,
+        "base_damage": 1276.0,
+        "base_health": 10208.0
+      },
+      {
+        "level": 174,
+        "base_damage": 1288.0,
+        "base_health": 10304.0
+      },
+      {
+        "level": 175,
+        "base_damage": 1301.0,
+        "base_health": 10408.0
+      },
+      {
+        "level": 176,
+        "base_damage": 1314.0,
+        "base_health": 10512.0
+      },
+      {
+        "level": 177,
+        "base_damage": 1328.0,
+        "base_health": 10624.0
+      },
+      {
+        "level": 178,
+        "base_damage": 1341.0,
+        "base_health": 10728.0
+      },
+      {
+        "level": 179,
+        "base_damage": 1354.0,
+        "base_health": 10832.0
+      },
+      {
+        "level": 180,
+        "base_damage": 1368.0,
+        "base_health": 10944.0
+      },
+      {
+        "level": 181,
+        "base_damage": 1381.0,
+        "base_health": 11048.0
+      },
+      {
+        "level": 182,
+        "base_damage": 1395.0,
+        "base_health": 11160.0
+      },
+      {
+        "level": 183,
+        "base_damage": 1409.0,
+        "base_health": 11272.0
+      },
+      {
+        "level": 184,
+        "base_damage": 1423.0,
+        "base_health": 11384.0
+      },
+      {
+        "level": 185,
+        "base_damage": 1438.0,
+        "base_health": 11504.0
+      },
+      {
+        "level": 186,
+        "base_damage": 1452.0,
+        "base_health": 11616.0
+      },
+      {
+        "level": 187,
+        "base_damage": 1466.0,
+        "base_health": 11728.0
+      },
+      {
+        "level": 188,
+        "base_damage": 1481.0,
+        "base_health": 11848.0
+      },
+      {
+        "level": 189,
+        "base_damage": 1496.0,
+        "base_health": 11968.0
+      },
+      {
+        "level": 190,
+        "base_damage": 1511.0,
+        "base_health": 12088.0
+      },
+      {
+        "level": 191,
+        "base_damage": 1526.0,
+        "base_health": 12208.0
+      },
+      {
+        "level": 192,
+        "base_damage": 1541.0,
+        "base_health": 12328.0
+      },
+      {
+        "level": 193,
+        "base_damage": 1557.0,
+        "base_health": 12456.0
+      },
+      {
+        "level": 194,
+        "base_damage": 1572.0,
+        "base_health": 12576.0
+      },
+      {
+        "level": 195,
+        "base_damage": 1588.0,
+        "base_health": 12704.0
+      },
+      {
+        "level": 196,
+        "base_damage": 1604.0,
+        "base_health": 12832.0
+      },
+      {
+        "level": 197,
+        "base_damage": 1620.0,
+        "base_health": 12960.0
+      },
+      {
+        "level": 198,
+        "base_damage": 1636.0,
+        "base_health": 13088.0
+      },
+      {
+        "level": 199,
+        "base_damage": 1652.0,
+        "base_health": 13216.0
+      },
+      {
+        "level": 200,
+        "base_damage": 1669.0,
+        "base_health": 13352.0
+      },
+      {
+        "level": 201,
+        "base_damage": 1686.0,
+        "base_health": 13488.0
+      },
+      {
+        "level": 202,
+        "base_damage": 1702.0,
+        "base_health": 13616.0
+      },
+      {
+        "level": 203,
+        "base_damage": 1719.0,
+        "base_health": 13752.0
+      },
+      {
+        "level": 204,
+        "base_damage": 1737.0,
+        "base_health": 13896.0
+      },
+      {
+        "level": 205,
+        "base_damage": 1754.0,
+        "base_health": 14032.0
+      },
+      {
+        "level": 206,
+        "base_damage": 1772.0,
+        "base_health": 14176.0
+      },
+      {
+        "level": 207,
+        "base_damage": 1789.0,
+        "base_health": 14312.0
+      },
+      {
+        "level": 208,
+        "base_damage": 1807.0,
+        "base_health": 14456.0
+      },
+      {
+        "level": 209,
+        "base_damage": 1825.0,
+        "base_health": 14600.0
+      },
+      {
+        "level": 210,
+        "base_damage": 1844.0,
+        "base_health": 14752.0
+      },
+      {
+        "level": 211,
+        "base_damage": 1862.0,
+        "base_health": 14896.0
+      },
+      {
+        "level": 212,
+        "base_damage": 1881.0,
+        "base_health": 15048.0
+      },
+      {
+        "level": 213,
+        "base_damage": 1899.0,
+        "base_health": 15192.0
+      },
+      {
+        "level": 214,
+        "base_damage": 1918.0,
+        "base_health": 15344.0
+      },
+      {
+        "level": 215,
+        "base_damage": 1938.0,
+        "base_health": 15504.0
+      },
+      {
+        "level": 216,
+        "base_damage": 1957.0,
+        "base_health": 15656.0
+      },
+      {
+        "level": 217,
+        "base_damage": 1977.0,
+        "base_health": 15816.0
+      },
+      {
+        "level": 218,
+        "base_damage": 1996.0,
+        "base_health": 15968.0
+      },
+      {
+        "level": 219,
+        "base_damage": 2016.0,
+        "base_health": 16128.0
+      },
+      {
+        "level": 220,
+        "base_damage": 2036.0,
+        "base_health": 16288.0
+      },
+      {
+        "level": 221,
+        "base_damage": 2057.0,
+        "base_health": 16456.0
+      },
+      {
+        "level": 222,
+        "base_damage": 2077.0,
+        "base_health": 16616.0
+      },
+      {
+        "level": 223,
+        "base_damage": 2098.0,
+        "base_health": 16784.0
+      },
+      {
+        "level": 224,
+        "base_damage": 2119.0,
+        "base_health": 16952.0
+      },
+      {
+        "level": 225,
+        "base_damage": 2140.0,
+        "base_health": 17120.0
+      },
+      {
+        "level": 226,
+        "base_damage": 2162.0,
+        "base_health": 17296.0
+      },
+      {
+        "level": 227,
+        "base_damage": 2183.0,
+        "base_health": 17464.0
+      },
+      {
+        "level": 228,
+        "base_damage": 2205.0,
+        "base_health": 17640.0
+      },
+      {
+        "level": 229,
+        "base_damage": 2227.0,
+        "base_health": 17816.0
+      },
+      {
+        "level": 230,
+        "base_damage": 2249.0,
+        "base_health": 17992.0
+      },
+      {
+        "level": 231,
+        "base_damage": 2272.0,
+        "base_health": 18176.0
+      },
+      {
+        "level": 232,
+        "base_damage": 2295.0,
+        "base_health": 18360.0
+      },
+      {
+        "level": 233,
+        "base_damage": 2318.0,
+        "base_health": 18544.0
+      },
+      {
+        "level": 234,
+        "base_damage": 2341.0,
+        "base_health": 18728.0
+      },
+      {
+        "level": 235,
+        "base_damage": 2364.0,
+        "base_health": 18912.0
+      },
+      {
+        "level": 236,
+        "base_damage": 2388.0,
+        "base_health": 19104.0
+      },
+      {
+        "level": 237,
+        "base_damage": 2412.0,
+        "base_health": 19296.0
+      },
+      {
+        "level": 238,
+        "base_damage": 2436.0,
+        "base_health": 19488.0
+      },
+      {
+        "level": 239,
+        "base_damage": 2460.0,
+        "base_health": 19680.0
+      },
+      {
+        "level": 240,
+        "base_damage": 2485.0,
+        "base_health": 19880.0
+      },
+      {
+        "level": 241,
+        "base_damage": 2510.0,
+        "base_health": 20080.0
+      },
+      {
+        "level": 242,
+        "base_damage": 2535.0,
+        "base_health": 20280.0
+      },
+      {
+        "level": 243,
+        "base_damage": 2560.0,
+        "base_health": 20480.0
+      },
+      {
+        "level": 244,
+        "base_damage": 2586.0,
+        "base_health": 20688.0
+      },
+      {
+        "level": 245,
+        "base_damage": 2612.0,
+        "base_health": 20896.0
+      },
+      {
+        "level": 246,
+        "base_damage": 2638.0,
+        "base_health": 21104.0
+      },
+      {
+        "level": 247,
+        "base_damage": 2664.0,
+        "base_health": 21312.0
+      },
+      {
+        "level": 248,
+        "base_damage": 2691.0,
+        "base_health": 21528.0
+      },
+      {
+        "level": 249,
+        "base_damage": 2718.0,
+        "base_health": 21744.0
+      },
+      {
+        "level": 250,
+        "base_damage": 2745.0,
+        "base_health": 21960.0
+      },
+      {
+        "level": 251,
+        "base_damage": 2772.0,
+        "base_health": 22176.0
+      },
+      {
+        "level": 252,
+        "base_damage": 2800.0,
+        "base_health": 22400.0
+      },
+      {
+        "level": 253,
+        "base_damage": 2828.0,
+        "base_health": 22624.0
+      },
+      {
+        "level": 254,
+        "base_damage": 2856.0,
+        "base_health": 22848.0
+      },
+      {
+        "level": 255,
+        "base_damage": 2885.0,
+        "base_health": 23080.0
+      },
+      {
+        "level": 256,
+        "base_damage": 2914.0,
+        "base_health": 23312.0
+      },
+      {
+        "level": 257,
+        "base_damage": 2943.0,
+        "base_health": 23544.0
+      },
+      {
+        "level": 258,
+        "base_damage": 2972.0,
+        "base_health": 23776.0
+      },
+      {
+        "level": 259,
+        "base_damage": 3002.0,
+        "base_health": 24016.0
+      },
+      {
+        "level": 260,
+        "base_damage": 3032.0,
+        "base_health": 24256.0
+      },
+      {
+        "level": 261,
+        "base_damage": 3062.0,
+        "base_health": 24496.0
+      },
+      {
+        "level": 262,
+        "base_damage": 3093.0,
+        "base_health": 24744.0
+      },
+      {
+        "level": 263,
+        "base_damage": 3124.0,
+        "base_health": 24992.0
+      },
+      {
+        "level": 264,
+        "base_damage": 3155.0,
+        "base_health": 25240.0
+      },
+      {
+        "level": 265,
+        "base_damage": 3187.0,
+        "base_health": 25496.0
+      },
+      {
+        "level": 266,
+        "base_damage": 3218.0,
+        "base_health": 25744.0
+      },
+      {
+        "level": 267,
+        "base_damage": 3251.0,
+        "base_health": 26008.0
+      },
+      {
+        "level": 268,
+        "base_damage": 3283.0,
+        "base_health": 26264.0
+      },
+      {
+        "level": 269,
+        "base_damage": 3316.0,
+        "base_health": 26528.0
+      },
+      {
+        "level": 270,
+        "base_damage": 3349.0,
+        "base_health": 26792.0
+      },
+      {
+        "level": 271,
+        "base_damage": 3383.0,
+        "base_health": 27064.0
+      },
+      {
+        "level": 272,
+        "base_damage": 3416.0,
+        "base_health": 27328.0
+      },
+      {
+        "level": 273,
+        "base_damage": 3451.0,
+        "base_health": 27608.0
+      },
+      {
+        "level": 274,
+        "base_damage": 3485.0,
+        "base_health": 27880.0
+      },
+      {
+        "level": 275,
+        "base_damage": 3520.0,
+        "base_health": 28160.0
+      },
+      {
+        "level": 276,
+        "base_damage": 3555.0,
+        "base_health": 28440.0
+      },
+      {
+        "level": 277,
+        "base_damage": 3591.0,
+        "base_health": 28728.0
+      },
+      {
+        "level": 278,
+        "base_damage": 3627.0,
+        "base_health": 29016.0
+      },
+      {
+        "level": 279,
+        "base_damage": 3663.0,
+        "base_health": 29304.0
+      },
+      {
+        "level": 280,
+        "base_damage": 3700.0,
+        "base_health": 29600.0
+      },
+      {
+        "level": 281,
+        "base_damage": 3737.0,
+        "base_health": 29896.0
+      },
+      {
+        "level": 282,
+        "base_damage": 3774.0,
+        "base_health": 30192.0
+      },
+      {
+        "level": 283,
+        "base_damage": 3812.0,
+        "base_health": 30496.0
+      },
+      {
+        "level": 284,
+        "base_damage": 3850.0,
+        "base_health": 30800.0
+      },
+      {
+        "level": 285,
+        "base_damage": 3888.0,
+        "base_health": 31104.0
+      },
+      {
+        "level": 286,
+        "base_damage": 3927.0,
+        "base_health": 31416.0
+      },
+      {
+        "level": 287,
+        "base_damage": 3966.0,
+        "base_health": 31728.0
+      },
+      {
+        "level": 288,
+        "base_damage": 4006.0,
+        "base_health": 32048.0
+      },
+      {
+        "level": 289,
+        "base_damage": 4046.0,
+        "base_health": 32368.0
+      },
+      {
+        "level": 290,
+        "base_damage": 4087.0,
+        "base_health": 32696.0
+      },
+      {
+        "level": 291,
+        "base_damage": 4127.0,
+        "base_health": 33016.0
+      },
+      {
+        "level": 292,
+        "base_damage": 4169.0,
+        "base_health": 33352.0
+      },
+      {
+        "level": 293,
+        "base_damage": 4210.0,
+        "base_health": 33680.0
+      },
+      {
+        "level": 294,
+        "base_damage": 4253.0,
+        "base_health": 34024.0
+      },
+      {
+        "level": 295,
+        "base_damage": 4295.0,
+        "base_health": 34360.0
+      },
+      {
+        "level": 296,
+        "base_damage": 4338.0,
+        "base_health": 34704.0
+      },
+      {
+        "level": 297,
+        "base_damage": 4381.0,
+        "base_health": 35048.0
+      },
+      {
+        "level": 298,
+        "base_damage": 4425.0,
+        "base_health": 35400.0
+      },
+      {
+        "level": 299,
+        "base_damage": 4469.0,
+        "base_health": 35752.0
+      },
+      {
+        "level": 300,
+        "base_damage": 4514.0,
+        "base_health": 36112.0
+      }
+    ]
+  },
+  "Legendary": {
+    "rarity": "Legendary",
+    "max_level": 300,
+    "levels": [
+      {
+        "level": 1,
+        "base_damage": 1106.0,
+        "base_health": 8848.0
+      },
+      {
+        "level": 2,
+        "base_damage": 1117.0,
+        "base_health": 8936.0
+      },
+      {
+        "level": 3,
+        "base_damage": 1128.0,
+        "base_health": 9024.0
+      },
+      {
+        "level": 4,
+        "base_damage": 1139.0,
+        "base_health": 9112.0
+      },
+      {
+        "level": 5,
+        "base_damage": 1151.0,
+        "base_health": 9208.0
+      },
+      {
+        "level": 6,
+        "base_damage": 1162.0,
+        "base_health": 9296.0
+      },
+      {
+        "level": 7,
+        "base_damage": 1174.0,
+        "base_health": 9392.0
+      },
+      {
+        "level": 8,
+        "base_damage": 1186.0,
+        "base_health": 9488.0
+      },
+      {
+        "level": 9,
+        "base_damage": 1198.0,
+        "base_health": 9584.0
+      },
+      {
+        "level": 10,
+        "base_damage": 1210.0,
+        "base_health": 9680.0
+      },
+      {
+        "level": 11,
+        "base_damage": 1222.0,
+        "base_health": 9776.0
+      },
+      {
+        "level": 12,
+        "base_damage": 1234.0,
+        "base_health": 9872.0
+      },
+      {
+        "level": 13,
+        "base_damage": 1246.0,
+        "base_health": 9968.0
+      },
+      {
+        "level": 14,
+        "base_damage": 1259.0,
+        "base_health": 10072.0
+      },
+      {
+        "level": 15,
+        "base_damage": 1271.0,
+        "base_health": 10168.0
+      },
+      {
+        "level": 16,
+        "base_damage": 1284.0,
+        "base_health": 10272.0
+      },
+      {
+        "level": 17,
+        "base_damage": 1297.0,
+        "base_health": 10376.0
+      },
+      {
+        "level": 18,
+        "base_damage": 1310.0,
+        "base_health": 10480.0
+      },
+      {
+        "level": 19,
+        "base_damage": 1323.0,
+        "base_health": 10584.0
+      },
+      {
+        "level": 20,
+        "base_damage": 1336.0,
+        "base_health": 10688.0
+      },
+      {
+        "level": 21,
+        "base_damage": 1349.0,
+        "base_health": 10792.0
+      },
+      {
+        "level": 22,
+        "base_damage": 1363.0,
+        "base_health": 10904.0
+      },
+      {
+        "level": 23,
+        "base_damage": 1377.0,
+        "base_health": 11016.0
+      },
+      {
+        "level": 24,
+        "base_damage": 1390.0,
+        "base_health": 11120.0
+      },
+      {
+        "level": 25,
+        "base_damage": 1404.0,
+        "base_health": 11232.0
+      },
+      {
+        "level": 26,
+        "base_damage": 1418.0,
+        "base_health": 11344.0
+      },
+      {
+        "level": 27,
+        "base_damage": 1432.0,
+        "base_health": 11456.0
+      },
+      {
+        "level": 28,
+        "base_damage": 1447.0,
+        "base_health": 11576.0
+      },
+      {
+        "level": 29,
+        "base_damage": 1461.0,
+        "base_health": 11688.0
+      },
+      {
+        "level": 30,
+        "base_damage": 1476.0,
+        "base_health": 11808.0
+      },
+      {
+        "level": 31,
+        "base_damage": 1491.0,
+        "base_health": 11928.0
+      },
+      {
+        "level": 32,
+        "base_damage": 1506.0,
+        "base_health": 12048.0
+      },
+      {
+        "level": 33,
+        "base_damage": 1521.0,
+        "base_health": 12168.0
+      },
+      {
+        "level": 34,
+        "base_damage": 1536.0,
+        "base_health": 12288.0
+      },
+      {
+        "level": 35,
+        "base_damage": 1551.0,
+        "base_health": 12408.0
+      },
+      {
+        "level": 36,
+        "base_damage": 1567.0,
+        "base_health": 12536.0
+      },
+      {
+        "level": 37,
+        "base_damage": 1582.0,
+        "base_health": 12656.0
+      },
+      {
+        "level": 38,
+        "base_damage": 1598.0,
+        "base_health": 12784.0
+      },
+      {
+        "level": 39,
+        "base_damage": 1614.0,
+        "base_health": 12912.0
+      },
+      {
+        "level": 40,
+        "base_damage": 1630.0,
+        "base_health": 13040.0
+      },
+      {
+        "level": 41,
+        "base_damage": 1647.0,
+        "base_health": 13176.0
+      },
+      {
+        "level": 42,
+        "base_damage": 1663.0,
+        "base_health": 13304.0
+      },
+      {
+        "level": 43,
+        "base_damage": 1680.0,
+        "base_health": 13440.0
+      },
+      {
+        "level": 44,
+        "base_damage": 1696.0,
+        "base_health": 13568.0
+      },
+      {
+        "level": 45,
+        "base_damage": 1713.0,
+        "base_health": 13704.0
+      },
+      {
+        "level": 46,
+        "base_damage": 1731.0,
+        "base_health": 13848.0
+      },
+      {
+        "level": 47,
+        "base_damage": 1748.0,
+        "base_health": 13984.0
+      },
+      {
+        "level": 48,
+        "base_damage": 1765.0,
+        "base_health": 14120.0
+      },
+      {
+        "level": 49,
+        "base_damage": 1783.0,
+        "base_health": 14264.0
+      },
+      {
+        "level": 50,
+        "base_damage": 1801.0,
+        "base_health": 14408.0
+      },
+      {
+        "level": 51,
+        "base_damage": 1819.0,
+        "base_health": 14552.0
+      },
+      {
+        "level": 52,
+        "base_damage": 1837.0,
+        "base_health": 14696.0
+      },
+      {
+        "level": 53,
+        "base_damage": 1855.0,
+        "base_health": 14840.0
+      },
+      {
+        "level": 54,
+        "base_damage": 1874.0,
+        "base_health": 14992.0
+      },
+      {
+        "level": 55,
+        "base_damage": 1893.0,
+        "base_health": 15144.0
+      },
+      {
+        "level": 56,
+        "base_damage": 1912.0,
+        "base_health": 15296.0
+      },
+      {
+        "level": 57,
+        "base_damage": 1931.0,
+        "base_health": 15448.0
+      },
+      {
+        "level": 58,
+        "base_damage": 1950.0,
+        "base_health": 15600.0
+      },
+      {
+        "level": 59,
+        "base_damage": 1970.0,
+        "base_health": 15760.0
+      },
+      {
+        "level": 60,
+        "base_damage": 1989.0,
+        "base_health": 15912.0
+      },
+      {
+        "level": 61,
+        "base_damage": 2009.0,
+        "base_health": 16072.0
+      },
+      {
+        "level": 62,
+        "base_damage": 2029.0,
+        "base_health": 16232.0
+      },
+      {
+        "level": 63,
+        "base_damage": 2050.0,
+        "base_health": 16400.0
+      },
+      {
+        "level": 64,
+        "base_damage": 2070.0,
+        "base_health": 16560.0
+      },
+      {
+        "level": 65,
+        "base_damage": 2091.0,
+        "base_health": 16728.0
+      },
+      {
+        "level": 66,
+        "base_damage": 2112.0,
+        "base_health": 16896.0
+      },
+      {
+        "level": 67,
+        "base_damage": 2133.0,
+        "base_health": 17064.0
+      },
+      {
+        "level": 68,
+        "base_damage": 2154.0,
+        "base_health": 17232.0
+      },
+      {
+        "level": 69,
+        "base_damage": 2176.0,
+        "base_health": 17408.0
+      },
+      {
+        "level": 70,
+        "base_damage": 2197.0,
+        "base_health": 17576.0
+      },
+      {
+        "level": 71,
+        "base_damage": 2219.0,
+        "base_health": 17752.0
+      },
+      {
+        "level": 72,
+        "base_damage": 2242.0,
+        "base_health": 17936.0
+      },
+      {
+        "level": 73,
+        "base_damage": 2264.0,
+        "base_health": 18112.0
+      },
+      {
+        "level": 74,
+        "base_damage": 2287.0,
+        "base_health": 18296.0
+      },
+      {
+        "level": 75,
+        "base_damage": 2309.0,
+        "base_health": 18472.0
+      },
+      {
+        "level": 76,
+        "base_damage": 2333.0,
+        "base_health": 18664.0
+      },
+      {
+        "level": 77,
+        "base_damage": 2356.0,
+        "base_health": 18848.0
+      },
+      {
+        "level": 78,
+        "base_damage": 2379.0,
+        "base_health": 19032.0
+      },
+      {
+        "level": 79,
+        "base_damage": 2403.0,
+        "base_health": 19224.0
+      },
+      {
+        "level": 80,
+        "base_damage": 2427.0,
+        "base_health": 19416.0
+      },
+      {
+        "level": 81,
+        "base_damage": 2452.0,
+        "base_health": 19616.0
+      },
+      {
+        "level": 82,
+        "base_damage": 2476.0,
+        "base_health": 19808.0
+      },
+      {
+        "level": 83,
+        "base_damage": 2501.0,
+        "base_health": 20008.0
+      },
+      {
+        "level": 84,
+        "base_damage": 2526.0,
+        "base_health": 20208.0
+      },
+      {
+        "level": 85,
+        "base_damage": 2551.0,
+        "base_health": 20408.0
+      },
+      {
+        "level": 86,
+        "base_damage": 2577.0,
+        "base_health": 20616.0
+      },
+      {
+        "level": 87,
+        "base_damage": 2602.0,
+        "base_health": 20816.0
+      },
+      {
+        "level": 88,
+        "base_damage": 2628.0,
+        "base_health": 21024.0
+      },
+      {
+        "level": 89,
+        "base_damage": 2655.0,
+        "base_health": 21240.0
+      },
+      {
+        "level": 90,
+        "base_damage": 2681.0,
+        "base_health": 21448.0
+      },
+      {
+        "level": 91,
+        "base_damage": 2708.0,
+        "base_health": 21664.0
+      },
+      {
+        "level": 92,
+        "base_damage": 2735.0,
+        "base_health": 21880.0
+      },
+      {
+        "level": 93,
+        "base_damage": 2762.0,
+        "base_health": 22096.0
+      },
+      {
+        "level": 94,
+        "base_damage": 2790.0,
+        "base_health": 22320.0
+      },
+      {
+        "level": 95,
+        "base_damage": 2818.0,
+        "base_health": 22544.0
+      },
+      {
+        "level": 96,
+        "base_damage": 2846.0,
+        "base_health": 22768.0
+      },
+      {
+        "level": 97,
+        "base_damage": 2875.0,
+        "base_health": 23000.0
+      },
+      {
+        "level": 98,
+        "base_damage": 2903.0,
+        "base_health": 23224.0
+      },
+      {
+        "level": 99,
+        "base_damage": 2932.0,
+        "base_health": 23456.0
+      },
+      {
+        "level": 100,
+        "base_damage": 2962.0,
+        "base_health": 23696.0
+      },
+      {
+        "level": 101,
+        "base_damage": 2991.0,
+        "base_health": 23928.0
+      },
+      {
+        "level": 102,
+        "base_damage": 3021.0,
+        "base_health": 24168.0
+      },
+      {
+        "level": 103,
+        "base_damage": 3051.0,
+        "base_health": 24408.0
+      },
+      {
+        "level": 104,
+        "base_damage": 3082.0,
+        "base_health": 24656.0
+      },
+      {
+        "level": 105,
+        "base_damage": 3113.0,
+        "base_health": 24904.0
+      },
+      {
+        "level": 106,
+        "base_damage": 3144.0,
+        "base_health": 25152.0
+      },
+      {
+        "level": 107,
+        "base_damage": 3175.0,
+        "base_health": 25400.0
+      },
+      {
+        "level": 108,
+        "base_damage": 3207.0,
+        "base_health": 25656.0
+      },
+      {
+        "level": 109,
+        "base_damage": 3239.0,
+        "base_health": 25912.0
+      },
+      {
+        "level": 110,
+        "base_damage": 3272.0,
+        "base_health": 26176.0
+      },
+      {
+        "level": 111,
+        "base_damage": 3304.0,
+        "base_health": 26432.0
+      },
+      {
+        "level": 112,
+        "base_damage": 3337.0,
+        "base_health": 26696.0
+      },
+      {
+        "level": 113,
+        "base_damage": 3371.0,
+        "base_health": 26968.0
+      },
+      {
+        "level": 114,
+        "base_damage": 3404.0,
+        "base_health": 27232.0
+      },
+      {
+        "level": 115,
+        "base_damage": 3438.0,
+        "base_health": 27504.0
+      },
+      {
+        "level": 116,
+        "base_damage": 3473.0,
+        "base_health": 27784.0
+      },
+      {
+        "level": 117,
+        "base_damage": 3508.0,
+        "base_health": 28064.0
+      },
+      {
+        "level": 118,
+        "base_damage": 3543.0,
+        "base_health": 28344.0
+      },
+      {
+        "level": 119,
+        "base_damage": 3578.0,
+        "base_health": 28624.0
+      },
+      {
+        "level": 120,
+        "base_damage": 3614.0,
+        "base_health": 28912.0
+      },
+      {
+        "level": 121,
+        "base_damage": 3650.0,
+        "base_health": 29200.0
+      },
+      {
+        "level": 122,
+        "base_damage": 3686.0,
+        "base_health": 29488.0
+      },
+      {
+        "level": 123,
+        "base_damage": 3723.0,
+        "base_health": 29784.0
+      },
+      {
+        "level": 124,
+        "base_damage": 3761.0,
+        "base_health": 30088.0
+      },
+      {
+        "level": 125,
+        "base_damage": 3798.0,
+        "base_health": 30384.0
+      },
+      {
+        "level": 126,
+        "base_damage": 3836.0,
+        "base_health": 30688.0
+      },
+      {
+        "level": 127,
+        "base_damage": 3875.0,
+        "base_health": 31000.0
+      },
+      {
+        "level": 128,
+        "base_damage": 3913.0,
+        "base_health": 31304.0
+      },
+      {
+        "level": 129,
+        "base_damage": 3952.0,
+        "base_health": 31616.0
+      },
+      {
+        "level": 130,
+        "base_damage": 3992.0,
+        "base_health": 31936.0
+      },
+      {
+        "level": 131,
+        "base_damage": 4032.0,
+        "base_health": 32256.0
+      },
+      {
+        "level": 132,
+        "base_damage": 4072.0,
+        "base_health": 32576.0
+      },
+      {
+        "level": 133,
+        "base_damage": 4113.0,
+        "base_health": 32904.0
+      },
+      {
+        "level": 134,
+        "base_damage": 4154.0,
+        "base_health": 33232.0
+      },
+      {
+        "level": 135,
+        "base_damage": 4196.0,
+        "base_health": 33568.0
+      },
+      {
+        "level": 136,
+        "base_damage": 4237.0,
+        "base_health": 33896.0
+      },
+      {
+        "level": 137,
+        "base_damage": 4280.0,
+        "base_health": 34240.0
+      },
+      {
+        "level": 138,
+        "base_damage": 4323.0,
+        "base_health": 34584.0
+      },
+      {
+        "level": 139,
+        "base_damage": 4366.0,
+        "base_health": 34928.0
+      },
+      {
+        "level": 140,
+        "base_damage": 4410.0,
+        "base_health": 35280.0
+      },
+      {
+        "level": 141,
+        "base_damage": 4454.0,
+        "base_health": 35632.0
+      },
+      {
+        "level": 142,
+        "base_damage": 4498.0,
+        "base_health": 35984.0
+      },
+      {
+        "level": 143,
+        "base_damage": 4543.0,
+        "base_health": 36344.0
+      },
+      {
+        "level": 144,
+        "base_damage": 4589.0,
+        "base_health": 36712.0
+      },
+      {
+        "level": 145,
+        "base_damage": 4634.0,
+        "base_health": 37072.0
+      },
+      {
+        "level": 146,
+        "base_damage": 4681.0,
+        "base_health": 37448.0
+      },
+      {
+        "level": 147,
+        "base_damage": 4728.0,
+        "base_health": 37824.0
+      },
+      {
+        "level": 148,
+        "base_damage": 4775.0,
+        "base_health": 38200.0
+      },
+      {
+        "level": 149,
+        "base_damage": 4823.0,
+        "base_health": 38584.0
+      },
+      {
+        "level": 150,
+        "base_damage": 4871.0,
+        "base_health": 38968.0
+      },
+      {
+        "level": 151,
+        "base_damage": 4920.0,
+        "base_health": 39360.0
+      },
+      {
+        "level": 152,
+        "base_damage": 4969.0,
+        "base_health": 39752.0
+      },
+      {
+        "level": 153,
+        "base_damage": 5018.0,
+        "base_health": 40144.0
+      },
+      {
+        "level": 154,
+        "base_damage": 5069.0,
+        "base_health": 40552.0
+      },
+      {
+        "level": 155,
+        "base_damage": 5119.0,
+        "base_health": 40952.0
+      },
+      {
+        "level": 156,
+        "base_damage": 5171.0,
+        "base_health": 41368.0
+      },
+      {
+        "level": 157,
+        "base_damage": 5222.0,
+        "base_health": 41776.0
+      },
+      {
+        "level": 158,
+        "base_damage": 5274.0,
+        "base_health": 42192.0
+      },
+      {
+        "level": 159,
+        "base_damage": 5327.0,
+        "base_health": 42616.0
+      },
+      {
+        "level": 160,
+        "base_damage": 5380.0,
+        "base_health": 43040.0
+      },
+      {
+        "level": 161,
+        "base_damage": 5434.0,
+        "base_health": 43472.0
+      },
+      {
+        "level": 162,
+        "base_damage": 5489.0,
+        "base_health": 43912.0
+      },
+      {
+        "level": 163,
+        "base_damage": 5544.0,
+        "base_health": 44352.0
+      },
+      {
+        "level": 164,
+        "base_damage": 5599.0,
+        "base_health": 44792.0
+      },
+      {
+        "level": 165,
+        "base_damage": 5655.0,
+        "base_health": 45240.0
+      },
+      {
+        "level": 166,
+        "base_damage": 5712.0,
+        "base_health": 45696.0
+      },
+      {
+        "level": 167,
+        "base_damage": 5769.0,
+        "base_health": 46152.0
+      },
+      {
+        "level": 168,
+        "base_damage": 5826.0,
+        "base_health": 46608.0
+      },
+      {
+        "level": 169,
+        "base_damage": 5885.0,
+        "base_health": 47080.0
+      },
+      {
+        "level": 170,
+        "base_damage": 5943.0,
+        "base_health": 47544.0
+      },
+      {
+        "level": 171,
+        "base_damage": 6003.0,
+        "base_health": 48024.0
+      },
+      {
+        "level": 172,
+        "base_damage": 6063.0,
+        "base_health": 48504.0
+      },
+      {
+        "level": 173,
+        "base_damage": 6124.0,
+        "base_health": 48992.0
+      },
+      {
+        "level": 174,
+        "base_damage": 6185.0,
+        "base_health": 49480.0
+      },
+      {
+        "level": 175,
+        "base_damage": 6247.0,
+        "base_health": 49976.0
+      },
+      {
+        "level": 176,
+        "base_damage": 6309.0,
+        "base_health": 50472.0
+      },
+      {
+        "level": 177,
+        "base_damage": 6372.0,
+        "base_health": 50976.0
+      },
+      {
+        "level": 178,
+        "base_damage": 6436.0,
+        "base_health": 51488.0
+      },
+      {
+        "level": 179,
+        "base_damage": 6500.0,
+        "base_health": 52000.0
+      },
+      {
+        "level": 180,
+        "base_damage": 6565.0,
+        "base_health": 52520.0
+      },
+      {
+        "level": 181,
+        "base_damage": 6631.0,
+        "base_health": 53048.0
+      },
+      {
+        "level": 182,
+        "base_damage": 6697.0,
+        "base_health": 53576.0
+      },
+      {
+        "level": 183,
+        "base_damage": 6764.0,
+        "base_health": 54112.0
+      },
+      {
+        "level": 184,
+        "base_damage": 6832.0,
+        "base_health": 54656.0
+      },
+      {
+        "level": 185,
+        "base_damage": 6900.0,
+        "base_health": 55200.0
+      },
+      {
+        "level": 186,
+        "base_damage": 6969.0,
+        "base_health": 55752.0
+      },
+      {
+        "level": 187,
+        "base_damage": 7039.0,
+        "base_health": 56312.0
+      },
+      {
+        "level": 188,
+        "base_damage": 7109.0,
+        "base_health": 56872.0
+      },
+      {
+        "level": 189,
+        "base_damage": 7180.0,
+        "base_health": 57440.0
+      },
+      {
+        "level": 190,
+        "base_damage": 7252.0,
+        "base_health": 58016.0
+      },
+      {
+        "level": 191,
+        "base_damage": 7325.0,
+        "base_health": 58600.0
+      },
+      {
+        "level": 192,
+        "base_damage": 7398.0,
+        "base_health": 59184.0
+      },
+      {
+        "level": 193,
+        "base_damage": 7472.0,
+        "base_health": 59776.0
+      },
+      {
+        "level": 194,
+        "base_damage": 7547.0,
+        "base_health": 60376.0
+      },
+      {
+        "level": 195,
+        "base_damage": 7622.0,
+        "base_health": 60976.0
+      },
+      {
+        "level": 196,
+        "base_damage": 7698.0,
+        "base_health": 61584.0
+      },
+      {
+        "level": 197,
+        "base_damage": 7775.0,
+        "base_health": 62200.0
+      },
+      {
+        "level": 198,
+        "base_damage": 7853.0,
+        "base_health": 62824.0
+      },
+      {
+        "level": 199,
+        "base_damage": 7932.0,
+        "base_health": 63456.0
+      },
+      {
+        "level": 200,
+        "base_damage": 8011.0,
+        "base_health": 64088.0
+      },
+      {
+        "level": 201,
+        "base_damage": 8091.0,
+        "base_health": 64728.0
+      },
+      {
+        "level": 202,
+        "base_damage": 8172.0,
+        "base_health": 65376.0
+      },
+      {
+        "level": 203,
+        "base_damage": 8254.0,
+        "base_health": 66032.0
+      },
+      {
+        "level": 204,
+        "base_damage": 8336.0,
+        "base_health": 66688.0
+      },
+      {
+        "level": 205,
+        "base_damage": 8419.0,
+        "base_health": 67352.0
+      },
+      {
+        "level": 206,
+        "base_damage": 8504.0,
+        "base_health": 68032.0
+      },
+      {
+        "level": 207,
+        "base_damage": 8589.0,
+        "base_health": 68712.0
+      },
+      {
+        "level": 208,
+        "base_damage": 8675.0,
+        "base_health": 69400.0
+      },
+      {
+        "level": 209,
+        "base_damage": 8761.0,
+        "base_health": 70088.0
+      },
+      {
+        "level": 210,
+        "base_damage": 8849.0,
+        "base_health": 70792.0
+      },
+      {
+        "level": 211,
+        "base_damage": 8937.0,
+        "base_health": 71496.0
+      },
+      {
+        "level": 212,
+        "base_damage": 9027.0,
+        "base_health": 72216.0
+      },
+      {
+        "level": 213,
+        "base_damage": 9117.0,
+        "base_health": 72936.0
+      },
+      {
+        "level": 214,
+        "base_damage": 9208.0,
+        "base_health": 73664.0
+      },
+      {
+        "level": 215,
+        "base_damage": 9300.0,
+        "base_health": 74400.0
+      },
+      {
+        "level": 216,
+        "base_damage": 9393.0,
+        "base_health": 75144.0
+      },
+      {
+        "level": 217,
+        "base_damage": 9487.0,
+        "base_health": 75896.0
+      },
+      {
+        "level": 218,
+        "base_damage": 9582.0,
+        "base_health": 76656.0
+      },
+      {
+        "level": 219,
+        "base_damage": 9678.0,
+        "base_health": 77424.0
+      },
+      {
+        "level": 220,
+        "base_damage": 9775.0,
+        "base_health": 78200.0
+      },
+      {
+        "level": 221,
+        "base_damage": 9872.0,
+        "base_health": 78976.0
+      },
+      {
+        "level": 222,
+        "base_damage": 9971.0,
+        "base_health": 79768.0
+      },
+      {
+        "level": 223,
+        "base_damage": 10071.0,
+        "base_health": 80568.0
+      },
+      {
+        "level": 224,
+        "base_damage": 10172.0,
+        "base_health": 81376.0
+      },
+      {
+        "level": 225,
+        "base_damage": 10273.0,
+        "base_health": 82184.0
+      },
+      {
+        "level": 226,
+        "base_damage": 10376.0,
+        "base_health": 83008.0
+      },
+      {
+        "level": 227,
+        "base_damage": 10480.0,
+        "base_health": 83840.0
+      },
+      {
+        "level": 228,
+        "base_damage": 10585.0,
+        "base_health": 84680.0
+      },
+      {
+        "level": 229,
+        "base_damage": 10690.0,
+        "base_health": 85520.0
+      },
+      {
+        "level": 230,
+        "base_damage": 10797.0,
+        "base_health": 86376.0
+      },
+      {
+        "level": 231,
+        "base_damage": 10905.0,
+        "base_health": 87240.0
+      },
+      {
+        "level": 232,
+        "base_damage": 11014.0,
+        "base_health": 88112.0
+      },
+      {
+        "level": 233,
+        "base_damage": 11125.0,
+        "base_health": 89000.0
+      },
+      {
+        "level": 234,
+        "base_damage": 11236.0,
+        "base_health": 89888.0
+      },
+      {
+        "level": 235,
+        "base_damage": 11348.0,
+        "base_health": 90784.0
+      },
+      {
+        "level": 236,
+        "base_damage": 11462.0,
+        "base_health": 91696.0
+      },
+      {
+        "level": 237,
+        "base_damage": 11576.0,
+        "base_health": 92608.0
+      },
+      {
+        "level": 238,
+        "base_damage": 11692.0,
+        "base_health": 93536.0
+      },
+      {
+        "level": 239,
+        "base_damage": 11809.0,
+        "base_health": 94472.0
+      },
+      {
+        "level": 240,
+        "base_damage": 11927.0,
+        "base_health": 95416.0
+      },
+      {
+        "level": 241,
+        "base_damage": 12046.0,
+        "base_health": 96368.0
+      },
+      {
+        "level": 242,
+        "base_damage": 12167.0,
+        "base_health": 97336.0
+      },
+      {
+        "level": 243,
+        "base_damage": 12288.0,
+        "base_health": 98304.0
+      },
+      {
+        "level": 244,
+        "base_damage": 12411.0,
+        "base_health": 99288.0
+      },
+      {
+        "level": 245,
+        "base_damage": 12535.0,
+        "base_health": 100280.0
+      },
+      {
+        "level": 246,
+        "base_damage": 12661.0,
+        "base_health": 101288.0
+      },
+      {
+        "level": 247,
+        "base_damage": 12787.0,
+        "base_health": 102296.0
+      },
+      {
+        "level": 248,
+        "base_damage": 12915.0,
+        "base_health": 103320.0
+      },
+      {
+        "level": 249,
+        "base_damage": 13044.0,
+        "base_health": 104352.0
+      },
+      {
+        "level": 250,
+        "base_damage": 13175.0,
+        "base_health": 105400.0
+      },
+      {
+        "level": 251,
+        "base_damage": 13307.0,
+        "base_health": 106456.0
+      },
+      {
+        "level": 252,
+        "base_damage": 13440.0,
+        "base_health": 107520.0
+      },
+      {
+        "level": 253,
+        "base_damage": 13574.0,
+        "base_health": 108592.0
+      },
+      {
+        "level": 254,
+        "base_damage": 13710.0,
+        "base_health": 109680.0
+      },
+      {
+        "level": 255,
+        "base_damage": 13847.0,
+        "base_health": 110776.0
+      },
+      {
+        "level": 256,
+        "base_damage": 13985.0,
+        "base_health": 111880.0
+      },
+      {
+        "level": 257,
+        "base_damage": 14125.0,
+        "base_health": 113000.0
+      },
+      {
+        "level": 258,
+        "base_damage": 14266.0,
+        "base_health": 114128.0
+      },
+      {
+        "level": 259,
+        "base_damage": 14409.0,
+        "base_health": 115272.0
+      },
+      {
+        "level": 260,
+        "base_damage": 14553.0,
+        "base_health": 116424.0
+      },
+      {
+        "level": 261,
+        "base_damage": 14699.0,
+        "base_health": 117592.0
+      },
+      {
+        "level": 262,
+        "base_damage": 14846.0,
+        "base_health": 118768.0
+      },
+      {
+        "level": 263,
+        "base_damage": 14994.0,
+        "base_health": 119952.0
+      },
+      {
+        "level": 264,
+        "base_damage": 15144.0,
+        "base_health": 121152.0
+      },
+      {
+        "level": 265,
+        "base_damage": 15296.0,
+        "base_health": 122368.0
+      },
+      {
+        "level": 266,
+        "base_damage": 15449.0,
+        "base_health": 123592.0
+      },
+      {
+        "level": 267,
+        "base_damage": 15603.0,
+        "base_health": 124824.0
+      },
+      {
+        "level": 268,
+        "base_damage": 15759.0,
+        "base_health": 126072.0
+      },
+      {
+        "level": 269,
+        "base_damage": 15917.0,
+        "base_health": 127336.0
+      },
+      {
+        "level": 270,
+        "base_damage": 16076.0,
+        "base_health": 128608.0
+      },
+      {
+        "level": 271,
+        "base_damage": 16237.0,
+        "base_health": 129896.0
+      },
+      {
+        "level": 272,
+        "base_damage": 16399.0,
+        "base_health": 131192.0
+      },
+      {
+        "level": 273,
+        "base_damage": 16563.0,
+        "base_health": 132504.0
+      },
+      {
+        "level": 274,
+        "base_damage": 16729.0,
+        "base_health": 133832.0
+      },
+      {
+        "level": 275,
+        "base_damage": 16896.0,
+        "base_health": 135168.0
+      },
+      {
+        "level": 276,
+        "base_damage": 17065.0,
+        "base_health": 136520.0
+      },
+      {
+        "level": 277,
+        "base_damage": 17235.0,
+        "base_health": 137880.0
+      },
+      {
+        "level": 278,
+        "base_damage": 17408.0,
+        "base_health": 139264.0
+      },
+      {
+        "level": 279,
+        "base_damage": 17582.0,
+        "base_health": 140656.0
+      },
+      {
+        "level": 280,
+        "base_damage": 17758.0,
+        "base_health": 142064.0
+      },
+      {
+        "level": 281,
+        "base_damage": 17935.0,
+        "base_health": 143480.0
+      },
+      {
+        "level": 282,
+        "base_damage": 18115.0,
+        "base_health": 144920.0
+      },
+      {
+        "level": 283,
+        "base_damage": 18296.0,
+        "base_health": 146368.0
+      },
+      {
+        "level": 284,
+        "base_damage": 18479.0,
+        "base_health": 147832.0
+      },
+      {
+        "level": 285,
+        "base_damage": 18664.0,
+        "base_health": 149312.0
+      },
+      {
+        "level": 286,
+        "base_damage": 18850.0,
+        "base_health": 150800.0
+      },
+      {
+        "level": 287,
+        "base_damage": 19039.0,
+        "base_health": 152312.0
+      },
+      {
+        "level": 288,
+        "base_damage": 19229.0,
+        "base_health": 153832.0
+      },
+      {
+        "level": 289,
+        "base_damage": 19421.0,
+        "base_health": 155368.0
+      },
+      {
+        "level": 290,
+        "base_damage": 19616.0,
+        "base_health": 156928.0
+      },
+      {
+        "level": 291,
+        "base_damage": 19812.0,
+        "base_health": 158496.0
+      },
+      {
+        "level": 292,
+        "base_damage": 20010.0,
+        "base_health": 160080.0
+      },
+      {
+        "level": 293,
+        "base_damage": 20210.0,
+        "base_health": 161680.0
+      },
+      {
+        "level": 294,
+        "base_damage": 20412.0,
+        "base_health": 163296.0
+      },
+      {
+        "level": 295,
+        "base_damage": 20616.0,
+        "base_health": 164928.0
+      },
+      {
+        "level": 296,
+        "base_damage": 20822.0,
+        "base_health": 166576.0
+      },
+      {
+        "level": 297,
+        "base_damage": 21031.0,
+        "base_health": 168248.0
+      },
+      {
+        "level": 298,
+        "base_damage": 21241.0,
+        "base_health": 169928.0
+      },
+      {
+        "level": 299,
+        "base_damage": 21453.0,
+        "base_health": 171624.0
+      },
+      {
+        "level": 300,
+        "base_damage": 21668.0,
+        "base_health": 173344.0
+      }
+    ]
+  },
+  "Ultimate": {
+    "rarity": "Ultimate",
+    "max_level": 300,
+    "levels": [
+      {
+        "level": 1,
+        "base_damage": 5308.0,
+        "base_health": 42464.0
+      },
+      {
+        "level": 2,
+        "base_damage": 5362.0,
+        "base_health": 42896.0
+      },
+      {
+        "level": 3,
+        "base_damage": 5415.0,
+        "base_health": 43320.0
+      },
+      {
+        "level": 4,
+        "base_damage": 5469.0,
+        "base_health": 43752.0
+      },
+      {
+        "level": 5,
+        "base_damage": 5524.0,
+        "base_health": 44192.0
+      },
+      {
+        "level": 6,
+        "base_damage": 5579.0,
+        "base_health": 44632.0
+      },
+      {
+        "level": 7,
+        "base_damage": 5635.0,
+        "base_health": 45080.0
+      },
+      {
+        "level": 8,
+        "base_damage": 5691.0,
+        "base_health": 45528.0
+      },
+      {
+        "level": 9,
+        "base_damage": 5748.0,
+        "base_health": 45984.0
+      },
+      {
+        "level": 10,
+        "base_damage": 5806.0,
+        "base_health": 46448.0
+      },
+      {
+        "level": 11,
+        "base_damage": 5864.0,
+        "base_health": 46912.0
+      },
+      {
+        "level": 12,
+        "base_damage": 5922.0,
+        "base_health": 47376.0
+      },
+      {
+        "level": 13,
+        "base_damage": 5982.0,
+        "base_health": 47856.0
+      },
+      {
+        "level": 14,
+        "base_damage": 6041.0,
+        "base_health": 48328.0
+      },
+      {
+        "level": 15,
+        "base_damage": 6102.0,
+        "base_health": 48816.0
+      },
+      {
+        "level": 16,
+        "base_damage": 6163.0,
+        "base_health": 49304.0
+      },
+      {
+        "level": 17,
+        "base_damage": 6225.0,
+        "base_health": 49800.0
+      },
+      {
+        "level": 18,
+        "base_damage": 6287.0,
+        "base_health": 50296.0
+      },
+      {
+        "level": 19,
+        "base_damage": 6350.0,
+        "base_health": 50800.0
+      },
+      {
+        "level": 20,
+        "base_damage": 6413.0,
+        "base_health": 51304.0
+      },
+      {
+        "level": 21,
+        "base_damage": 6477.0,
+        "base_health": 51816.0
+      },
+      {
+        "level": 22,
+        "base_damage": 6542.0,
+        "base_health": 52336.0
+      },
+      {
+        "level": 23,
+        "base_damage": 6607.0,
+        "base_health": 52856.0
+      },
+      {
+        "level": 24,
+        "base_damage": 6674.0,
+        "base_health": 53392.0
+      },
+      {
+        "level": 25,
+        "base_damage": 6740.0,
+        "base_health": 53920.0
+      },
+      {
+        "level": 26,
+        "base_damage": 6808.0,
+        "base_health": 54464.0
+      },
+      {
+        "level": 27,
+        "base_damage": 6876.0,
+        "base_health": 55008.0
+      },
+      {
+        "level": 28,
+        "base_damage": 6945.0,
+        "base_health": 55560.0
+      },
+      {
+        "level": 29,
+        "base_damage": 7014.0,
+        "base_health": 56112.0
+      },
+      {
+        "level": 30,
+        "base_damage": 7084.0,
+        "base_health": 56672.0
+      },
+      {
+        "level": 31,
+        "base_damage": 7155.0,
+        "base_health": 57240.0
+      },
+      {
+        "level": 32,
+        "base_damage": 7226.0,
+        "base_health": 57808.0
+      },
+      {
+        "level": 33,
+        "base_damage": 7299.0,
+        "base_health": 58392.0
+      },
+      {
+        "level": 34,
+        "base_damage": 7372.0,
+        "base_health": 58976.0
+      },
+      {
+        "level": 35,
+        "base_damage": 7445.0,
+        "base_health": 59560.0
+      },
+      {
+        "level": 36,
+        "base_damage": 7520.0,
+        "base_health": 60160.0
+      },
+      {
+        "level": 37,
+        "base_damage": 7595.0,
+        "base_health": 60760.0
+      },
+      {
+        "level": 38,
+        "base_damage": 7671.0,
+        "base_health": 61368.0
+      },
+      {
+        "level": 39,
+        "base_damage": 7748.0,
+        "base_health": 61984.0
+      },
+      {
+        "level": 40,
+        "base_damage": 7825.0,
+        "base_health": 62600.0
+      },
+      {
+        "level": 41,
+        "base_damage": 7904.0,
+        "base_health": 63232.0
+      },
+      {
+        "level": 42,
+        "base_damage": 7983.0,
+        "base_health": 63864.0
+      },
+      {
+        "level": 43,
+        "base_damage": 8062.0,
+        "base_health": 64496.0
+      },
+      {
+        "level": 44,
+        "base_damage": 8143.0,
+        "base_health": 65144.0
+      },
+      {
+        "level": 45,
+        "base_damage": 8224.0,
+        "base_health": 65792.0
+      },
+      {
+        "level": 46,
+        "base_damage": 8307.0,
+        "base_health": 66456.0
+      },
+      {
+        "level": 47,
+        "base_damage": 8390.0,
+        "base_health": 67120.0
+      },
+      {
+        "level": 48,
+        "base_damage": 8474.0,
+        "base_health": 67792.0
+      },
+      {
+        "level": 49,
+        "base_damage": 8558.0,
+        "base_health": 68464.0
+      },
+      {
+        "level": 50,
+        "base_damage": 8644.0,
+        "base_health": 69152.0
+      },
+      {
+        "level": 51,
+        "base_damage": 8730.0,
+        "base_health": 69840.0
+      },
+      {
+        "level": 52,
+        "base_damage": 8818.0,
+        "base_health": 70544.0
+      },
+      {
+        "level": 53,
+        "base_damage": 8906.0,
+        "base_health": 71248.0
+      },
+      {
+        "level": 54,
+        "base_damage": 8995.0,
+        "base_health": 71960.0
+      },
+      {
+        "level": 55,
+        "base_damage": 9085.0,
+        "base_health": 72680.0
+      },
+      {
+        "level": 56,
+        "base_damage": 9176.0,
+        "base_health": 73408.0
+      },
+      {
+        "level": 57,
+        "base_damage": 9267.0,
+        "base_health": 74136.0
+      },
+      {
+        "level": 58,
+        "base_damage": 9360.0,
+        "base_health": 74880.0
+      },
+      {
+        "level": 59,
+        "base_damage": 9454.0,
+        "base_health": 75632.0
+      },
+      {
+        "level": 60,
+        "base_damage": 9548.0,
+        "base_health": 76384.0
+      },
+      {
+        "level": 61,
+        "base_damage": 9644.0,
+        "base_health": 77152.0
+      },
+      {
+        "level": 62,
+        "base_damage": 9740.0,
+        "base_health": 77920.0
+      },
+      {
+        "level": 63,
+        "base_damage": 9838.0,
+        "base_health": 78704.0
+      },
+      {
+        "level": 64,
+        "base_damage": 9936.0,
+        "base_health": 79488.0
+      },
+      {
+        "level": 65,
+        "base_damage": 10035.0,
+        "base_health": 80280.0
+      },
+      {
+        "level": 66,
+        "base_damage": 10136.0,
+        "base_health": 81088.0
+      },
+      {
+        "level": 67,
+        "base_damage": 10237.0,
+        "base_health": 81896.0
+      },
+      {
+        "level": 68,
+        "base_damage": 10339.0,
+        "base_health": 82712.0
+      },
+      {
+        "level": 69,
+        "base_damage": 10443.0,
+        "base_health": 83544.0
+      },
+      {
+        "level": 70,
+        "base_damage": 10547.0,
+        "base_health": 84376.0
+      },
+      {
+        "level": 71,
+        "base_damage": 10653.0,
+        "base_health": 85224.0
+      },
+      {
+        "level": 72,
+        "base_damage": 10759.0,
+        "base_health": 86072.0
+      },
+      {
+        "level": 73,
+        "base_damage": 10867.0,
+        "base_health": 86936.0
+      },
+      {
+        "level": 74,
+        "base_damage": 10976.0,
+        "base_health": 87808.0
+      },
+      {
+        "level": 75,
+        "base_damage": 11085.0,
+        "base_health": 88680.0
+      },
+      {
+        "level": 76,
+        "base_damage": 11196.0,
+        "base_health": 89568.0
+      },
+      {
+        "level": 77,
+        "base_damage": 11308.0,
+        "base_health": 90464.0
+      },
+      {
+        "level": 78,
+        "base_damage": 11421.0,
+        "base_health": 91368.0
+      },
+      {
+        "level": 79,
+        "base_damage": 11535.0,
+        "base_health": 92280.0
+      },
+      {
+        "level": 80,
+        "base_damage": 11651.0,
+        "base_health": 93208.0
+      },
+      {
+        "level": 81,
+        "base_damage": 11767.0,
+        "base_health": 94136.0
+      },
+      {
+        "level": 82,
+        "base_damage": 11885.0,
+        "base_health": 95080.0
+      },
+      {
+        "level": 83,
+        "base_damage": 12004.0,
+        "base_health": 96032.0
+      },
+      {
+        "level": 84,
+        "base_damage": 12124.0,
+        "base_health": 96992.0
+      },
+      {
+        "level": 85,
+        "base_damage": 12245.0,
+        "base_health": 97960.0
+      },
+      {
+        "level": 86,
+        "base_damage": 12367.0,
+        "base_health": 98936.0
+      },
+      {
+        "level": 87,
+        "base_damage": 12491.0,
+        "base_health": 99928.0
+      },
+      {
+        "level": 88,
+        "base_damage": 12616.0,
+        "base_health": 100928.0
+      },
+      {
+        "level": 89,
+        "base_damage": 12742.0,
+        "base_health": 101936.0
+      },
+      {
+        "level": 90,
+        "base_damage": 12870.0,
+        "base_health": 102960.0
+      },
+      {
+        "level": 91,
+        "base_damage": 12998.0,
+        "base_health": 103984.0
+      },
+      {
+        "level": 92,
+        "base_damage": 13128.0,
+        "base_health": 105024.0
+      },
+      {
+        "level": 93,
+        "base_damage": 13260.0,
+        "base_health": 106080.0
+      },
+      {
+        "level": 94,
+        "base_damage": 13392.0,
+        "base_health": 107136.0
+      },
+      {
+        "level": 95,
+        "base_damage": 13526.0,
+        "base_health": 108208.0
+      },
+      {
+        "level": 96,
+        "base_damage": 13661.0,
+        "base_health": 109288.0
+      },
+      {
+        "level": 97,
+        "base_damage": 13798.0,
+        "base_health": 110384.0
+      },
+      {
+        "level": 98,
+        "base_damage": 13936.0,
+        "base_health": 111488.0
+      },
+      {
+        "level": 99,
+        "base_damage": 14075.0,
+        "base_health": 112600.0
+      },
+      {
+        "level": 100,
+        "base_damage": 14216.0,
+        "base_health": 113728.0
+      },
+      {
+        "level": 101,
+        "base_damage": 14358.0,
+        "base_health": 114864.0
+      },
+      {
+        "level": 102,
+        "base_damage": 14502.0,
+        "base_health": 116016.0
+      },
+      {
+        "level": 103,
+        "base_damage": 14647.0,
+        "base_health": 117176.0
+      },
+      {
+        "level": 104,
+        "base_damage": 14793.0,
+        "base_health": 118344.0
+      },
+      {
+        "level": 105,
+        "base_damage": 14941.0,
+        "base_health": 119528.0
+      },
+      {
+        "level": 106,
+        "base_damage": 15091.0,
+        "base_health": 120728.0
+      },
+      {
+        "level": 107,
+        "base_damage": 15242.0,
+        "base_health": 121936.0
+      },
+      {
+        "level": 108,
+        "base_damage": 15394.0,
+        "base_health": 123152.0
+      },
+      {
+        "level": 109,
+        "base_damage": 15548.0,
+        "base_health": 124384.0
+      },
+      {
+        "level": 110,
+        "base_damage": 15703.0,
+        "base_health": 125624.0
+      },
+      {
+        "level": 111,
+        "base_damage": 15860.0,
+        "base_health": 126880.0
+      },
+      {
+        "level": 112,
+        "base_damage": 16019.0,
+        "base_health": 128152.0
+      },
+      {
+        "level": 113,
+        "base_damage": 16179.0,
+        "base_health": 129432.0
+      },
+      {
+        "level": 114,
+        "base_damage": 16341.0,
+        "base_health": 130728.0
+      },
+      {
+        "level": 115,
+        "base_damage": 16504.0,
+        "base_health": 132032.0
+      },
+      {
+        "level": 116,
+        "base_damage": 16670.0,
+        "base_health": 133360.0
+      },
+      {
+        "level": 117,
+        "base_damage": 16836.0,
+        "base_health": 134688.0
+      },
+      {
+        "level": 118,
+        "base_damage": 17005.0,
+        "base_health": 136040.0
+      },
+      {
+        "level": 119,
+        "base_damage": 17175.0,
+        "base_health": 137400.0
+      },
+      {
+        "level": 120,
+        "base_damage": 17346.0,
+        "base_health": 138768.0
+      },
+      {
+        "level": 121,
+        "base_damage": 17520.0,
+        "base_health": 140160.0
+      },
+      {
+        "level": 122,
+        "base_damage": 17695.0,
+        "base_health": 141560.0
+      },
+      {
+        "level": 123,
+        "base_damage": 17872.0,
+        "base_health": 142976.0
+      },
+      {
+        "level": 124,
+        "base_damage": 18051.0,
+        "base_health": 144408.0
+      },
+      {
+        "level": 125,
+        "base_damage": 18231.0,
+        "base_health": 145848.0
+      },
+      {
+        "level": 126,
+        "base_damage": 18414.0,
+        "base_health": 147312.0
+      },
+      {
+        "level": 127,
+        "base_damage": 18598.0,
+        "base_health": 148784.0
+      },
+      {
+        "level": 128,
+        "base_damage": 18784.0,
+        "base_health": 150272.0
+      },
+      {
+        "level": 129,
+        "base_damage": 18971.0,
+        "base_health": 151768.0
+      },
+      {
+        "level": 130,
+        "base_damage": 19161.0,
+        "base_health": 153288.0
+      },
+      {
+        "level": 131,
+        "base_damage": 19353.0,
+        "base_health": 154824.0
+      },
+      {
+        "level": 132,
+        "base_damage": 19546.0,
+        "base_health": 156368.0
+      },
+      {
+        "level": 133,
+        "base_damage": 19742.0,
+        "base_health": 157936.0
+      },
+      {
+        "level": 134,
+        "base_damage": 19939.0,
+        "base_health": 159512.0
+      },
+      {
+        "level": 135,
+        "base_damage": 20139.0,
+        "base_health": 161112.0
+      },
+      {
+        "level": 136,
+        "base_damage": 20340.0,
+        "base_health": 162720.0
+      },
+      {
+        "level": 137,
+        "base_damage": 20543.0,
+        "base_health": 164344.0
+      },
+      {
+        "level": 138,
+        "base_damage": 20749.0,
+        "base_health": 165992.0
+      },
+      {
+        "level": 139,
+        "base_damage": 20956.0,
+        "base_health": 167648.0
+      },
+      {
+        "level": 140,
+        "base_damage": 21166.0,
+        "base_health": 169328.0
+      },
+      {
+        "level": 141,
+        "base_damage": 21378.0,
+        "base_health": 171024.0
+      },
+      {
+        "level": 142,
+        "base_damage": 21591.0,
+        "base_health": 172728.0
+      },
+      {
+        "level": 143,
+        "base_damage": 21807.0,
+        "base_health": 174456.0
+      },
+      {
+        "level": 144,
+        "base_damage": 22025.0,
+        "base_health": 176200.0
+      },
+      {
+        "level": 145,
+        "base_damage": 22246.0,
+        "base_health": 177968.0
+      },
+      {
+        "level": 146,
+        "base_damage": 22468.0,
+        "base_health": 179744.0
+      },
+      {
+        "level": 147,
+        "base_damage": 22693.0,
+        "base_health": 181544.0
+      },
+      {
+        "level": 148,
+        "base_damage": 22920.0,
+        "base_health": 183360.0
+      },
+      {
+        "level": 149,
+        "base_damage": 23149.0,
+        "base_health": 185192.0
+      },
+      {
+        "level": 150,
+        "base_damage": 23380.0,
+        "base_health": 187040.0
+      },
+      {
+        "level": 151,
+        "base_damage": 23614.0,
+        "base_health": 188912.0
+      },
+      {
+        "level": 152,
+        "base_damage": 23850.0,
+        "base_health": 190800.0
+      },
+      {
+        "level": 153,
+        "base_damage": 24089.0,
+        "base_health": 192712.0
+      },
+      {
+        "level": 154,
+        "base_damage": 24330.0,
+        "base_health": 194640.0
+      },
+      {
+        "level": 155,
+        "base_damage": 24573.0,
+        "base_health": 196584.0
+      },
+      {
+        "level": 156,
+        "base_damage": 24819.0,
+        "base_health": 198552.0
+      },
+      {
+        "level": 157,
+        "base_damage": 25067.0,
+        "base_health": 200536.0
+      },
+      {
+        "level": 158,
+        "base_damage": 25317.0,
+        "base_health": 202536.0
+      },
+      {
+        "level": 159,
+        "base_damage": 25571.0,
+        "base_health": 204568.0
+      },
+      {
+        "level": 160,
+        "base_damage": 25826.0,
+        "base_health": 206608.0
+      },
+      {
+        "level": 161,
+        "base_damage": 26085.0,
+        "base_health": 208680.0
+      },
+      {
+        "level": 162,
+        "base_damage": 26345.0,
+        "base_health": 210760.0
+      },
+      {
+        "level": 163,
+        "base_damage": 26609.0,
+        "base_health": 212872.0
+      },
+      {
+        "level": 164,
+        "base_damage": 26875.0,
+        "base_health": 215000.0
+      },
+      {
+        "level": 165,
+        "base_damage": 27144.0,
+        "base_health": 217152.0
+      },
+      {
+        "level": 166,
+        "base_damage": 27415.0,
+        "base_health": 219320.0
+      },
+      {
+        "level": 167,
+        "base_damage": 27689.0,
+        "base_health": 221512.0
+      },
+      {
+        "level": 168,
+        "base_damage": 27966.0,
+        "base_health": 223728.0
+      },
+      {
+        "level": 169,
+        "base_damage": 28246.0,
+        "base_health": 225968.0
+      },
+      {
+        "level": 170,
+        "base_damage": 28528.0,
+        "base_health": 228224.0
+      },
+      {
+        "level": 171,
+        "base_damage": 28814.0,
+        "base_health": 230512.0
+      },
+      {
+        "level": 172,
+        "base_damage": 29102.0,
+        "base_health": 232816.0
+      },
+      {
+        "level": 173,
+        "base_damage": 29393.0,
+        "base_health": 235144.0
+      },
+      {
+        "level": 174,
+        "base_damage": 29687.0,
+        "base_health": 237496.0
+      },
+      {
+        "level": 175,
+        "base_damage": 29984.0,
+        "base_health": 239872.0
+      },
+      {
+        "level": 176,
+        "base_damage": 30283.0,
+        "base_health": 242264.0
+      },
+      {
+        "level": 177,
+        "base_damage": 30586.0,
+        "base_health": 244688.0
+      },
+      {
+        "level": 178,
+        "base_damage": 30892.0,
+        "base_health": 247136.0
+      },
+      {
+        "level": 179,
+        "base_damage": 31201.0,
+        "base_health": 249608.0
+      },
+      {
+        "level": 180,
+        "base_damage": 31513.0,
+        "base_health": 252104.0
+      },
+      {
+        "level": 181,
+        "base_damage": 31828.0,
+        "base_health": 254624.0
+      },
+      {
+        "level": 182,
+        "base_damage": 32146.0,
+        "base_health": 257168.0
+      },
+      {
+        "level": 183,
+        "base_damage": 32468.0,
+        "base_health": 259744.0
+      },
+      {
+        "level": 184,
+        "base_damage": 32793.0,
+        "base_health": 262344.0
+      },
+      {
+        "level": 185,
+        "base_damage": 33121.0,
+        "base_health": 264968.0
+      },
+      {
+        "level": 186,
+        "base_damage": 33452.0,
+        "base_health": 267616.0
+      },
+      {
+        "level": 187,
+        "base_damage": 33786.0,
+        "base_health": 270288.0
+      },
+      {
+        "level": 188,
+        "base_damage": 34124.0,
+        "base_health": 272992.0
+      },
+      {
+        "level": 189,
+        "base_damage": 34465.0,
+        "base_health": 275720.0
+      },
+      {
+        "level": 190,
+        "base_damage": 34810.0,
+        "base_health": 278480.0
+      },
+      {
+        "level": 191,
+        "base_damage": 35158.0,
+        "base_health": 281264.0
+      },
+      {
+        "level": 192,
+        "base_damage": 35510.0,
+        "base_health": 284080.0
+      },
+      {
+        "level": 193,
+        "base_damage": 35865.0,
+        "base_health": 286920.0
+      },
+      {
+        "level": 194,
+        "base_damage": 36223.0,
+        "base_health": 289784.0
+      },
+      {
+        "level": 195,
+        "base_damage": 36586.0,
+        "base_health": 292688.0
+      },
+      {
+        "level": 196,
+        "base_damage": 36952.0,
+        "base_health": 295616.0
+      },
+      {
+        "level": 197,
+        "base_damage": 37321.0,
+        "base_health": 298568.0
+      },
+      {
+        "level": 198,
+        "base_damage": 37694.0,
+        "base_health": 301552.0
+      },
+      {
+        "level": 199,
+        "base_damage": 38071.0,
+        "base_health": 304568.0
+      },
+      {
+        "level": 200,
+        "base_damage": 38452.0,
+        "base_health": 307616.0
+      },
+      {
+        "level": 201,
+        "base_damage": 38836.0,
+        "base_health": 310688.0
+      },
+      {
+        "level": 202,
+        "base_damage": 39225.0,
+        "base_health": 313800.0
+      },
+      {
+        "level": 203,
+        "base_damage": 39617.0,
+        "base_health": 316936.0
+      },
+      {
+        "level": 204,
+        "base_damage": 40013.0,
+        "base_health": 320104.0
+      },
+      {
+        "level": 205,
+        "base_damage": 40413.0,
+        "base_health": 323304.0
+      },
+      {
+        "level": 206,
+        "base_damage": 40818.0,
+        "base_health": 326544.0
+      },
+      {
+        "level": 207,
+        "base_damage": 41226.0,
+        "base_health": 329808.0
+      },
+      {
+        "level": 208,
+        "base_damage": 41638.0,
+        "base_health": 333104.0
+      },
+      {
+        "level": 209,
+        "base_damage": 42054.0,
+        "base_health": 336432.0
+      },
+      {
+        "level": 210,
+        "base_damage": 42475.0,
+        "base_health": 339800.0
+      },
+      {
+        "level": 211,
+        "base_damage": 42900.0,
+        "base_health": 343200.0
+      },
+      {
+        "level": 212,
+        "base_damage": 43329.0,
+        "base_health": 346632.0
+      },
+      {
+        "level": 213,
+        "base_damage": 43762.0,
+        "base_health": 350096.0
+      },
+      {
+        "level": 214,
+        "base_damage": 44200.0,
+        "base_health": 353600.0
+      },
+      {
+        "level": 215,
+        "base_damage": 44642.0,
+        "base_health": 357136.0
+      },
+      {
+        "level": 216,
+        "base_damage": 45088.0,
+        "base_health": 360704.0
+      },
+      {
+        "level": 217,
+        "base_damage": 45539.0,
+        "base_health": 364312.0
+      },
+      {
+        "level": 218,
+        "base_damage": 45994.0,
+        "base_health": 367952.0
+      },
+      {
+        "level": 219,
+        "base_damage": 46454.0,
+        "base_health": 371632.0
+      },
+      {
+        "level": 220,
+        "base_damage": 46919.0,
+        "base_health": 375352.0
+      },
+      {
+        "level": 221,
+        "base_damage": 47388.0,
+        "base_health": 379104.0
+      },
+      {
+        "level": 222,
+        "base_damage": 47862.0,
+        "base_health": 382896.0
+      },
+      {
+        "level": 223,
+        "base_damage": 48340.0,
+        "base_health": 386720.0
+      },
+      {
+        "level": 224,
+        "base_damage": 48824.0,
+        "base_health": 390592.0
+      },
+      {
+        "level": 225,
+        "base_damage": 49312.0,
+        "base_health": 394496.0
+      },
+      {
+        "level": 226,
+        "base_damage": 49805.0,
+        "base_health": 398440.0
+      },
+      {
+        "level": 227,
+        "base_damage": 50303.0,
+        "base_health": 402424.0
+      },
+      {
+        "level": 228,
+        "base_damage": 50806.0,
+        "base_health": 406448.0
+      },
+      {
+        "level": 229,
+        "base_damage": 51314.0,
+        "base_health": 410512.0
+      },
+      {
+        "level": 230,
+        "base_damage": 51827.0,
+        "base_health": 414616.0
+      },
+      {
+        "level": 231,
+        "base_damage": 52346.0,
+        "base_health": 418768.0
+      },
+      {
+        "level": 232,
+        "base_damage": 52869.0,
+        "base_health": 422952.0
+      },
+      {
+        "level": 233,
+        "base_damage": 53398.0,
+        "base_health": 427184.0
+      },
+      {
+        "level": 234,
+        "base_damage": 53932.0,
+        "base_health": 431456.0
+      },
+      {
+        "level": 235,
+        "base_damage": 54471.0,
+        "base_health": 435768.0
+      },
+      {
+        "level": 236,
+        "base_damage": 55016.0,
+        "base_health": 440128.0
+      },
+      {
+        "level": 237,
+        "base_damage": 55566.0,
+        "base_health": 444528.0
+      },
+      {
+        "level": 238,
+        "base_damage": 56122.0,
+        "base_health": 448976.0
+      },
+      {
+        "level": 239,
+        "base_damage": 56683.0,
+        "base_health": 453464.0
+      },
+      {
+        "level": 240,
+        "base_damage": 57250.0,
+        "base_health": 458000.0
+      },
+      {
+        "level": 241,
+        "base_damage": 57822.0,
+        "base_health": 462576.0
+      },
+      {
+        "level": 242,
+        "base_damage": 58400.0,
+        "base_health": 467200.0
+      },
+      {
+        "level": 243,
+        "base_damage": 58984.0,
+        "base_health": 471872.0
+      },
+      {
+        "level": 244,
+        "base_damage": 59574.0,
+        "base_health": 476592.0
+      },
+      {
+        "level": 245,
+        "base_damage": 60170.0,
+        "base_health": 481360.0
+      },
+      {
+        "level": 246,
+        "base_damage": 60772.0,
+        "base_health": 486176.0
+      },
+      {
+        "level": 247,
+        "base_damage": 61379.0,
+        "base_health": 491032.0
+      },
+      {
+        "level": 248,
+        "base_damage": 61993.0,
+        "base_health": 495944.0
+      },
+      {
+        "level": 249,
+        "base_damage": 62613.0,
+        "base_health": 500904.0
+      },
+      {
+        "level": 250,
+        "base_damage": 63239.0,
+        "base_health": 505912.0
+      },
+      {
+        "level": 251,
+        "base_damage": 63872.0,
+        "base_health": 510976.0
+      },
+      {
+        "level": 252,
+        "base_damage": 64510.0,
+        "base_health": 516080.0
+      },
+      {
+        "level": 253,
+        "base_damage": 65156.0,
+        "base_health": 521248.0
+      },
+      {
+        "level": 254,
+        "base_damage": 65807.0,
+        "base_health": 526456.0
+      },
+      {
+        "level": 255,
+        "base_damage": 66465.0,
+        "base_health": 531720.0
+      },
+      {
+        "level": 256,
+        "base_damage": 67130.0,
+        "base_health": 537040.0
+      },
+      {
+        "level": 257,
+        "base_damage": 67801.0,
+        "base_health": 542408.0
+      },
+      {
+        "level": 258,
+        "base_damage": 68479.0,
+        "base_health": 547832.0
+      },
+      {
+        "level": 259,
+        "base_damage": 69164.0,
+        "base_health": 553312.0
+      },
+      {
+        "level": 260,
+        "base_damage": 69856.0,
+        "base_health": 558848.0
+      },
+      {
+        "level": 261,
+        "base_damage": 70554.0,
+        "base_health": 564432.0
+      },
+      {
+        "level": 262,
+        "base_damage": 71260.0,
+        "base_health": 570080.0
+      },
+      {
+        "level": 263,
+        "base_damage": 71972.0,
+        "base_health": 575776.0
+      },
+      {
+        "level": 264,
+        "base_damage": 72692.0,
+        "base_health": 581536.0
+      },
+      {
+        "level": 265,
+        "base_damage": 73419.0,
+        "base_health": 587352.0
+      },
+      {
+        "level": 266,
+        "base_damage": 74153.0,
+        "base_health": 593224.0
+      },
+      {
+        "level": 267,
+        "base_damage": 74895.0,
+        "base_health": 599160.0
+      },
+      {
+        "level": 268,
+        "base_damage": 75644.0,
+        "base_health": 605152.0
+      },
+      {
+        "level": 269,
+        "base_damage": 76400.0,
+        "base_health": 611200.0
+      },
+      {
+        "level": 270,
+        "base_damage": 77164.0,
+        "base_health": 617312.0
+      },
+      {
+        "level": 271,
+        "base_damage": 77936.0,
+        "base_health": 623488.0
+      },
+      {
+        "level": 272,
+        "base_damage": 78715.0,
+        "base_health": 629720.0
+      },
+      {
+        "level": 273,
+        "base_damage": 79502.0,
+        "base_health": 636016.0
+      },
+      {
+        "level": 274,
+        "base_damage": 80297.0,
+        "base_health": 642376.0
+      },
+      {
+        "level": 275,
+        "base_damage": 81100.0,
+        "base_health": 648800.0
+      },
+      {
+        "level": 276,
+        "base_damage": 81911.0,
+        "base_health": 655288.0
+      },
+      {
+        "level": 277,
+        "base_damage": 82730.0,
+        "base_health": 661840.0
+      },
+      {
+        "level": 278,
+        "base_damage": 83558.0,
+        "base_health": 668464.0
+      },
+      {
+        "level": 279,
+        "base_damage": 84393.0,
+        "base_health": 675144.0
+      },
+      {
+        "level": 280,
+        "base_damage": 85237.0,
+        "base_health": 681896.0
+      },
+      {
+        "level": 281,
+        "base_damage": 86089.0,
+        "base_health": 688712.0
+      },
+      {
+        "level": 282,
+        "base_damage": 86950.0,
+        "base_health": 695600.0
+      },
+      {
+        "level": 283,
+        "base_damage": 87820.0,
+        "base_health": 702560.0
+      },
+      {
+        "level": 284,
+        "base_damage": 88698.0,
+        "base_health": 709584.0
+      },
+      {
+        "level": 285,
+        "base_damage": 89585.0,
+        "base_health": 716680.0
+      },
+      {
+        "level": 286,
+        "base_damage": 90481.0,
+        "base_health": 723848.0
+      },
+      {
+        "level": 287,
+        "base_damage": 91386.0,
+        "base_health": 731088.0
+      },
+      {
+        "level": 288,
+        "base_damage": 92299.0,
+        "base_health": 738392.0
+      },
+      {
+        "level": 289,
+        "base_damage": 93222.0,
+        "base_health": 745776.0
+      },
+      {
+        "level": 290,
+        "base_damage": 94155.0,
+        "base_health": 753240.0
+      },
+      {
+        "level": 291,
+        "base_damage": 95096.0,
+        "base_health": 760768.0
+      },
+      {
+        "level": 292,
+        "base_damage": 96047.0,
+        "base_health": 768376.0
+      },
+      {
+        "level": 293,
+        "base_damage": 97008.0,
+        "base_health": 776064.0
+      },
+      {
+        "level": 294,
+        "base_damage": 97978.0,
+        "base_health": 783824.0
+      },
+      {
+        "level": 295,
+        "base_damage": 98958.0,
+        "base_health": 791664.0
+      },
+      {
+        "level": 296,
+        "base_damage": 99947.0,
+        "base_health": 799576.0
+      },
+      {
+        "level": 297,
+        "base_damage": 100947.0,
+        "base_health": 807576.0
+      },
+      {
+        "level": 298,
+        "base_damage": 101956.0,
+        "base_health": 815648.0
+      },
+      {
+        "level": 299,
+        "base_damage": 102976.0,
+        "base_health": 823808.0
+      },
+      {
+        "level": 300,
+        "base_damage": 104005.0,
+        "base_health": 832040.0
+      }
+    ]
+  },
+  "Mythic": {
+    "rarity": "Mythic",
+    "max_level": 300,
+    "levels": [
+      {
+        "level": 1,
+        "base_damage": 25480.0,
+        "base_health": 203840.0
+      },
+      {
+        "level": 2,
+        "base_damage": 25735.0,
+        "base_health": 205880.0
+      },
+      {
+        "level": 3,
+        "base_damage": 25993.0,
+        "base_health": 207944.0
+      },
+      {
+        "level": 4,
+        "base_damage": 26252.0,
+        "base_health": 210016.0
+      },
+      {
+        "level": 5,
+        "base_damage": 26515.0,
+        "base_health": 212120.0
+      },
+      {
+        "level": 6,
+        "base_damage": 26780.0,
+        "base_health": 214240.0
+      },
+      {
+        "level": 7,
+        "base_damage": 27048.0,
+        "base_health": 216384.0
+      },
+      {
+        "level": 8,
+        "base_damage": 27318.0,
+        "base_health": 218544.0
+      },
+      {
+        "level": 9,
+        "base_damage": 27592.0,
+        "base_health": 220736.0
+      },
+      {
+        "level": 10,
+        "base_damage": 27868.0,
+        "base_health": 222944.0
+      },
+      {
+        "level": 11,
+        "base_damage": 28146.0,
+        "base_health": 225168.0
+      },
+      {
+        "level": 12,
+        "base_damage": 28428.0,
+        "base_health": 227424.0
+      },
+      {
+        "level": 13,
+        "base_damage": 28712.0,
+        "base_health": 229696.0
+      },
+      {
+        "level": 14,
+        "base_damage": 28999.0,
+        "base_health": 231992.0
+      },
+      {
+        "level": 15,
+        "base_damage": 29289.0,
+        "base_health": 234312.0
+      },
+      {
+        "level": 16,
+        "base_damage": 29582.0,
+        "base_health": 236656.0
+      },
+      {
+        "level": 17,
+        "base_damage": 29878.0,
+        "base_health": 239024.0
+      },
+      {
+        "level": 18,
+        "base_damage": 30177.0,
+        "base_health": 241416.0
+      },
+      {
+        "level": 19,
+        "base_damage": 30478.0,
+        "base_health": 243824.0
+      },
+      {
+        "level": 20,
+        "base_damage": 30783.0,
+        "base_health": 246264.0
+      },
+      {
+        "level": 21,
+        "base_damage": 31091.0,
+        "base_health": 248728.0
+      },
+      {
+        "level": 22,
+        "base_damage": 31402.0,
+        "base_health": 251216.0
+      },
+      {
+        "level": 23,
+        "base_damage": 31716.0,
+        "base_health": 253728.0
+      },
+      {
+        "level": 24,
+        "base_damage": 32033.0,
+        "base_health": 256264.0
+      },
+      {
+        "level": 25,
+        "base_damage": 32353.0,
+        "base_health": 258824.0
+      },
+      {
+        "level": 26,
+        "base_damage": 32677.0,
+        "base_health": 261416.0
+      },
+      {
+        "level": 27,
+        "base_damage": 33004.0,
+        "base_health": 264032.0
+      },
+      {
+        "level": 28,
+        "base_damage": 33334.0,
+        "base_health": 266672.0
+      },
+      {
+        "level": 29,
+        "base_damage": 33667.0,
+        "base_health": 269336.0
+      },
+      {
+        "level": 30,
+        "base_damage": 34004.0,
+        "base_health": 272032.0
+      },
+      {
+        "level": 31,
+        "base_damage": 34344.0,
+        "base_health": 274752.0
+      },
+      {
+        "level": 32,
+        "base_damage": 34687.0,
+        "base_health": 277496.0
+      },
+      {
+        "level": 33,
+        "base_damage": 35034.0,
+        "base_health": 280272.0
+      },
+      {
+        "level": 34,
+        "base_damage": 35384.0,
+        "base_health": 283072.0
+      },
+      {
+        "level": 35,
+        "base_damage": 35738.0,
+        "base_health": 285904.0
+      },
+      {
+        "level": 36,
+        "base_damage": 36096.0,
+        "base_health": 288768.0
+      },
+      {
+        "level": 37,
+        "base_damage": 36457.0,
+        "base_health": 291656.0
+      },
+      {
+        "level": 38,
+        "base_damage": 36821.0,
+        "base_health": 294568.0
+      },
+      {
+        "level": 39,
+        "base_damage": 37189.0,
+        "base_health": 297512.0
+      },
+      {
+        "level": 40,
+        "base_damage": 37561.0,
+        "base_health": 300488.0
+      },
+      {
+        "level": 41,
+        "base_damage": 37937.0,
+        "base_health": 303496.0
+      },
+      {
+        "level": 42,
+        "base_damage": 38316.0,
+        "base_health": 306528.0
+      },
+      {
+        "level": 43,
+        "base_damage": 38699.0,
+        "base_health": 309592.0
+      },
+      {
+        "level": 44,
+        "base_damage": 39086.0,
+        "base_health": 312688.0
+      },
+      {
+        "level": 45,
+        "base_damage": 39477.0,
+        "base_health": 315816.0
+      },
+      {
+        "level": 46,
+        "base_damage": 39872.0,
+        "base_health": 318976.0
+      },
+      {
+        "level": 47,
+        "base_damage": 40271.0,
+        "base_health": 322168.0
+      },
+      {
+        "level": 48,
+        "base_damage": 40673.0,
+        "base_health": 325384.0
+      },
+      {
+        "level": 49,
+        "base_damage": 41080.0,
+        "base_health": 328640.0
+      },
+      {
+        "level": 50,
+        "base_damage": 41491.0,
+        "base_health": 331928.0
+      },
+      {
+        "level": 51,
+        "base_damage": 41906.0,
+        "base_health": 335248.0
+      },
+      {
+        "level": 52,
+        "base_damage": 42325.0,
+        "base_health": 338600.0
+      },
+      {
+        "level": 53,
+        "base_damage": 42748.0,
+        "base_health": 341984.0
+      },
+      {
+        "level": 54,
+        "base_damage": 43176.0,
+        "base_health": 345408.0
+      },
+      {
+        "level": 55,
+        "base_damage": 43607.0,
+        "base_health": 348856.0
+      },
+      {
+        "level": 56,
+        "base_damage": 44043.0,
+        "base_health": 352344.0
+      },
+      {
+        "level": 57,
+        "base_damage": 44484.0,
+        "base_health": 355872.0
+      },
+      {
+        "level": 58,
+        "base_damage": 44929.0,
+        "base_health": 359432.0
+      },
+      {
+        "level": 59,
+        "base_damage": 45378.0,
+        "base_health": 363024.0
+      },
+      {
+        "level": 60,
+        "base_damage": 45832.0,
+        "base_health": 366656.0
+      },
+      {
+        "level": 61,
+        "base_damage": 46290.0,
+        "base_health": 370320.0
+      },
+      {
+        "level": 62,
+        "base_damage": 46753.0,
+        "base_health": 374024.0
+      },
+      {
+        "level": 63,
+        "base_damage": 47221.0,
+        "base_health": 377768.0
+      },
+      {
+        "level": 64,
+        "base_damage": 47693.0,
+        "base_health": 381544.0
+      },
+      {
+        "level": 65,
+        "base_damage": 48170.0,
+        "base_health": 385360.0
+      },
+      {
+        "level": 66,
+        "base_damage": 48651.0,
+        "base_health": 389208.0
+      },
+      {
+        "level": 67,
+        "base_damage": 49138.0,
+        "base_health": 393104.0
+      },
+      {
+        "level": 68,
+        "base_damage": 49629.0,
+        "base_health": 397032.0
+      },
+      {
+        "level": 69,
+        "base_damage": 50126.0,
+        "base_health": 401008.0
+      },
+      {
+        "level": 70,
+        "base_damage": 50627.0,
+        "base_health": 405016.0
+      },
+      {
+        "level": 71,
+        "base_damage": 51133.0,
+        "base_health": 409064.0
+      },
+      {
+        "level": 72,
+        "base_damage": 51644.0,
+        "base_health": 413152.0
+      },
+      {
+        "level": 73,
+        "base_damage": 52161.0,
+        "base_health": 417288.0
+      },
+      {
+        "level": 74,
+        "base_damage": 52683.0,
+        "base_health": 421464.0
+      },
+      {
+        "level": 75,
+        "base_damage": 53209.0,
+        "base_health": 425672.0
+      },
+      {
+        "level": 76,
+        "base_damage": 53741.0,
+        "base_health": 429928.0
+      },
+      {
+        "level": 77,
+        "base_damage": 54279.0,
+        "base_health": 434232.0
+      },
+      {
+        "level": 78,
+        "base_damage": 54822.0,
+        "base_health": 438576.0
+      },
+      {
+        "level": 79,
+        "base_damage": 55370.0,
+        "base_health": 442960.0
+      },
+      {
+        "level": 80,
+        "base_damage": 55924.0,
+        "base_health": 447392.0
+      },
+      {
+        "level": 81,
+        "base_damage": 56483.0,
+        "base_health": 451864.0
+      },
+      {
+        "level": 82,
+        "base_damage": 57048.0,
+        "base_health": 456384.0
+      },
+      {
+        "level": 83,
+        "base_damage": 57618.0,
+        "base_health": 460944.0
+      },
+      {
+        "level": 84,
+        "base_damage": 58194.0,
+        "base_health": 465552.0
+      },
+      {
+        "level": 85,
+        "base_damage": 58776.0,
+        "base_health": 470208.0
+      },
+      {
+        "level": 86,
+        "base_damage": 59364.0,
+        "base_health": 474912.0
+      },
+      {
+        "level": 87,
+        "base_damage": 59958.0,
+        "base_health": 479664.0
+      },
+      {
+        "level": 88,
+        "base_damage": 60557.0,
+        "base_health": 484456.0
+      },
+      {
+        "level": 89,
+        "base_damage": 61163.0,
+        "base_health": 489304.0
+      },
+      {
+        "level": 90,
+        "base_damage": 61774.0,
+        "base_health": 494192.0
+      },
+      {
+        "level": 91,
+        "base_damage": 62392.0,
+        "base_health": 499136.0
+      },
+      {
+        "level": 92,
+        "base_damage": 63016.0,
+        "base_health": 504128.0
+      },
+      {
+        "level": 93,
+        "base_damage": 63646.0,
+        "base_health": 509168.0
+      },
+      {
+        "level": 94,
+        "base_damage": 64283.0,
+        "base_health": 514264.0
+      },
+      {
+        "level": 95,
+        "base_damage": 64926.0,
+        "base_health": 519408.0
+      },
+      {
+        "level": 96,
+        "base_damage": 65575.0,
+        "base_health": 524600.0
+      },
+      {
+        "level": 97,
+        "base_damage": 66231.0,
+        "base_health": 529848.0
+      },
+      {
+        "level": 98,
+        "base_damage": 66893.0,
+        "base_health": 535144.0
+      },
+      {
+        "level": 99,
+        "base_damage": 67562.0,
+        "base_health": 540496.0
+      },
+      {
+        "level": 100,
+        "base_damage": 68237.0,
+        "base_health": 545896.0
+      },
+      {
+        "level": 101,
+        "base_damage": 68920.0,
+        "base_health": 551360.0
+      },
+      {
+        "level": 102,
+        "base_damage": 69609.0,
+        "base_health": 556872.0
+      },
+      {
+        "level": 103,
+        "base_damage": 70305.0,
+        "base_health": 562440.0
+      },
+      {
+        "level": 104,
+        "base_damage": 71008.0,
+        "base_health": 568064.0
+      },
+      {
+        "level": 105,
+        "base_damage": 71718.0,
+        "base_health": 573744.0
+      },
+      {
+        "level": 106,
+        "base_damage": 72435.0,
+        "base_health": 579480.0
+      },
+      {
+        "level": 107,
+        "base_damage": 73160.0,
+        "base_health": 585280.0
+      },
+      {
+        "level": 108,
+        "base_damage": 73891.0,
+        "base_health": 591128.0
+      },
+      {
+        "level": 109,
+        "base_damage": 74630.0,
+        "base_health": 597040.0
+      },
+      {
+        "level": 110,
+        "base_damage": 75376.0,
+        "base_health": 603008.0
+      },
+      {
+        "level": 111,
+        "base_damage": 76130.0,
+        "base_health": 609040.0
+      },
+      {
+        "level": 112,
+        "base_damage": 76892.0,
+        "base_health": 615136.0
+      },
+      {
+        "level": 113,
+        "base_damage": 77660.0,
+        "base_health": 621280.0
+      },
+      {
+        "level": 114,
+        "base_damage": 78437.0,
+        "base_health": 627496.0
+      },
+      {
+        "level": 115,
+        "base_damage": 79221.0,
+        "base_health": 633768.0
+      },
+      {
+        "level": 116,
+        "base_damage": 80014.0,
+        "base_health": 640112.0
+      },
+      {
+        "level": 117,
+        "base_damage": 80814.0,
+        "base_health": 646512.0
+      },
+      {
+        "level": 118,
+        "base_damage": 81622.0,
+        "base_health": 652976.0
+      },
+      {
+        "level": 119,
+        "base_damage": 82438.0,
+        "base_health": 659504.0
+      },
+      {
+        "level": 120,
+        "base_damage": 83263.0,
+        "base_health": 666104.0
+      },
+      {
+        "level": 121,
+        "base_damage": 84095.0,
+        "base_health": 672760.0
+      },
+      {
+        "level": 122,
+        "base_damage": 84936.0,
+        "base_health": 679488.0
+      },
+      {
+        "level": 123,
+        "base_damage": 85785.0,
+        "base_health": 686280.0
+      },
+      {
+        "level": 124,
+        "base_damage": 86643.0,
+        "base_health": 693144.0
+      },
+      {
+        "level": 125,
+        "base_damage": 87510.0,
+        "base_health": 700080.0
+      },
+      {
+        "level": 126,
+        "base_damage": 88385.0,
+        "base_health": 707080.0
+      },
+      {
+        "level": 127,
+        "base_damage": 89269.0,
+        "base_health": 714152.0
+      },
+      {
+        "level": 128,
+        "base_damage": 90161.0,
+        "base_health": 721288.0
+      },
+      {
+        "level": 129,
+        "base_damage": 91063.0,
+        "base_health": 728504.0
+      },
+      {
+        "level": 130,
+        "base_damage": 91974.0,
+        "base_health": 735792.0
+      },
+      {
+        "level": 131,
+        "base_damage": 92893.0,
+        "base_health": 743144.0
+      },
+      {
+        "level": 132,
+        "base_damage": 93822.0,
+        "base_health": 750576.0
+      },
+      {
+        "level": 133,
+        "base_damage": 94761.0,
+        "base_health": 758088.0
+      },
+      {
+        "level": 134,
+        "base_damage": 95708.0,
+        "base_health": 765664.0
+      },
+      {
+        "level": 135,
+        "base_damage": 96665.0,
+        "base_health": 773320.0
+      },
+      {
+        "level": 136,
+        "base_damage": 97632.0,
+        "base_health": 781056.0
+      },
+      {
+        "level": 137,
+        "base_damage": 98608.0,
+        "base_health": 788864.0
+      },
+      {
+        "level": 138,
+        "base_damage": 99594.0,
+        "base_health": 796752.0
+      },
+      {
+        "level": 139,
+        "base_damage": 100590.0,
+        "base_health": 804720.0
+      },
+      {
+        "level": 140,
+        "base_damage": 101596.0,
+        "base_health": 812768.0
+      },
+      {
+        "level": 141,
+        "base_damage": 102612.0,
+        "base_health": 820896.0
+      },
+      {
+        "level": 142,
+        "base_damage": 103638.0,
+        "base_health": 829104.0
+      },
+      {
+        "level": 143,
+        "base_damage": 104675.0,
+        "base_health": 837400.0
+      },
+      {
+        "level": 144,
+        "base_damage": 105721.0,
+        "base_health": 845768.0
+      },
+      {
+        "level": 145,
+        "base_damage": 106779.0,
+        "base_health": 854232.0
+      },
+      {
+        "level": 146,
+        "base_damage": 107846.0,
+        "base_health": 862768.0
+      },
+      {
+        "level": 147,
+        "base_damage": 108925.0,
+        "base_health": 871400.0
+      },
+      {
+        "level": 148,
+        "base_damage": 110014.0,
+        "base_health": 880112.0
+      },
+      {
+        "level": 149,
+        "base_damage": 111114.0,
+        "base_health": 888912.0
+      },
+      {
+        "level": 150,
+        "base_damage": 112225.0,
+        "base_health": 897800.0
+      },
+      {
+        "level": 151,
+        "base_damage": 113348.0,
+        "base_health": 906784.0
+      },
+      {
+        "level": 152,
+        "base_damage": 114481.0,
+        "base_health": 915848.0
+      },
+      {
+        "level": 153,
+        "base_damage": 115626.0,
+        "base_health": 925008.0
+      },
+      {
+        "level": 154,
+        "base_damage": 116782.0,
+        "base_health": 934256.0
+      },
+      {
+        "level": 155,
+        "base_damage": 117950.0,
+        "base_health": 943600.0
+      },
+      {
+        "level": 156,
+        "base_damage": 119129.0,
+        "base_health": 953032.0
+      },
+      {
+        "level": 157,
+        "base_damage": 120321.0,
+        "base_health": 962568.0
+      },
+      {
+        "level": 158,
+        "base_damage": 121524.0,
+        "base_health": 972192.0
+      },
+      {
+        "level": 159,
+        "base_damage": 122739.0,
+        "base_health": 981912.0
+      },
+      {
+        "level": 160,
+        "base_damage": 123967.0,
+        "base_health": 991736.0
+      },
+      {
+        "level": 161,
+        "base_damage": 125206.0,
+        "base_health": 1001648.0
+      },
+      {
+        "level": 162,
+        "base_damage": 126458.0,
+        "base_health": 1011664.0
+      },
+      {
+        "level": 163,
+        "base_damage": 127723.0,
+        "base_health": 1021784.0
+      },
+      {
+        "level": 164,
+        "base_damage": 129000.0,
+        "base_health": 1032000.0
+      },
+      {
+        "level": 165,
+        "base_damage": 130290.0,
+        "base_health": 1042320.0
+      },
+      {
+        "level": 166,
+        "base_damage": 131593.0,
+        "base_health": 1052744.0
+      },
+      {
+        "level": 167,
+        "base_damage": 132909.0,
+        "base_health": 1063272.0
+      },
+      {
+        "level": 168,
+        "base_damage": 134238.0,
+        "base_health": 1073904.0
+      },
+      {
+        "level": 169,
+        "base_damage": 135580.0,
+        "base_health": 1084640.0
+      },
+      {
+        "level": 170,
+        "base_damage": 136936.0,
+        "base_health": 1095488.0
+      },
+      {
+        "level": 171,
+        "base_damage": 138306.0,
+        "base_health": 1106448.0
+      },
+      {
+        "level": 172,
+        "base_damage": 139689.0,
+        "base_health": 1117512.0
+      },
+      {
+        "level": 173,
+        "base_damage": 141086.0,
+        "base_health": 1128688.0
+      },
+      {
+        "level": 174,
+        "base_damage": 142496.0,
+        "base_health": 1139968.0
+      },
+      {
+        "level": 175,
+        "base_damage": 143921.0,
+        "base_health": 1151368.0
+      },
+      {
+        "level": 176,
+        "base_damage": 145361.0,
+        "base_health": 1162888.0
+      },
+      {
+        "level": 177,
+        "base_damage": 146814.0,
+        "base_health": 1174512.0
+      },
+      {
+        "level": 178,
+        "base_damage": 148282.0,
+        "base_health": 1186256.0
+      },
+      {
+        "level": 179,
+        "base_damage": 149765.0,
+        "base_health": 1198120.0
+      },
+      {
+        "level": 180,
+        "base_damage": 151263.0,
+        "base_health": 1210104.0
+      },
+      {
+        "level": 181,
+        "base_damage": 152775.0,
+        "base_health": 1222200.0
+      },
+      {
+        "level": 182,
+        "base_damage": 154303.0,
+        "base_health": 1234424.0
+      },
+      {
+        "level": 183,
+        "base_damage": 155846.0,
+        "base_health": 1246768.0
+      },
+      {
+        "level": 184,
+        "base_damage": 157405.0,
+        "base_health": 1259240.0
+      },
+      {
+        "level": 185,
+        "base_damage": 158979.0,
+        "base_health": 1271832.0
+      },
+      {
+        "level": 186,
+        "base_damage": 160568.0,
+        "base_health": 1284544.0
+      },
+      {
+        "level": 187,
+        "base_damage": 162174.0,
+        "base_health": 1297392.0
+      },
+      {
+        "level": 188,
+        "base_damage": 163796.0,
+        "base_health": 1310368.0
+      },
+      {
+        "level": 189,
+        "base_damage": 165434.0,
+        "base_health": 1323472.0
+      },
+      {
+        "level": 190,
+        "base_damage": 167088.0,
+        "base_health": 1336704.0
+      },
+      {
+        "level": 191,
+        "base_damage": 168759.0,
+        "base_health": 1350072.0
+      },
+      {
+        "level": 192,
+        "base_damage": 170447.0,
+        "base_health": 1363576.0
+      },
+      {
+        "level": 193,
+        "base_damage": 172151.0,
+        "base_health": 1377208.0
+      },
+      {
+        "level": 194,
+        "base_damage": 173873.0,
+        "base_health": 1390984.0
+      },
+      {
+        "level": 195,
+        "base_damage": 175611.0,
+        "base_health": 1404888.0
+      },
+      {
+        "level": 196,
+        "base_damage": 177368.0,
+        "base_health": 1418944.0
+      },
+      {
+        "level": 197,
+        "base_damage": 179141.0,
+        "base_health": 1433128.0
+      },
+      {
+        "level": 198,
+        "base_damage": 180933.0,
+        "base_health": 1447464.0
+      },
+      {
+        "level": 199,
+        "base_damage": 182742.0,
+        "base_health": 1461936.0
+      },
+      {
+        "level": 200,
+        "base_damage": 184569.0,
+        "base_health": 1476552.0
+      },
+      {
+        "level": 201,
+        "base_damage": 186415.0,
+        "base_health": 1491320.0
+      },
+      {
+        "level": 202,
+        "base_damage": 188279.0,
+        "base_health": 1506232.0
+      },
+      {
+        "level": 203,
+        "base_damage": 190162.0,
+        "base_health": 1521296.0
+      },
+      {
+        "level": 204,
+        "base_damage": 192064.0,
+        "base_health": 1536512.0
+      },
+      {
+        "level": 205,
+        "base_damage": 193984.0,
+        "base_health": 1551872.0
+      },
+      {
+        "level": 206,
+        "base_damage": 195924.0,
+        "base_health": 1567392.0
+      },
+      {
+        "level": 207,
+        "base_damage": 197883.0,
+        "base_health": 1583064.0
+      },
+      {
+        "level": 208,
+        "base_damage": 199862.0,
+        "base_health": 1598896.0
+      },
+      {
+        "level": 209,
+        "base_damage": 201861.0,
+        "base_health": 1614888.0
+      },
+      {
+        "level": 210,
+        "base_damage": 203879.0,
+        "base_health": 1631032.0
+      },
+      {
+        "level": 211,
+        "base_damage": 205918.0,
+        "base_health": 1647344.0
+      },
+      {
+        "level": 212,
+        "base_damage": 207977.0,
+        "base_health": 1663816.0
+      },
+      {
+        "level": 213,
+        "base_damage": 210057.0,
+        "base_health": 1680456.0
+      },
+      {
+        "level": 214,
+        "base_damage": 212158.0,
+        "base_health": 1697264.0
+      },
+      {
+        "level": 215,
+        "base_damage": 214279.0,
+        "base_health": 1714232.0
+      },
+      {
+        "level": 216,
+        "base_damage": 216422.0,
+        "base_health": 1731376.0
+      },
+      {
+        "level": 217,
+        "base_damage": 218586.0,
+        "base_health": 1748688.0
+      },
+      {
+        "level": 218,
+        "base_damage": 220772.0,
+        "base_health": 1766176.0
+      },
+      {
+        "level": 219,
+        "base_damage": 222980.0,
+        "base_health": 1783840.0
+      },
+      {
+        "level": 220,
+        "base_damage": 225210.0,
+        "base_health": 1801680.0
+      },
+      {
+        "level": 221,
+        "base_damage": 227462.0,
+        "base_health": 1819696.0
+      },
+      {
+        "level": 222,
+        "base_damage": 229736.0,
+        "base_health": 1837888.0
+      },
+      {
+        "level": 223,
+        "base_damage": 232034.0,
+        "base_health": 1856272.0
+      },
+      {
+        "level": 224,
+        "base_damage": 234354.0,
+        "base_health": 1874832.0
+      },
+      {
+        "level": 225,
+        "base_damage": 236698.0,
+        "base_health": 1893584.0
+      },
+      {
+        "level": 226,
+        "base_damage": 239065.0,
+        "base_health": 1912520.0
+      },
+      {
+        "level": 227,
+        "base_damage": 241455.0,
+        "base_health": 1931640.0
+      },
+      {
+        "level": 228,
+        "base_damage": 243870.0,
+        "base_health": 1950960.0
+      },
+      {
+        "level": 229,
+        "base_damage": 246309.0,
+        "base_health": 1970472.0
+      },
+      {
+        "level": 230,
+        "base_damage": 248772.0,
+        "base_health": 1990176.0
+      },
+      {
+        "level": 231,
+        "base_damage": 251259.0,
+        "base_health": 2010072.0
+      },
+      {
+        "level": 232,
+        "base_damage": 253772.0,
+        "base_health": 2030176.0
+      },
+      {
+        "level": 233,
+        "base_damage": 256310.0,
+        "base_health": 2050480.0
+      },
+      {
+        "level": 234,
+        "base_damage": 258873.0,
+        "base_health": 2070984.0
+      },
+      {
+        "level": 235,
+        "base_damage": 261461.0,
+        "base_health": 2091688.0
+      },
+      {
+        "level": 236,
+        "base_damage": 264076.0,
+        "base_health": 2112608.0
+      },
+      {
+        "level": 237,
+        "base_damage": 266717.0,
+        "base_health": 2133736.0
+      },
+      {
+        "level": 238,
+        "base_damage": 269384.0,
+        "base_health": 2155072.0
+      },
+      {
+        "level": 239,
+        "base_damage": 272078.0,
+        "base_health": 2176624.0
+      },
+      {
+        "level": 240,
+        "base_damage": 274799.0,
+        "base_health": 2198392.0
+      },
+      {
+        "level": 241,
+        "base_damage": 277547.0,
+        "base_health": 2220376.0
+      },
+      {
+        "level": 242,
+        "base_damage": 280322.0,
+        "base_health": 2242576.0
+      },
+      {
+        "level": 243,
+        "base_damage": 283125.0,
+        "base_health": 2265000.0
+      },
+      {
+        "level": 244,
+        "base_damage": 285957.0,
+        "base_health": 2287656.0
+      },
+      {
+        "level": 245,
+        "base_damage": 288816.0,
+        "base_health": 2310528.0
+      },
+      {
+        "level": 246,
+        "base_damage": 291704.0,
+        "base_health": 2333632.0
+      },
+      {
+        "level": 247,
+        "base_damage": 294621.0,
+        "base_health": 2356968.0
+      },
+      {
+        "level": 248,
+        "base_damage": 297568.0,
+        "base_health": 2380544.0
+      },
+      {
+        "level": 249,
+        "base_damage": 300543.0,
+        "base_health": 2404344.0
+      },
+      {
+        "level": 250,
+        "base_damage": 303549.0,
+        "base_health": 2428392.0
+      },
+      {
+        "level": 251,
+        "base_damage": 306584.0,
+        "base_health": 2452672.0
+      },
+      {
+        "level": 252,
+        "base_damage": 309650.0,
+        "base_health": 2477200.0
+      },
+      {
+        "level": 253,
+        "base_damage": 312746.0,
+        "base_health": 2501968.0
+      },
+      {
+        "level": 254,
+        "base_damage": 315874.0,
+        "base_health": 2526992.0
+      },
+      {
+        "level": 255,
+        "base_damage": 319033.0,
+        "base_health": 2552264.0
+      },
+      {
+        "level": 256,
+        "base_damage": 322223.0,
+        "base_health": 2577784.0
+      },
+      {
+        "level": 257,
+        "base_damage": 325445.0,
+        "base_health": 2603560.0
+      },
+      {
+        "level": 258,
+        "base_damage": 328700.0,
+        "base_health": 2629600.0
+      },
+      {
+        "level": 259,
+        "base_damage": 331987.0,
+        "base_health": 2655896.0
+      },
+      {
+        "level": 260,
+        "base_damage": 335307.0,
+        "base_health": 2682456.0
+      },
+      {
+        "level": 261,
+        "base_damage": 338660.0,
+        "base_health": 2709280.0
+      },
+      {
+        "level": 262,
+        "base_damage": 342046.0,
+        "base_health": 2736368.0
+      },
+      {
+        "level": 263,
+        "base_damage": 345467.0,
+        "base_health": 2763736.0
+      },
+      {
+        "level": 264,
+        "base_damage": 348921.0,
+        "base_health": 2791368.0
+      },
+      {
+        "level": 265,
+        "base_damage": 352411.0,
+        "base_health": 2819288.0
+      },
+      {
+        "level": 266,
+        "base_damage": 355935.0,
+        "base_health": 2847480.0
+      },
+      {
+        "level": 267,
+        "base_damage": 359494.0,
+        "base_health": 2875952.0
+      },
+      {
+        "level": 268,
+        "base_damage": 363089.0,
+        "base_health": 2904712.0
+      },
+      {
+        "level": 269,
+        "base_damage": 366720.0,
+        "base_health": 2933760.0
+      },
+      {
+        "level": 270,
+        "base_damage": 370387.0,
+        "base_health": 2963096.0
+      },
+      {
+        "level": 271,
+        "base_damage": 374091.0,
+        "base_health": 2992728.0
+      },
+      {
+        "level": 272,
+        "base_damage": 377832.0,
+        "base_health": 3022656.0
+      },
+      {
+        "level": 273,
+        "base_damage": 381610.0,
+        "base_health": 3052880.0
+      },
+      {
+        "level": 274,
+        "base_damage": 385426.0,
+        "base_health": 3083408.0
+      },
+      {
+        "level": 275,
+        "base_damage": 389280.0,
+        "base_health": 3114240.0
+      },
+      {
+        "level": 276,
+        "base_damage": 393173.0,
+        "base_health": 3145384.0
+      },
+      {
+        "level": 277,
+        "base_damage": 397105.0,
+        "base_health": 3176840.0
+      },
+      {
+        "level": 278,
+        "base_damage": 401076.0,
+        "base_health": 3208608.0
+      },
+      {
+        "level": 279,
+        "base_damage": 405087.0,
+        "base_health": 3240696.0
+      },
+      {
+        "level": 280,
+        "base_damage": 409138.0,
+        "base_health": 3273104.0
+      },
+      {
+        "level": 281,
+        "base_damage": 413229.0,
+        "base_health": 3305832.0
+      },
+      {
+        "level": 282,
+        "base_damage": 417361.0,
+        "base_health": 3338888.0
+      },
+      {
+        "level": 283,
+        "base_damage": 421535.0,
+        "base_health": 3372280.0
+      },
+      {
+        "level": 284,
+        "base_damage": 425750.0,
+        "base_health": 3406000.0
+      },
+      {
+        "level": 285,
+        "base_damage": 430008.0,
+        "base_health": 3440064.0
+      },
+      {
+        "level": 286,
+        "base_damage": 434308.0,
+        "base_health": 3474464.0
+      },
+      {
+        "level": 287,
+        "base_damage": 438651.0,
+        "base_health": 3509208.0
+      },
+      {
+        "level": 288,
+        "base_damage": 443037.0,
+        "base_health": 3544296.0
+      },
+      {
+        "level": 289,
+        "base_damage": 447468.0,
+        "base_health": 3579744.0
+      },
+      {
+        "level": 290,
+        "base_damage": 451943.0,
+        "base_health": 3615544.0
+      },
+      {
+        "level": 291,
+        "base_damage": 456462.0,
+        "base_health": 3651696.0
+      },
+      {
+        "level": 292,
+        "base_damage": 461027.0,
+        "base_health": 3688216.0
+      },
+      {
+        "level": 293,
+        "base_damage": 465637.0,
+        "base_health": 3725096.0
+      },
+      {
+        "level": 294,
+        "base_damage": 470293.0,
+        "base_health": 3762344.0
+      },
+      {
+        "level": 295,
+        "base_damage": 474996.0,
+        "base_health": 3799968.0
+      },
+      {
+        "level": 296,
+        "base_damage": 479746.0,
+        "base_health": 3837968.0
+      },
+      {
+        "level": 297,
+        "base_damage": 484544.0,
+        "base_health": 3876352.0
+      },
+      {
+        "level": 298,
+        "base_damage": 489389.0,
+        "base_health": 3915112.0
+      },
+      {
+        "level": 299,
+        "base_damage": 494283.0,
+        "base_health": 3954264.0
+      },
+      {
+        "level": 300,
+        "base_damage": 499226.0,
+        "base_health": 3993808.0
+      }
+    ]
+  }
+}

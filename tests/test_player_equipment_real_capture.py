@@ -28,7 +28,7 @@ except ImportError:
 
 from PIL import Image
 
-from backend import player_equipment_scanner as pes
+from backend.scanner import player_equipment as pes
 from backend.constants import EQUIPMENT_SLOTS
 
 

@@ -1,4 +1,4 @@
-"""Tests for backend.enemy_icon_identifier (Phase 2)."""
+"""Tests for backend.scanner.icon_matcher (Phase 2)."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from typing import Iterator
 import pytest
 from PIL import Image
 
-from backend import enemy_icon_identifier as ii
-from backend.enemy_libraries import (
+from backend.scanner import icon_matcher as ii
+from backend.data.libraries import (
     DATA_DIR,
     pets_atlas_path,
     mounts_atlas_path,

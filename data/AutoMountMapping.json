@@ -1,0 +1,92 @@
+{
+  "{'Rarity': 'Common', 'Id': 0}": {
+    "Rarity": "Common",
+    "Id": 0,
+    "MountName": "Lily Pad",
+    "SpriteName": "Lily Pad"
+  },
+  "{'Rarity': 'Common', 'Id': 1}": {
+    "Rarity": "Common",
+    "Id": 1,
+    "MountName": "Lily Leaf",
+    "SpriteName": "Lily Leaf"
+  },
+  "{'Rarity': 'Common', 'Id': 2}": {
+    "Rarity": "Common",
+    "Id": 2,
+    "MountName": "Brown Leaf",
+    "SpriteName": "Brown Leaf"
+  },
+  "{'Rarity': 'Rare', 'Id': 0}": {
+    "Rarity": "Rare",
+    "Id": 0,
+    "MountName": "Brown Horse",
+    "SpriteName": "Brown Horse"
+  },
+  "{'Rarity': 'Rare', 'Id': 1}": {
+    "Rarity": "Rare",
+    "Id": 1,
+    "MountName": "Dino",
+    "SpriteName": "Dino"
+  },
+  "{'Rarity': 'Rare', 'Id': 2}": {
+    "Rarity": "Rare",
+    "Id": 2,
+    "MountName": "Crab",
+    "SpriteName": "Crab"
+  },
+  "{'Rarity': 'Rare', 'Id': 3}": {
+    "Rarity": "Rare",
+    "Id": 3,
+    "MountName": "Turtle",
+    "SpriteName": "Turtle"
+  },
+  "{'Rarity': 'Epic', 'Id': 0}": {
+    "Rarity": "Epic",
+    "Id": 0,
+    "MountName": "Pig",
+    "SpriteName": "Pig"
+  },
+  "{'Rarity': 'Epic', 'Id': 1}": {
+    "Rarity": "Epic",
+    "Id": 1,
+    "MountName": "Goat",
+    "SpriteName": "Goat"
+  },
+  "{'Rarity': 'Legendary', 'Id': 0}": {
+    "Rarity": "Legendary",
+    "Id": 0,
+    "MountName": "Bike",
+    "SpriteName": "Bike"
+  },
+  "{'Rarity': 'Legendary', 'Id': 1}": {
+    "Rarity": "Legendary",
+    "Id": 1,
+    "MountName": "Giant Bee",
+    "SpriteName": "Giant Bee"
+  },
+  "{'Rarity': 'Ultimate', 'Id': 0}": {
+    "Rarity": "Ultimate",
+    "Id": 0,
+    "MountName": "One Wheel Droid",
+    "SpriteName": "One Wheel Droid"
+  },
+  "{'Rarity': 'Ultimate', 'Id': 1}": {
+    "Rarity": "Ultimate",
+    "Id": 1,
+    "MountName": "Mini Dragon",
+    "SpriteName": "Mini Dragon"
+  },
+  "{'Rarity': 'Mythic', 'Id': 0}": {
+    "Rarity": "Mythic",
+    "Id": 0,
+    "MountName": "Hover Disk",
+    "SpriteName": "Hover Disk"
+  },
+  "{'Rarity': 'Mythic', 'Id': 1}": {
+    "Rarity": "Mythic",
+    "Id": 1,
+    "MountName": "Hover Board",
+    "SpriteName": "Hover Board"
+  }
+}

@@ -1,0 +1,380 @@
+==========================================================
+  FORGE MASTER — Sorties attendues du parser
+  (après toutes les modifications décrites dans INSTRUCTIONS_NOUVEAU_CHAT.md)
+
+  Ce fichier décrit ce que chaque fonction du pipeline
+  doit retourner pour chacune des 6 captures de référence.
+  Il sert de référence pour les tests et la validation.
+==========================================================
+
+
+══════════════════════════════════════════════════════════
+  IMAGE 1 — profile.png  (panneau profil joueur)
+══════════════════════════════════════════════════════════
+
+Source : capture du panneau profil du joueur "lopertyup"
+
+── parse_profile_text(ocr_text) ──────────────────────────
+# backend/parser.py → parse_profile_text()
+# Lit les totaux affichés + les substats en % dans le texte OCR
+
+{
+    "hp_total":       28_300_000.0,   # "28.3m Total Health"
+    "attack_total":    8_300_000.0,   # "8.3m Total Damage"
+    "hp_base":         <calculé>  ,   # hp_total / (1 + health_pct/100)
+    "attack_base":     8_300_000.0,   # identique à attack_total (pas de damage_pct visible)
+    "health_pct":            0.0,     # non visible dans les substats affichés
+    "damage_pct":            0.0,     # non visible
+    "melee_pct":            65.8,     # "+65.8% Melee Damage"
+    "ranged_pct":            0.0,     # non visible
+    "crit_chance":          47.7,     # "+47.7% Critical Chance"
+    "crit_damage":         419.0,     # "+419% Critical Damage"
+    "health_regen":          0.0,     # non visible
+    "lifesteal":            27.1,     # "+27.1% Lifesteal"
+    "double_chance":        59.3,     # "+59.3% Double Chance"
+    "attack_speed":        129.0,     # "+129% Attack Speed"
+    "skill_damage":         19.2,     # "+19.2% Skill Damage" (partiellement visible)
+    "skill_cooldown":        0.0,     # non visible
+    "block_chance":          0.0,     # non visible
+}
+
+── identify_equipment_panel() — slots visibles ───────────
+# backend/equipment_pipeline.py → identify_equipment_panel()
+# Template-matching des 8 icônes → (slot, age, idx, rarity, level)
+# Les noms exacts dépendent du contenu de icons_checker/
+
+[
+    IdentifiedItem(slot="Helmet",   age=7, idx=<idx>, rarity="Quantum",    level=96),
+    IdentifiedItem(slot="Body",     age=7, idx=<idx>, rarity=<rarity>,     level=103),
+    IdentifiedItem(slot="Gloves",   age=7, idx=<idx>, rarity=<rarity>,     level=103),
+    IdentifiedItem(slot="Necklace", age=7, idx=<idx>, rarity=<rarity>,     level=97),
+    IdentifiedItem(slot="Ring",     age=7, idx=<idx>, rarity=<rarity>,     level=103),
+    IdentifiedItem(slot="Weapon",   age=7, idx=<idx>, rarity=<rarity>,     level=101),
+    IdentifiedItem(slot="Shoe",     age=7, idx=<idx>, rarity=<rarity>,     level=103),
+    IdentifiedItem(slot="Belt",     age=7, idx=<idx>, rarity=<rarity>,     level=101),
+]
+# Note : age=7 = Quantum (index selon AGE_TO_SPRITESHEET dans enemy_libraries.py)
+# Note : le Mount (Lv.58, cadre cyan) occupe la 4e cellule de la rangée 2,
+#        il est identifié séparément (voir identify_mount ci-dessous)
+
+── identify_pet() / identify_mount() / identify_skill() ──
+# backend/enemy_icon_identifier.py — nouvelles fonctions
+
+# Pets (rangée basse, 3 droits) — levels lus par OCR sous chaque icône
+pets = [
+    IdentifiedPet(id=<id>, rarity="Ultimate",  level=15),   # icône 1 (étoile)
+    IdentifiedPet(id=<id>, rarity=<rarity>,    level=6),    # icône 2
+    IdentifiedPet(id=<id>, rarity=<rarity>,    level=7),    # icône 3
+]
+
+# Mount (cellule cyan, rangée 2)
+mount = IdentifiedMount(id=<id>, rarity="Rare", level=58)
+# → correspond à "Crab" (confirmé par image 3)
+
+# Skills (rangée basse, 3 gauche)
+skills = [
+    IdentifiedSkill(id="Stampede", rarity="Ultimate", level=15),  # icône 1
+    IdentifiedSkill(id=<name>,     rarity=<rarity>,   level=8),   # icône 2
+    IdentifiedSkill(id=<name>,     rarity=<rarity>,   level=8),   # icône 3
+]
+# Note : les noms exacts des icônes 2 et 3 dépendent du template-matching
+
+
+══════════════════════════════════════════════════════════
+  IMAGE 2 — equipement_comparaison.png  (comparateur)
+══════════════════════════════════════════════════════════
+
+Source : popup de comparaison d'équipement (deux items affichés)
+
+── parse_equipment(ocr_text) ─────────────────────────────
+# backend/parser.py → parse_equipment()
+# Deux items détectés → retourne {"equipped": {...}, "candidate": {...}}
+
+{
+    "equipped": {
+        "name":          "Energy Helmet",
+        "rarity":        "quantum",          # "[Quantum]" → lowercase
+        "hp_flat":       1_750_000.0,        # "1.75m Health"
+        "damage_flat":           0.0,        # pas de flat damage = pas une arme
+        "attack_type":          None,        # pas une arme
+        "crit_chance":          11.5,        # "+11.5% Critical Chance"
+        "attack_speed":         20.7,        # "+20.7% Attack Speed"
+        "crit_damage":           0.0,
+        "health_regen":          0.0,
+        "lifesteal":             0.0,
+        "double_chance":         0.0,
+        "skill_damage":          0.0,
+        "skill_cooldown":        0.0,
+        "block_chance":          0.0,
+        "health_pct":            0.0,
+        "damage_pct":            0.0,
+        "melee_pct":             0.0,
+        "ranged_pct":            0.0,
+    },
+    "candidate": {
+        "name":          "Hair Tied",
+        "rarity":        "quantum",
+        "hp_flat":       1_750_000.0,        # "1.75m Health"
+        "damage_flat":           0.0,
+        "attack_type":          None,
+        "crit_chance":           6.81,       # "+6.81% Critical Chance"
+        "skill_damage":         27.9,        # "+27.9% Skill Damage"
+        "attack_speed":          0.0,
+        "crit_damage":           0.0,
+        "health_regen":          0.0,
+        "lifesteal":             0.0,
+        "double_chance":         0.0,
+        "skill_cooldown":        0.0,
+        "block_chance":          0.0,
+        "health_pct":            0.0,
+        "damage_pct":            0.0,
+        "melee_pct":             0.0,
+        "ranged_pct":            0.0,
+    }
+}
+
+# Note : le niveau (Lv.96) est lu par OCR sur l'icône, pas par parse_equipment().
+#        Il est fourni par identify_equipment_panel() qui OCR la bande sous l'icône.
+
+
+══════════════════════════════════════════════════════════
+  IMAGE 3 — mount.png  (détail mount équipé)
+══════════════════════════════════════════════════════════
+
+Source : popup du mount "Crab" dans le menu mount du joueur
+
+── parse_companion_meta(ocr_text) ────────────────────────
+# backend/parser.py → parse_companion_meta()
+
+{
+    "name":   "Crab",       # "[Rare] Crab" → extrait par _RE_NAME_RARITY
+    "rarity": "rare",       # lowercase
+    "level":  58,           # "Lv.58" ou "Lv. 58"
+    "stats": {
+        # parse_companion() appliqué au texte
+        "hp_flat":        117_000.0,   # "117k Health"  (pas "Health Regen")
+        "damage_flat":     14_600.0,   # "14.6k Damage"
+        "crit_chance":        10.6,    # "+10.6% Critical Chance"
+        "crit_damage":         0.0,
+        "health_regen":        0.0,
+        "lifesteal":           0.0,
+        "double_chance":       0.0,
+        "attack_speed":        0.0,
+        "skill_damage":        0.0,
+        "skill_cooldown":      0.0,
+        "block_chance":        0.0,
+        "health_pct":          0.0,
+        "damage_pct":          0.0,
+        "melee_pct":           0.0,
+        "ranged_pct":          0.0,
+    }
+}
+
+── Lookup library (pour le calculateur) ──────────────────
+# MountNameMapping["name_to_id"]["Crab"]
+→ {"rarity": "Rare", "id": 2}
+
+# MountUpgradeLibrary["Rare"].LevelInfo[57]  (level-1 = index 57)
+→ MountStats.Stats[] → valeurs flat DMG/HP à Lv.58
+# Ces valeurs doivent correspondre approximativement à 14.6k / 117k
+# (les chiffres affichés dans le popup sont les stats calculées après scaling)
+
+# ⚠️ StatNature="Multiplier" dans la lib → traiter comme flat (patch jeu)
+
+
+══════════════════════════════════════════════════════════
+  IMAGE 4 — pet.png  (détail pet)
+══════════════════════════════════════════════════════════
+
+Source : popup du pet "Cerberus" dans le menu pet du joueur
+
+── parse_companion_meta(ocr_text) ────────────────────────
+# backend/parser.py → parse_companion_meta()
+
+{
+    "name":   "Cerberus",   # "[Legendary] Cerberus"
+    "rarity": "legendary",
+    "level":  1,            # "Lv.1" (Lv. sous l'icône)
+    "stats": {
+        "hp_flat":      1_360_000.0,   # "1.36m Health"
+        "damage_flat":    171_000.0,   # "171k Damage"
+        "melee_pct":         29.6,     # "+29.6% Melee Damage"
+        "crit_damage":       62.6,     # "+62.6% Critical Damage"
+        "crit_chance":        0.0,
+        "health_regen":       0.0,
+        "lifesteal":          0.0,
+        "double_chance":      0.0,
+        "attack_speed":       0.0,
+        "skill_damage":       0.0,
+        "skill_cooldown":     0.0,
+        "block_chance":       0.0,
+        "health_pct":         0.0,
+        "damage_pct":         0.0,
+        "ranged_pct":         0.0,
+    }
+}
+
+── Lookup library + vérification calcul ──────────────────
+# PetNameMapping["name_to_id"]["Cerberus"]
+→ {"rarity": "Legendary", "id": 1}
+
+# PetLibrary["{'Rarity': 'Legendary', 'Id': 1}"]
+→ {"Type": "Balanced"}
+
+# PetUpgradeLibrary["Legendary"].LevelInfo[0]  (level 1 → index 0)
+→ PetStats.Stats[]: DMG=12_500.0, HP=100_000.0  (valeurs base Lv.1)
+
+# PetBalancingLibrary["Legendary_Balanced"]
+→ {"DamageMultiplier": 12.0, "HealthMultiplier": 12.0}
+
+# Stats calculées :
+#   DMG = 12_500 × 12.0 = 150_000   ← wiki dit 150k ✓
+#   HP  = 100_000 × 12.0 = 1_200_000 ← wiki dit 1.2m ✓
+#
+# ⚠️ Le popup affiche 171k DMG / 1.36m HP
+#    Ces valeurs incluent les substats secondaires (Melee Damage, etc.)
+#    La base pure (stats LevelInfo) donne 150k / 1.2m.
+#    La différence est normale : les substats (+29.6% Melee, +62.6% Crit Dmg)
+#    sont des substats de l'ITEM pet, pas du calcul principal.
+
+
+══════════════════════════════════════════════════════════
+  IMAGE 5 — skill.png  (détail skill)
+══════════════════════════════════════════════════════════
+
+Source : popup du skill "Stampede" dans le menu skill du joueur
+
+── parse_skill_meta(ocr_text) ────────────────────────────
+# backend/parser.py → parse_skill_meta()
+
+{
+    "name":           "Stampede",     # "[Ultimate] Stampede"
+    "rarity":         "ultimate",
+    "level":          8,              # "Lv.8"
+    "total_damage":   2_710_000.0,    # "dealing 2.71m Damage" (hors section Passive)
+    "passive_damage":    43_400.0,    # "+43.4k Base Damage" (dans section Passive)
+    "passive_hp":       347_000.0,    # "+347k Base Health"   (dans section Passive)
+}
+
+── Lookup library ────────────────────────────────────────
+# SkillLibrary["Stampede"]
+→ {
+    "Type": "Stampede",
+    "Rarity": "Ultimate",
+    "Cooldown": 20.0,
+    "DamagePerLevel": [2_160_000, 2_181_600, ...],  # index 7 = Lv.8
+    "HealthPerLevel": []
+  }
+
+# SkillPassiveLibrary["Ultimate"].LevelStats[7]  (level 8 → index 7)
+→ Stats[]: DMG passive ≈ 5_308 + (7 × step), HP passive proportionnel
+#
+# Note : les valeurs passive affichées dans le popup (43.4k / 347k)
+# sont des valeurs in-game agrégées qui incluent potentiellement
+# des bonus externes — SkillPassiveLibrary donne la base pure du skill.
+# Le ratio 43.4k / 5.308 ≈ 8.2 suggère que ces passives sont amplifiées
+# par les substats du joueur (+129% Attack Speed, etc.) avant affichage.
+
+
+══════════════════════════════════════════════════════════
+  IMAGE 6 — adversaire.png  (panneau adversaire "tommybo")
+══════════════════════════════════════════════════════════
+
+Source : capture du panneau adversaire en combat
+
+── parse_displayed_totals(ocr_text) ──────────────────────
+# backend/enemy_ocr_parser.py → parse_displayed_totals()
+
+damage =  4_240_000.0   # "4.24m Total Damage"
+health = 32_700_000.0   # "32.7m Total Health"
+level  = 23             # "Lv. 23 Forge"
+
+── parse_substats(ocr_text) ──────────────────────────────
+# backend/enemy_ocr_parser.py → parse_substats()
+# Retourne une liste d'OcrSubstat (valeurs en POINTS de %)
+
+[
+    OcrSubstat(stat_id="CriticalChance",      value=52.7),   # "+52.7% Critical Chance"
+    OcrSubstat(stat_id="CriticalDamage",      value=288.0),  # "+288% Critical Damage"
+    OcrSubstat(stat_id="BlockChance",         value=3.02),   # "+3.02% Block Chance"
+    OcrSubstat(stat_id="LifeSteal",           value=66.6),   # "+66.6% Lifesteal"
+    OcrSubstat(stat_id="DoubleDamageChance",  value=89.4),   # "+89.4% Double Chance"
+    OcrSubstat(stat_id="RangedDamageMulti",   value=26.4),   # "+26.4% Ranged Damage"
+    OcrSubstat(stat_id="AttackSpeed",         value=99.1),   # "+99.1% Attack Speed" (partiellement visible)
+]
+
+── parse_enemy_text(ocr_text) ────────────────────────────
+# backend/enemy_ocr_parser.py → parse_enemy_text()
+# Wrapper qui combine les deux fonctions ci-dessus
+
+EnemyIdentifiedProfile(
+    forge_level=23,
+    total_damage_displayed=4_240_000.0,
+    total_health_displayed=32_700_000.0,
+    substats=[
+        OcrSubstat(stat_id="CriticalChance",     value=52.7),
+        OcrSubstat(stat_id="CriticalDamage",     value=288.0),
+        OcrSubstat(stat_id="BlockChance",        value=3.02),
+        OcrSubstat(stat_id="LifeSteal",          value=66.6),
+        OcrSubstat(stat_id="DoubleDamageChance", value=89.4),
+        OcrSubstat(stat_id="RangedDamageMulti",  value=26.4),
+        OcrSubstat(stat_id="AttackSpeed",        value=99.1),
+    ],
+    items=[],    # rempli par identify_equipment_panel() après OCR
+    pets=[],     # rempli par identify_pet() après OCR
+    mount=None,  # rempli par identify_mount() après OCR
+    skills=[],   # rempli par identify_skill() après OCR
+)
+
+── identify_equipment_panel() — slots visibles ───────────
+# backend/equipment_pipeline.py → identify_equipment_panel()
+
+[
+    IdentifiedItem(slot="Helmet",   age=<age>, idx=<idx>, rarity=<rarity>, level=111),
+    IdentifiedItem(slot="Body",     age=<age>, idx=<idx>, rarity=<rarity>, level=43),
+    IdentifiedItem(slot="Gloves",   age=<age>, idx=<idx>, rarity=<rarity>, level=55),
+    IdentifiedItem(slot="Necklace", age=<age>, idx=<idx>, rarity=<rarity>, level=48),
+    IdentifiedItem(slot="Ring",     age=<age>, idx=<idx>, rarity=<rarity>, level=53),
+    IdentifiedItem(slot="Weapon",   age=<age>, idx=<idx>, rarity=<rarity>, level=35),
+    IdentifiedItem(slot="Shoe",     age=<age>, idx=<idx>, rarity=<rarity>, level=107),
+    IdentifiedItem(slot="Belt",     age=<age>, idx=<idx>, rarity=<rarity>, level=89),
+]
+
+── identify_pet() / identify_mount() / identify_skill() ──
+
+# Mount (cellule cyan, Lv.41)
+mount = IdentifiedMount(id=<id>, rarity=<rarity>, level=41)
+
+# Skills (3 icônes gauche de la rangée basse)
+skills = [
+    IdentifiedSkill(id=<name>, rarity=<rarity>, level=6),
+    IdentifiedSkill(id=<name>, rarity=<rarity>, level=3),
+    IdentifiedSkill(id=<name>, rarity=<rarity>, level=5),
+]
+
+# Pets (3 icônes droite de la rangée basse)
+pets = [
+    IdentifiedPet(id=<id>, rarity=<rarity>, level=23),
+    IdentifiedPet(id=<id>, rarity=<rarity>, level=1),
+    IdentifiedPet(id=<id>, rarity=<rarity>, level=1),
+]
+
+
+══════════════════════════════════════════════════════════
+  NOTES GÉNÉRALES
+══════════════════════════════════════════════════════════
+
+Les champs marqués <idx>, <id>, <age>, <rarity> dépendent du
+résultat du template-matching contre icons_checker/ et ne peuvent
+pas être déterminés sans accès au dossier. Les autres valeurs
+(levels, substats, totaux) sont lues directement par OCR et
+doivent correspondre exactement aux chiffres affichés dans le jeu.
+
+Tolérance OCR admise sur les valeurs numériques : ±1% sur les
+grands nombres (ex: 28.3m → peut lire 28.2m ou 28.4m selon la
+qualité de la capture).
+
+Le champ "level" dans les IdentifiedItem/Pet/Mount/Skill est lu
+par OCR sur la bande sous l'icône (fonction extract_level() dans
+equipment_pipeline.py). Si l'OCR rate, la valeur est 1 par défaut
+(jamais 0 dans le résultat final).
