@@ -28,7 +28,7 @@ from ui.theme import (
     FONT_SUB,
     fmt_number,
 )
-from ui.widgets import attach_scan_button, build_header, confirm
+from ui.widgets import attach_scan_button, build_header, companion_slot_card, confirm
 
 
 # Stats displayed on equipment — canonical in-game order.
@@ -78,6 +78,17 @@ _SLOT_LABEL_TO_KEY = {
     "Belt":     "EQUIP_BELT",
 }
 
+_SLOT_EMOJI = {
+    "EQUIP_HELMET":   "🪖",
+    "EQUIP_BODY":     "🦺",
+    "EQUIP_GLOVES":   "🧤",
+    "EQUIP_NECKLACE": "📿",
+    "EQUIP_RING":     "💍",
+    "EQUIP_WEAPON":   "⚔",
+    "EQUIP_SHOE":     "👢",
+    "EQUIP_BELT":     "🎗",
+}
+
 
 class EquipmentView(ctk.CTkFrame):
 
@@ -96,8 +107,16 @@ class EquipmentView(ctk.CTkFrame):
     def _build(self) -> None:
         build_header(self, "Equipment Comparator")
 
-        body = ctk.CTkFrame(self, fg_color=C["bg"], corner_radius=0)
-        body.grid(row=1, column=0, sticky="nsew", padx=16, pady=12)
+        scroll = ctk.CTkScrollableFrame(self, fg_color=C["bg"],
+                                         corner_radius=0)
+        scroll.grid(row=1, column=0, sticky="nsew")
+        scroll.grid_columnconfigure(0, weight=1)
+
+        # ── Current equipment (8 slots) ────────────────────
+        self._build_equipment_cards(scroll)
+
+        body = ctk.CTkFrame(scroll, fg_color=C["bg"], corner_radius=0)
+        body.grid(row=1, column=0, sticky="nsew", padx=0, pady=(0, 12))
         body.grid_columnconfigure(0, weight=2)   # text column
         body.grid_columnconfigure(1, weight=3)   # equipment column
         body.grid_rowconfigure(0, weight=1)
@@ -217,6 +236,61 @@ class EquipmentView(ctk.CTkFrame):
         ctk.CTkLabel(self.bottom,
                      text="Simulation results will appear here.",
                      font=FONT_SMALL, text_color=C["muted"]).pack(pady=18)
+
+    # ── Current equipment cards ──────────────────────────────
+
+    def _build_equipment_cards(self, scroll) -> None:
+        equip_outer = ctk.CTkFrame(scroll, fg_color=C["card"], corner_radius=12)
+        equip_outer.grid(row=0, column=0, padx=16, pady=(16, 8), sticky="ew")
+        equip_outer.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(equip_outer, text="🛡 Current Equipment",
+                     font=FONT_SUB, text_color=C["text"]).grid(
+            row=0, column=0, padx=20, pady=(16, 8), sticky="w")
+
+        self._equip_grid = ctk.CTkFrame(equip_outer, fg_color="transparent")
+        self._equip_grid.grid(row=1, column=0, padx=16, pady=(0, 12),
+                              sticky="ew")
+        for c in range(4):
+            self._equip_grid.grid_columnconfigure(c, weight=1)
+
+        self._refresh_equipment_cards()
+
+    def _refresh_equipment_cards(self) -> None:
+        for child in self._equip_grid.winfo_children():
+            child.destroy()
+
+        equipment = self.controller.get_equipment()
+        for i, slot_key in enumerate(EQUIPMENT_SLOTS):
+            slot_name = EQUIPMENT_SLOT_NAMES[i]
+            data = equipment.get(slot_key, {}) or {}
+            name = data.get("__name__")
+            rar  = data.get("__rarity__")
+
+            stats = {}
+            if data.get("__level__") is not None:
+                stats["__level__"] = data.get("__level__")
+            hp_flat = data.get("hp_flat")
+            dmg_flat = data.get("damage_flat")
+            if hp_flat:
+                stats["hp_flat"] = float(hp_flat)
+            if dmg_flat:
+                stats["damage_flat"] = float(dmg_flat)
+            atype = data.get("attack_type")
+            if atype:
+                stats["attack_type"] = atype
+
+            card = companion_slot_card(
+                self._equip_grid,
+                slot_label=f"{_SLOT_EMOJI.get(slot_key, '🛡')}  {slot_name}",
+                name=name,
+                rarity=rar,
+                stats=stats,
+                fallback_emoji=_SLOT_EMOJI.get(slot_key, "🛡"),
+                empty_text="(unscanned)",
+            )
+            row, col = divmod(i, 4)
+            card.grid(row=row, column=col, padx=6, pady=6, sticky="nsew")
 
     # ── OCR callback ──────────────────────────────────────────
 
@@ -473,6 +547,7 @@ class EquipmentView(ctk.CTkFrame):
     def _apply(self) -> None:
         if self._new_profile:
             self.controller.apply_equipment(self._new_profile)
+            self._refresh_equipment_cards()
             self.app.refresh_current()
         self._clear()
 
