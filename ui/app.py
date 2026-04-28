@@ -12,7 +12,6 @@ import customtkinter as ctk
 
 from game_controller import GameController
 from ui.theme import C, FONT_H1, FONT_NAV, FONT_SMALL
-from ui.views.build_view   import BuildView
 from ui.views.dashboard    import DashboardView
 from ui.views.equipment  import EquipmentView
 from ui.views.mount_view   import MountView
@@ -30,7 +29,6 @@ log = logging.getLogger(__name__)
 _NAV_ITEMS = [
     ("dashboard",   "  📊  Dashboard",   DashboardView),
     ("simulator",   "  ⚔   Simulator",   SimulatorView),
-    ("build",       "  🛡   Build",      BuildView),
     ("equipment",   "  ⚖   Equipment",  EquipmentView),
     ("skills",      "  ✨  Skills",      SkillsView),
     ("pets",        "  🐾  Pets",        PetsView),

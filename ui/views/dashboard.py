@@ -9,6 +9,7 @@ from typing import Dict
 
 import customtkinter as ctk
 
+from backend.constants import EQUIPMENT_SLOTS, EQUIPMENT_SLOT_NAMES
 from ui.theme import (
     C,
     FONT_BIG,
@@ -35,6 +36,17 @@ from ui.widgets import (
 )
 
 _PET_SLOTS = ("PET1", "PET2", "PET3")
+
+_SLOT_EMOJI = {
+    "EQUIP_HELMET":   "🪖",
+    "EQUIP_BODY":     "🦺",
+    "EQUIP_GLOVES":   "🧤",
+    "EQUIP_NECKLACE": "📿",
+    "EQUIP_RING":     "💍",
+    "EQUIP_WEAPON":   "⚔",
+    "EQUIP_SHOE":     "👢",
+    "EQUIP_BELT":     "🎗",
+}
 
 # Profile-import dialog geometry — fixed (no session persistence).
 # Tuned to sit flush against the left edge of the main window.
@@ -106,9 +118,12 @@ class DashboardView(ctk.CTkFrame):
                      font=FONT_SUB, text_color=C["muted"]).pack(
             padx=20, pady=10)
 
+        # ── Equipment (8 slots) ─────────────────────────────
+        self._build_equipment_section(scroll)
+
         # ── Secondary stats ────────────────────────────────
         stats_frame = ctk.CTkFrame(scroll, fg_color=C["card"], corner_radius=12)
-        stats_frame.grid(row=2, column=0, columnspan=2, padx=16, pady=(0, 8),
+        stats_frame.grid(row=3, column=0, columnspan=2, padx=16, pady=(0, 8),
                           sticky="ew")
         stats_frame.grid_columnconfigure(0, weight=1)
 
@@ -160,7 +175,7 @@ class DashboardView(ctk.CTkFrame):
         # ── Active skills ───────────────────────────────────
         skills   = self.controller.get_active_skills()
         sk_frame = ctk.CTkFrame(scroll, fg_color=C["card"], corner_radius=12)
-        sk_frame.grid(row=3, column=0, columnspan=2, padx=16, pady=(0, 16),
+        sk_frame.grid(row=4, column=0, columnspan=2, padx=16, pady=(0, 16),
                        sticky="ew")
         sk_frame.grid_columnconfigure((0, 1, 2), weight=1)
 
@@ -185,7 +200,7 @@ class DashboardView(ctk.CTkFrame):
 
         # ── Pets (3 slots) ──────────────────────────────────
         pets_outer = ctk.CTkFrame(scroll, fg_color=C["card"], corner_radius=12)
-        pets_outer.grid(row=4, column=0, columnspan=2, padx=16, pady=(0, 16),
+        pets_outer.grid(row=5, column=0, columnspan=2, padx=16, pady=(0, 16),
                          sticky="ew")
         pets_outer.grid_columnconfigure(0, weight=1)
         ctk.CTkLabel(pets_outer, text="Pets",
@@ -216,7 +231,7 @@ class DashboardView(ctk.CTkFrame):
 
         # ── Mount (single slot) ─────────────────────────────
         mount_outer = ctk.CTkFrame(scroll, fg_color=C["card"], corner_radius=12)
-        mount_outer.grid(row=5, column=0, columnspan=2, padx=16, pady=(0, 16),
+        mount_outer.grid(row=6, column=0, columnspan=2, padx=16, pady=(0, 16),
                           sticky="ew")
         mount_outer.grid_columnconfigure(0, weight=1)
         ctk.CTkLabel(mount_outer, text="Mount",
@@ -338,6 +353,125 @@ class DashboardView(ctk.CTkFrame):
             if atk: yield ("⚔  Buff ATK",     fmt_number(atk))
             if hp:  yield ("❤  Buff HP",      fmt_number(hp))
             if cd:  yield ("⏱  Cooldown",     f"{cd:g}s")
+
+    # ── Equipment section (ported from BuildView) ────────
+
+    def _build_equipment_section(self, scroll) -> None:
+        equip_outer = ctk.CTkFrame(scroll, fg_color=C["card"], corner_radius=12)
+        equip_outer.grid(row=2, column=0, columnspan=2, padx=16, pady=(0, 8),
+                         sticky="ew")
+        equip_outer.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(equip_outer, text="🛡 Equipment",
+                     font=FONT_SUB, text_color=C["text"]).grid(
+            row=0, column=0, padx=20, pady=(16, 8), sticky="w")
+
+        bar = ctk.CTkFrame(equip_outer, fg_color="transparent")
+        bar.grid(row=1, column=0, padx=16, pady=(0, 6), sticky="ew")
+        bar.grid_columnconfigure(2, weight=1)
+
+        ctk.CTkButton(
+            bar, text="📷  Scan Build",
+            font=FONT_SMALL, width=160,
+            command=self._on_equipment_scan_clicked,
+        ).grid(row=0, column=0, padx=(0, 8))
+
+        ctk.CTkButton(
+            bar, text="🔄  Reload",
+            font=FONT_SMALL, width=120,
+            fg_color="transparent",
+            border_color=C["card"], border_width=1,
+            command=self._refresh_equipment_slots,
+        ).grid(row=0, column=1, padx=(0, 8))
+
+        self._equip_status_lbl = ctk.CTkLabel(
+            bar, text="", font=FONT_SMALL,
+            text_color=C["muted"], anchor="w",
+        )
+        self._equip_status_lbl.grid(row=0, column=2, sticky="ew")
+
+        self._equip_grid = ctk.CTkFrame(equip_outer, fg_color="transparent")
+        self._equip_grid.grid(row=2, column=0, padx=16, pady=(0, 12),
+                              sticky="ew")
+        for c in range(4):
+            self._equip_grid.grid_columnconfigure(c, weight=1)
+
+        self._refresh_equipment_slots()
+
+    def _refresh_equipment_slots(self) -> None:
+        for child in self._equip_grid.winfo_children():
+            child.destroy()
+
+        equipment = self.controller.get_equipment()
+        for i, slot_key in enumerate(EQUIPMENT_SLOTS):
+            slot_name = EQUIPMENT_SLOT_NAMES[i]
+            data = equipment.get(slot_key, {}) or {}
+            name = data.get("__name__")
+            rar  = data.get("__rarity__")
+
+            stats = {}
+            if data.get("__level__") is not None:
+                stats["__level__"] = data.get("__level__")
+            hp_flat = data.get("hp_flat")
+            dmg_flat = data.get("damage_flat")
+            if hp_flat:
+                stats["hp_flat"] = float(hp_flat)
+            if dmg_flat:
+                stats["damage_flat"] = float(dmg_flat)
+            atype = data.get("attack_type")
+            if atype:
+                stats["attack_type"] = atype
+
+            card = companion_slot_card(
+                self._equip_grid,
+                slot_label=f"{_SLOT_EMOJI.get(slot_key, '🛡')}  {slot_name}",
+                name=name,
+                rarity=rar,
+                stats=stats,
+                fallback_emoji=_SLOT_EMOJI.get(slot_key, "🛡"),
+                empty_text="(unscanned)",
+            )
+            row, col = divmod(i, 4)
+            card.grid(row=row, column=col, padx=6, pady=6, sticky="nsew")
+
+        n_filled = sum(1 for v in equipment.values()
+                       if isinstance(v, dict) and v.get("__name__"))
+        self._equip_status_lbl.configure(
+            text=f"{n_filled}/8 slots populated",
+            text_color=C["muted"],
+        )
+
+    def _on_equipment_scan_clicked(self) -> None:
+        self._equip_status_lbl.configure(text="📷  Scanning ...",
+                                         text_color=C["accent"])
+
+        def _on_done(text: str, status: str) -> None:
+            if status == "ocr_unavailable":
+                self._equip_status_lbl.configure(
+                    text="⚠  OCR unavailable -- install rapidocr_onnxruntime",
+                    text_color=C["lose"])
+                return
+            if status == "zone_not_configured":
+                self._equip_status_lbl.configure(
+                    text="⚠  Zone player_equipment not configured -- "
+                         "set the bbox in the Zones tab first",
+                    text_color=C["lose"])
+                return
+            if status == "ocr_error":
+                self._equip_status_lbl.configure(
+                    text="⚠  OCR failed", text_color=C["lose"])
+                return
+            self._refresh_equipment_slots()
+            self._equip_status_lbl.configure(
+                text="✅  Scan applied",
+                text_color=C["win"])
+
+        try:
+            self.controller.scan(zone_key="player_equipment", callback=_on_done)
+        except Exception as e:
+            self._equip_status_lbl.configure(
+                text=f"⚠  scan() raised: {e}",
+                text_color=C["lose"])
 
     def _empty_state(self, parent: ctk.CTkBaseClass) -> None:
         ctk.CTkLabel(
