@@ -1,8 +1,20 @@
 """
 ============================================================
   FORGE MASTER UI — Pet Management
-  3 slots (PET1, PET2, PET3). Tests the new pet against
-  each existing one to find the best slot to replace.
+
+  Phase-3 refactor (UI_REFACTOR_PLAN §11):
+  3-tab layout — same flow as Mount / Skills / Equipment > Comparer:
+
+      [Équipés]   [Comparer]   [Librairie]
+
+    * Équipés   : 3 slot cards (PET1 / PET2 / PET3) side-by-side.
+    * Comparer  : paste / scan a candidate, run test_pet()
+                  against ALL 3 slots, render one result per
+                  slot + recommend the best replacement.
+    * Librairie : LibraryList with rarity / type filters,
+                  per-row Compare and Delete.
+
+  All shared widgets come from ui/cards.py.
 ============================================================
 """
 
@@ -13,15 +25,11 @@ import customtkinter as ctk
 from ui.theme import (
     C,
     FONT_BODY,
-    FONT_MONO_S,
     FONT_SMALL,
     FONT_SUB,
     FONT_TINY,
     PET_ICONS,
-    RARITY_ORDER,
-    fmt_number,
     load_pet_icon,
-    rarity_color,
 )
 from ui.widgets import (
     build_header,
@@ -30,6 +38,7 @@ from ui.widgets import (
     companion_slot_card,
     confirm,
 )
+from ui.cards import LibraryList
 from backend.constants import N_SIMULATIONS
 
 _SLOTS = ("PET1", "PET2", "PET3")
@@ -50,18 +59,31 @@ class PetsView(ctk.CTkFrame):
     def _build(self) -> None:
         build_header(self, "Pet Management")
 
-        self._scroll = ctk.CTkScrollableFrame(self, fg_color=C["bg"],
-                                               corner_radius=0)
-        self._scroll.grid(row=1, column=0, sticky="nsew")
-        self._scroll.grid_columnconfigure(0, weight=1)
+        self._tabs = ctk.CTkTabview(
+            self,
+            fg_color=C["bg"],
+            segmented_button_fg_color=C["card"],
+            segmented_button_selected_color=C["accent"],
+            segmented_button_selected_hover_color=C["accent"],
+        )
+        self._tabs.grid(row=1, column=0, sticky="nsew", padx=8, pady=(8, 8))
 
-        self._build_pet_cards()
-        self._build_import()
-        self._build_result_zone()
-        self._build_library()
+        self._build_equipped_tab(self._tabs.add("Équipés"))
+        self._build_compare_tab(self._tabs.add("Comparer"))
+        self._build_library_tab(self._tabs.add("Librairie"))
 
-    def _build_pet_cards(self) -> None:
-        pets_frame = ctk.CTkFrame(self._scroll, fg_color="transparent")
+    # ── Tab 1 — Équipés ──────────────────────────────────────
+
+    def _build_equipped_tab(self, parent: ctk.CTkFrame) -> None:
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure(0, weight=1)
+
+        scroll = ctk.CTkScrollableFrame(parent, fg_color=C["bg"],
+                                         corner_radius=0)
+        scroll.grid(row=0, column=0, sticky="nsew")
+        scroll.grid_columnconfigure(0, weight=1)
+
+        pets_frame = ctk.CTkFrame(scroll, fg_color="transparent")
         pets_frame.grid(row=0, column=0, padx=16, pady=16, sticky="ew")
         pets_frame.grid_columnconfigure((0, 1, 2), weight=1)
 
@@ -84,107 +106,155 @@ class PetsView(ctk.CTkFrame):
             )
             card.grid(row=0, column=col, padx=6, pady=0, sticky="nsew")
 
-    def _build_import(self) -> None:
-        card, self._textbox, self._lbl_status = build_import_zone(
-            self._scroll,
+        bar = ctk.CTkFrame(scroll, fg_color="transparent")
+        bar.grid(row=1, column=0, padx=16, pady=(0, 16), sticky="ew")
+        bar.grid_columnconfigure((0, 1), weight=1)
+
+        ctk.CTkButton(
+            bar, text="↪  Go to « Comparer »",
+            font=FONT_SMALL, height=34, corner_radius=8,
+            fg_color=C["accent"], hover_color=C["accent_hv"],
+            command=lambda: self._tabs.set("Comparer"),
+        ).grid(row=0, column=0, padx=(0, 4), sticky="ew")
+
+        ctk.CTkButton(
+            bar, text="📚  Open library",
+            font=FONT_SMALL, height=34, corner_radius=8,
+            fg_color="transparent", border_color=C["card"], border_width=1,
+            hover_color=C["border"], text_color=C["text"],
+            command=lambda: self._tabs.set("Librairie"),
+        ).grid(row=0, column=1, padx=(4, 0), sticky="ew")
+
+    # ── Tab 2 — Comparer ─────────────────────────────────────
+
+    def _build_compare_tab(self, parent: ctk.CTkFrame) -> None:
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure(1, weight=1)
+
+        import_card, self._textbox, self._lbl_status = build_import_zone(
+            parent,
             title="Test a new pet",
-            hint="Paste the pet stats from the game.",
-            primary_label="🔬  Simulate replacement",
+            hint="Paste the pet stats from the game, or scan with the camera button.",
+            primary_label="🔬  Compare against 3 slots",
             primary_cmd=self._test_pet,
-            secondary_label="✏  Directly edit a slot",
+            secondary_label="✏  Edit a slot directly",
             secondary_cmd=self._edit_direct,
             scan_key="pet",
             scan_fn=self.controller.scan,
             captures_fn=self.controller.get_zone_captures,
             on_scan_ready=self._test_pet,
         )
-        card.grid(row=1, column=0, padx=16, pady=(0, 8), sticky="ew")
+        import_card.grid(row=0, column=0, padx=16, pady=(12, 8), sticky="ew")
 
-    def _build_result_zone(self) -> None:
-        self._result_outer = ctk.CTkFrame(self._scroll, fg_color="transparent")
-        self._result_outer.grid(row=2, column=0, padx=16, pady=(0, 16),
-                                sticky="ew")
+        self._result_outer = ctk.CTkScrollableFrame(
+            parent, fg_color=C["bg"], corner_radius=0)
+        self._result_outer.grid(row=1, column=0, padx=16, pady=(0, 16),
+                                sticky="nsew")
         self._result_outer.grid_columnconfigure(0, weight=1)
 
-    def _build_library(self) -> None:
-        """Library section: list of known pets (Lv.1 stats)."""
-        card = ctk.CTkFrame(self._scroll, fg_color=C["card"], corner_radius=12)
-        card.grid(row=3, column=0, padx=16, pady=(0, 16), sticky="ew")
-        card.grid_columnconfigure(0, weight=1)
+        self._compare_placeholder()
 
-        header = ctk.CTkFrame(card, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", padx=20, pady=(16, 4))
-        header.grid_columnconfigure(0, weight=1)
-        ctk.CTkLabel(header, text="📚  Pet Library",
-                     font=FONT_SUB, text_color=C["text"]).grid(
-            row=0, column=0, sticky="w")
-        ctk.CTkLabel(header,
-                     text="Flat stats (HP/Damage) at Lv.1 are used for all comparisons, regardless of the imported pet's level.",
-                     font=FONT_SMALL, text_color=C["muted"],
-                     wraplength=700, justify="left").grid(
-            row=1, column=0, sticky="w", pady=(2, 0))
+    def _compare_placeholder(self) -> None:
+        for w in self._result_outer.winfo_children():
+            w.destroy()
+        ctk.CTkLabel(
+            self._result_outer,
+            text="Paste or scan a candidate above, then hit « Compare ».\n"
+                 "We'll test it against each of your 3 active slots.",
+            font=FONT_SMALL, text_color=C["muted"],
+        ).pack(pady=24)
 
-        library = self.controller.get_pets_library()
+    # ── Tab 3 — Librairie ────────────────────────────────────
 
-        if not library:
-            ctk.CTkLabel(
-                card,
-                text="No pets in library. Paste a Lv.1 pet in the zone above and click « Simulate » — it will be added automatically.",
-                font=FONT_SMALL, text_color=C["muted"],
-                wraplength=700, justify="left").grid(
-                row=1, column=0, padx=20, pady=(0, 16), sticky="w")
+    def _build_library_tab(self, parent: ctk.CTkFrame) -> None:
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure(1, weight=1)
+
+        hint = ctk.CTkFrame(parent, fg_color=C["card"], corner_radius=12)
+        hint.grid(row=0, column=0, padx=16, pady=(12, 6), sticky="ew")
+        ctk.CTkLabel(
+            hint,
+            text="📚  Pet Library",
+            font=FONT_SUB, text_color=C["text"],
+        ).pack(padx=16, pady=(12, 2), anchor="w")
+        ctk.CTkLabel(
+            hint,
+            text=("Flat stats (HP / Damage) at Lv.1 are used for all "
+                  "comparisons, regardless of the imported pet's level."),
+            font=FONT_SMALL, text_color=C["muted"],
+            wraplength=700, justify="left",
+        ).pack(padx=16, pady=(0, 12), anchor="w")
+
+        library = self.controller.get_pets_library() or {}
+        items   = self._library_items(library)
+
+        filters = {}
+        if items:
+            filters["rarity"] = self._distinct(items, "rarity")
+            type_vals = self._distinct(items, "type")
+            if type_vals:
+                filters["type"] = type_vals
+
+        list_frame, _ctrl = LibraryList(
+            parent,
+            items,
+            title="Collected pets",
+            hint=None,
+            filters=filters or None,
+            on_action=self._library_use_as_candidate,
+            on_delete=self._library_delete,
+            icon_loader=lambda name: load_pet_icon(name, size=40),
+            fallback_emoji="🐾",
+            max_height=420,
+        )
+        list_frame.grid(row=1, column=0, padx=16, pady=(0, 16), sticky="nsew")
+
+    @staticmethod
+    def _library_items(library: Dict[str, Dict]) -> list:
+        rows = []
+        for name, entry in library.items():
+            rows.append({
+                "key":         name,
+                "name":        name,
+                "rarity":      str(entry.get("rarity", "common")).lower(),
+                "type":        str(entry.get("type", "")).lower(),
+                "hp_flat":     entry.get("hp_flat", 0),
+                "damage_flat": entry.get("damage_flat", 0),
+            })
+        return rows
+
+    @staticmethod
+    def _distinct(items: list, key: str) -> list:
+        seen = []
+        for it in items:
+            v = it.get(key)
+            if v and v not in seen:
+                seen.append(v)
+        return seen
+
+    def _library_use_as_candidate(self, item: Dict) -> None:
+        """Drop a library row into the Comparer tab as a candidate."""
+        name   = item.get("name", "?")
+        rarity = str(item.get("rarity", "common")).title()
+        hp     = item.get("hp_flat") or 0
+        dmg    = item.get("damage_flat") or 0
+        text = (f"[{rarity}] {name}\n"
+                f"Lv.1\n"
+                f"+{int(dmg)} Damage\n"
+                f"+{int(hp)} Health\n")
+
+        try:
+            self._tabs.set("Comparer")
+        except Exception:
+            pass
+        self._textbox.delete("1.0", "end")
+        self._textbox.insert("1.0", text)
+        self._test_pet()
+
+    def _library_delete(self, item: Dict) -> None:
+        name = item.get("name") or item.get("key")
+        if not name:
             return
-
-        lst = ctk.CTkFrame(card, fg_color="transparent")
-        lst.grid(row=1, column=0, padx=10, pady=(4, 12), sticky="ew")
-        lst.grid_columnconfigure(1, weight=1)
-
-        def _sort_key(n: str):
-            rar = str(library[n].get("rarity", "common")).lower()
-            idx = RARITY_ORDER.index(rar) if rar in RARITY_ORDER else 0
-            return (idx, n.lower())
-
-        for i, name in enumerate(sorted(library.keys(), key=_sort_key)):
-            entry = library[name]
-            bg = C["card_alt"] if i % 2 == 0 else C["card"]
-            row = ctk.CTkFrame(lst, fg_color=bg, corner_radius=6)
-            row.grid(row=i, column=0, columnspan=5, sticky="ew", padx=4, pady=2)
-            row.grid_columnconfigure(2, weight=1)
-
-            # Icon (or emoji fallback)
-            icon_img = load_pet_icon(name, size=40)
-            if icon_img:
-                ctk.CTkLabel(row, image=icon_img, text="",
-                             fg_color="transparent").grid(
-                    row=0, column=0, padx=(8, 2), pady=4)
-            else:
-                ctk.CTkLabel(row, text="🐾", font=("Segoe UI", 24),
-                             width=48).grid(
-                    row=0, column=0, padx=(8, 2), pady=4)
-
-            rar = str(entry.get("rarity", "common")).lower()
-            ctk.CTkLabel(row, text=rar.upper(),
-                         font=FONT_TINY, text_color=rarity_color(rar),
-                         width=80).grid(row=0, column=1, padx=(6, 6), pady=6)
-            ctk.CTkLabel(row, text=name, font=FONT_BODY,
-                         text_color=C["text"], anchor="w").grid(
-                row=0, column=2, padx=6, pady=6, sticky="w")
-
-            stats_txt = (f"⚔ {fmt_number(entry.get('damage_flat', 0))}   "
-                         f"❤ {fmt_number(entry.get('hp_flat', 0))}")
-            ctk.CTkLabel(row, text=stats_txt, font=FONT_MONO_S,
-                         text_color=C["muted"]).grid(
-                row=0, column=3, padx=6, pady=6)
-
-            ctk.CTkButton(
-                row, text="🗑", width=32, height=26,
-                font=FONT_SMALL, corner_radius=6,
-                fg_color="transparent", hover_color=C["lose"],
-                text_color=C["muted"],
-                command=lambda n=name: self._delete_from_library(n),
-            ).grid(row=0, column=4, padx=(4, 10), pady=4)
-
-    def _delete_from_library(self, name: str) -> None:
         if not confirm(
             self.app, "Remove from library",
             f"Remove « {name} » from the pet library?\n"
@@ -195,9 +265,14 @@ class PetsView(ctk.CTkFrame):
         if self.controller.remove_pet_library(name):
             self.app.refresh_current()
 
-    # ── Actions ───────────────────────────────────────────────
+    # ── Compare actions (logic preserved from legacy view) ────
 
     def _test_pet(self) -> None:
+        try:
+            self._tabs.set("Comparer")
+        except Exception:
+            pass
+
         if not self.controller.has_profile():
             self._lbl_status.configure(
                 text="⚠ No player profile. Go to Dashboard first.",
@@ -218,16 +293,14 @@ class PetsView(ctk.CTkFrame):
                 text_color=C["lose"])
             return
 
-        if status == "unknown":
+        if status == "unknown_not_lvl1":
             name = meta.get("name") if meta else "?"
             self._lbl_status.configure(
-                text=f"⚠ « {name} » is not in the library — check the spelling or add it manually to pets_library.txt.",
+                text=f"⚠ « {name} » is not in the library — paste at Lv.1 to auto-add it.",
                 text_color=C["lose"])
             return
 
-        for w in self._result_outer.winfo_children():
-            w.destroy()
-
+        self._compare_placeholder()
         self._lbl_status.configure(text="⏳ Simulation running…",
                                     text_color=C["muted"])
         self.update_idletasks()
@@ -365,10 +438,10 @@ class PetsView(ctk.CTkFrame):
                 text="⚠ Could not read the pet name.",
                 text_color=C["lose"])
             return
-        if status == "unknown":
+        if status == "unknown_not_lvl1":
             name = meta.get("name") if meta else "?"
             self._lbl_status.configure(
-                text=f"⚠ « {name} » is not in the library — check the spelling.",
+                text=f"⚠ « {name} » is not in the library — paste at Lv.1 to auto-add it.",
                 text_color=C["lose"])
             return
 

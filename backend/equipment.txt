@@ -5,12 +5,12 @@
 # ============================================================
 
 [EQUIP_HELMET]
-__name__     = Common Helmet #0
-__rarity__   = Common
-__age__      = 0
-__idx__      = 0
+__name__     = Epic Helmet #2
+__rarity__   = Epic
+__age__      = 4
+__idx__      = 2
 __level__    = 1
-hp_flat      = 40.0
+hp_flat      = 10240.0
 damage_flat  = 0.0
 
 [EQUIP_BODY]
@@ -23,44 +23,45 @@ hp_flat      = 10240.0
 damage_flat  = 0.0
 
 [EQUIP_GLOVES]
-__name__     = Common Gloves #0
-__rarity__   = Common
-__age__      = 0
+__name__     = Rare Gloves #0
+__rarity__   = Rare
+__age__      = 5
 __idx__      = 0
 __level__    = 1
 hp_flat      = 0.0
-damage_flat  = 5.0
+damage_flat  = 5120.0
 
 [EQUIP_NECKLACE]
-__name__     = Common Necklace #0
-__rarity__   = Common
-__age__      = 4
-__idx__      = 0
+__name__     = Rare Necklace #1
+__rarity__   = Rare
+__age__      = 6
+__idx__      = 1
 __level__    = 1
 hp_flat      = 0.0
-damage_flat  = 1280.0
+damage_flat  = 20480.0
 
 [EQUIP_RING]
-__name__     = Common Ring #0
+__name__     = Common Ring #1
 __rarity__   = Common
-__age__      = 4
-__idx__      = 0
+__age__      = 7
+__idx__      = 1
 __level__    = 1
 hp_flat      = 0.0
-damage_flat  = 1280.0
+damage_flat  = 81920.0
 
 [EQUIP_WEAPON]
-__name__     = Common Weapon #0
-__rarity__   = Common
+__name__     = Epic Weapon #2
+__rarity__   = Epic
 __age__      = 4
-__idx__      = 0
+__idx__      = 2
 __level__    = 1
 hp_flat      = 0.0
 damage_flat  = 1280.0
+attack_type  = melee
 
 [EQUIP_SHOE]
-__name__     = Common Shoe #0
-__rarity__   = Common
+__name__     = Rare Shoe #0
+__rarity__   = Rare
 __age__      = 4
 __idx__      = 0
 __level__    = 1
@@ -68,11 +69,11 @@ hp_flat      = 10240.0
 damage_flat  = 0.0
 
 [EQUIP_BELT]
-__name__     = Common Belt #0
-__rarity__   = Common
-__age__      = 4
-__idx__      = 0
+__name__     = Epic Belt #1
+__rarity__   = Epic
+__age__      = 5
+__idx__      = 1
 __level__    = 1
-hp_flat      = 10240.0
+hp_flat      = 40960.0
 damage_flat  = 0.0
 

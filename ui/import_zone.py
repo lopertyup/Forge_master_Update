@@ -125,9 +125,8 @@ def attach_scan_button(parent_btn_frame: ctk.CTkBaseClass,
     populated (when provided) and `on_scan_ready` is called.
 
     `textbox=None` is supported for "headless" scans where the
-    captured text is consumed directly by the controller (e.g.
-    player_weapon, player_equipment) without a UI textbox to fill.
-    `label` overrides the default "📷 Scan" caption.
+    captured text is consumed directly by the controller (no UI
+    textbox to fill). `label` overrides the default "📷 Scan" caption.
     """
     total = 1
     if captures_fn is not None:

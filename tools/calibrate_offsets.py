@@ -40,7 +40,7 @@ from PIL import Image, ImageTk
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from backend.scanner.offsets.opponent import (  # noqa: E402
+from scan.offsets.opponent import (  # noqa: E402
     EQUIPMENT_RATIOS, MOUNT_RATIO, PET_RATIOS, SKILL_RATIOS,
     SLOT_ORDER, BORDER_RATIOS, BG_RATIOS, write_overrides,
 )

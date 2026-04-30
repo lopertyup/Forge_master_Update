@@ -19,11 +19,24 @@ from PIL import Image
 log = logging.getLogger(__name__)
 
 # ── Icon paths (relative to ui/theme.py) ─────────────────────
-_UI_DIR         = os.path.dirname(os.path.abspath(__file__))
-_ROOT_DIR       = os.path.dirname(_UI_DIR)
-ICONS_DIR       = os.path.join(_ROOT_DIR, "skill_icons")
-PET_ICONS_DIR   = os.path.join(_ROOT_DIR, "pet_icons")
-MOUNT_ICONS_DIR = os.path.join(_ROOT_DIR, "mount_icons")
+# All icons live under data/icons/ (cf. data/README-DATA.txt §2.E):
+#     data/icons/skills/<SpriteName>.png
+#     data/icons/pets/<SpriteName>.png
+#     data/icons/mount/<SpriteName>.png
+#     data/icons/equipment/<Age>/<Slot>/<SpriteName>.png
+# The SpriteName used for lookup MUST match the value stored in
+# Auto{Skill,Pet,Mount,Item}Mapping.json. Display names with spaces
+# and capitalised words are preserved verbatim (e.g. "Saber Tooth.png",
+# "Cannon Barrage.png", "Brown Horse.png"). No name normalisation.
+_UI_DIR             = os.path.dirname(os.path.abspath(__file__))
+_ROOT_DIR           = os.path.dirname(_UI_DIR)
+_DATA_ICONS_DIR     = os.path.join(_ROOT_DIR, "data", "icons")
+SKILL_ICONS_DIR     = os.path.join(_DATA_ICONS_DIR, "skills")
+PET_ICONS_DIR       = os.path.join(_DATA_ICONS_DIR, "pets")
+MOUNT_ICONS_DIR     = os.path.join(_DATA_ICONS_DIR, "mount")
+EQUIPMENT_ICONS_DIR = os.path.join(_DATA_ICONS_DIR, "equipment")
+# Backwards-compatible alias used historically by load_icon().
+ICONS_DIR           = SKILL_ICONS_DIR
 
 
 # ── Palette ──────────────────────────────────────────────────
@@ -185,28 +198,99 @@ def _load_icon_from(directory: str, code: str, size: int) -> Optional[ctk.CTkIma
 
 
 def load_icon(code: str, size: int = 48) -> Optional[ctk.CTkImage]:
-    """Load a skill icon from skill_icons/. None if absent."""
-    return _load_icon_from(ICONS_DIR, code, size)
+    """Load a skill icon from data/icons/skills/. None if absent.
+
+    Back-compat shim — prefer load_skill_icon_by_name in new code.
+    """
+    return _load_icon_from(SKILL_ICONS_DIR, code, size)
 
 
 def load_skill_icon_by_name(name: str, size: int = 48) -> Optional[ctk.CTkImage]:
     """
-    Load a skill icon by its NAME from `skill_icons/<Name>.png`
-    (same pattern as load_pet_icon / load_mount_icon). None if absent.
+    Load a skill icon by its display NAME from
+    ``data/icons/skills/<Name>.png``. The name must match the
+    SpriteName field in ``data/AutoSkillMapping.json`` (display name
+    with spaces). Returns None if the file is absent.
     """
     if not name:
         return None
-    return _load_icon_from(ICONS_DIR, name.strip(), size)
+    return _load_icon_from(SKILL_ICONS_DIR, name.strip(), size)
 
 
 def load_pet_icon(name: str, size: int = 48) -> Optional[ctk.CTkImage]:
-    """Load a pet icon from pet_icons/<Name>.png. None if absent."""
-    return _load_icon_from(PET_ICONS_DIR, name, size)
+    """Load a pet icon from ``data/icons/pets/<Name>.png``.
+
+    The name must match the SpriteName field in
+    ``data/AutoPetMapping.json`` (display name with spaces, e.g.
+    ``"Saber Tooth"``). Returns None if absent.
+    """
+    if not name:
+        return None
+    return _load_icon_from(PET_ICONS_DIR, name.strip(), size)
 
 
 def load_mount_icon(name: str, size: int = 48) -> Optional[ctk.CTkImage]:
-    """Load a mount icon from mount_icons/<Name>.png. None if absent."""
-    return _load_icon_from(MOUNT_ICONS_DIR, name, size)
+    """Load a mount icon from ``data/icons/mount/<Name>.png``.
+
+    The name must match the SpriteName field in
+    ``data/AutoMountMapping.json`` (display name with spaces, e.g.
+    ``"Brown Horse"``). Returns None if absent.
+    """
+    if not name:
+        return None
+    return _load_icon_from(MOUNT_ICONS_DIR, name.strip(), size)
+
+
+# Internal age-int → folder name map (mirror of
+# backend.data.libraries.AGE_INT_TO_FOLDER — duplicated here so the UI
+# stays decoupled from the backend, cf. UI_REFACTOR_PLAN P1).
+_AGE_INT_TO_FOLDER = {
+    0: "Primitive",   1: "Medieval",    2: "Early-Modern",
+    3: "Modern",      4: "Space",       5: "Interstellar",
+    6: "Multiverse",  7: "Quantum",     8: "Underworld",
+    9: "Divine",
+}
+
+# Two slot vocabularies are accepted:
+#  - the canonical EQUIPMENT_SLOTS keys used by the backend
+#    (Helmet / Body / Gloves / Necklace / Ring / Weapon / Shoe / Belt),
+#  - the TypeName values used by data/AutoItemMapping.json
+#    (Helmet / Armour / Gloves / Necklace / Ring / Weapon / Shoes / Belt).
+# Both must resolve to the actual folder names under
+# data/icons/equipment/<Age>/.
+_SLOT_TO_FOLDER = {
+    # canonical (backend.constants.EQUIPMENT_SLOTS)
+    "Helmet":   "Headgear",
+    "Body":     "Armor",
+    "Gloves":   "Glove",
+    "Necklace": "Neck",
+    "Ring":     "Ring",
+    "Weapon":   "Weapon",
+    "Shoe":     "Foot",
+    "Belt":     "Belt",
+    # AutoItemMapping TypeName variants
+    "Armour":   "Armor",
+    "Shoes":    "Foot",
+}
+
+
+def load_equipment_icon(age, slot: str, sprite_name: str,
+                         size: int = 48) -> Optional[ctk.CTkImage]:
+    """Load an equipment icon from
+    ``data/icons/equipment/<Age>/<Slot>/<SpriteName>.png``.
+
+    `age` may be an int (0-9) or the folder name directly.
+    `slot` is the canonical equipment slot key (Helmet / Body / ...).
+    `sprite_name` must match the SpriteName field in
+    ``data/AutoItemMapping.json``. Returns None if absent.
+    """
+    if not sprite_name:
+        return None
+    age_folder = _AGE_INT_TO_FOLDER.get(age, str(age)) if isinstance(age, int) \
+        else str(age)
+    slot_folder = _SLOT_TO_FOLDER.get(slot, str(slot))
+    directory = os.path.join(EQUIPMENT_ICONS_DIR, age_folder, slot_folder)
+    return _load_icon_from(directory, sprite_name.strip(), size)
 
 
 # ── Formatting helpers ───────────────────────────────────────

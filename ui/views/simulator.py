@@ -1,38 +1,75 @@
 """
 ============================================================
   FORGE MASTER UI — Combat Simulator
-  N_SIMULATIONS fights with graphical display.
-  Thread-safe callbacks (via controller.set_tk_root → after()).
+
+  Phase-4 refactor (UI_REFACTOR_PLAN §4 / §11).
+
+  Two-panel layout (no tabs):
+
+      ┌── Header — title + [📷 Scan opponent] [📷 Scan weapon] ─┐
+      │                                                        │
+      ├── Left: player mini-fiche  ──── Right: opponent mini-fiche ──┤
+      │                                                        │
+      ├── [▶  Run 1000 fights]   (disabled while incomplete)   │
+      │                                                        │
+      └── ResultDelta (W/L/D bars + verdict)                   │
+
+  All shared widgets come from ui/cards.py (Phase-2 module).
+  No imports from backend/* here — Plan §11 D1 / Plan P1.
+
+  The opponent panel is populated from controller.get_last_enemy_stats() /
+  controller.get_last_enemy_profile() — peek, not consume — so a second
+  click on Run reuses the same scan (Plan §11 D2).
 ============================================================
 """
 
-from typing import Dict
-
 import logging
-import customtkinter as ctk
+from typing import Dict, Optional
 
-from backend.constants import N_SIMULATIONS
-from backend.scanner.text_parser import parse_profile_text
-from backend.calculator.stats import finalize_bases, combat_stats
+import customtkinter as ctk
 
 from ui.theme import (
     C,
     FONT_BIG,
     FONT_BODY,
+    FONT_MONO,
     FONT_SMALL,
     FONT_SUB,
+    FONT_TINY,
     FONT_TITLE,
+    MOUNT_ICON,
+    PET_ICONS,
     fmt_number,
+    load_mount_icon,
+    load_pet_icon,
+    load_skill_icon_by_name,
     rarity_color,
 )
 from ui.widgets import (
     attach_scan_button,
-    big_counter,
     build_header,
-    skill_icon_grid,
 )
+from ui.cards import ResultDelta
 
 log = logging.getLogger(__name__)
+
+# Default total used for the result panel when a sim hasn't run yet.
+# Plan §4 keeps the historical 1000-fight contract.
+_N_SIMULATIONS_DEFAULT = 1000
+
+# Substats shown in the mini-fiche (filtered to non-zero entries).
+_SUBSTAT_ROWS = (
+    ("crit_chance",    "Crit Chance"),
+    ("crit_damage",    "Crit Damage"),
+    ("block_chance",   "Block Chance"),
+    ("lifesteal",      "Lifesteal"),
+    ("double_chance",  "Double Chance"),
+    ("damage_pct",     "Damage %"),
+    ("attack_speed",   "Attack Speed"),
+    ("skill_damage",   "Skill Damage"),
+)
+
+_PET_SLOTS = ("PET1", "PET2", "PET3")
 
 
 class SimulatorView(ctk.CTkFrame):
@@ -43,36 +80,76 @@ class SimulatorView(ctk.CTkFrame):
         self.app        = app
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
-        self._opp_profile = None
-        self._opp_skills  = []
         self._build()
 
+    # ── Build ─────────────────────────────────────────────────
+
     def _build(self) -> None:
-        build_header(self, "Combat Simulator")
+        build_header(self, "⚔  Combat Simulator")
 
         body = ctk.CTkFrame(self, fg_color=C["bg"], corner_radius=0)
         body.grid(row=1, column=0, sticky="nsew", padx=16, pady=16)
         body.grid_columnconfigure((0, 1), weight=1)
         body.grid_rowconfigure(0, weight=1)
         body.grid_rowconfigure(1, weight=0)
+        body.grid_rowconfigure(2, weight=0)
+        body.grid_rowconfigure(3, weight=0)
 
-        player_card = ctk.CTkFrame(body, fg_color=C["card"], corner_radius=12)
-        player_card.grid(row=0, column=0, padx=(0, 8), pady=(0, 8), sticky="nsew")
-        self._build_player_panel(player_card)
+        # Row 0 — left/right mini-fiches.
+        self._left_panel = ctk.CTkFrame(body, fg_color=C["card"], corner_radius=12)
+        self._left_panel.grid(row=0, column=0, padx=(0, 8), pady=(0, 8),
+                                sticky="nsew")
+        self._right_panel = ctk.CTkFrame(body, fg_color=C["card"], corner_radius=12)
+        self._right_panel.grid(row=0, column=1, padx=(8, 0), pady=(0, 8),
+                                 sticky="nsew")
 
-        opp_outer = ctk.CTkFrame(body, fg_color=C["card"], corner_radius=12)
-        opp_outer.grid(row=0, column=1, padx=(8, 0), pady=(0, 8), sticky="nsew")
-        opp_outer.grid_rowconfigure(0, weight=1)
-        opp_outer.grid_rowconfigure(1, weight=0)
-        opp_outer.grid_columnconfigure(0, weight=1)
-        self._build_opponent_panel(opp_outer)
+        # Row 1 — header status line shared by Scan / Run actions.
+        self._lbl_status = ctk.CTkLabel(
+            body, text="", font=FONT_SMALL, text_color=C["muted"],
+        )
+        self._lbl_status.grid(row=1, column=0, columnspan=2,
+                                padx=4, pady=(0, 6), sticky="w")
 
-        self.result_frame = ctk.CTkFrame(body, fg_color=C["card"], corner_radius=12)
-        self.result_frame.grid(row=1, column=0, columnspan=2,
-                               padx=0, pady=(0, 0), sticky="nsew")
-        self._build_result_panel(self.result_frame)
+        # Row 2 — central Run button.
+        self._btn_run = ctk.CTkButton(
+            body,
+            text=f"▶  Run {_N_SIMULATIONS_DEFAULT} fights",
+            font=FONT_SUB, height=44, corner_radius=10,
+            fg_color=C["accent"], hover_color=C["accent_hv"],
+            command=self._on_run,
+        )
+        self._btn_run.grid(row=2, column=0, columnspan=2,
+                            padx=0, pady=(0, 8), sticky="ew")
 
-    # ── Player panel ──────────────────────────────────────────
+        # Row 3 — result slot (ResultDelta dropped here once we have data).
+        self._result_slot = ctk.CTkFrame(body, fg_color="transparent",
+                                           corner_radius=0)
+        self._result_slot.grid(row=3, column=0, columnspan=2,
+                                padx=0, pady=(0, 0), sticky="nsew")
+        self._result_slot.grid_columnconfigure(0, weight=1)
+
+        self._refresh_panels()
+
+    def _refresh_panels(self) -> None:
+        """Wipe + redraw both mini-fiches based on the current controller
+        state. Cheap — called on every Scan callback and Run completion."""
+        for panel in (self._left_panel, self._right_panel):
+            for child in panel.winfo_children():
+                child.destroy()
+
+        self._build_player_panel(self._left_panel)
+        self._build_opponent_panel(self._right_panel)
+        self._refresh_run_button()
+
+    def _refresh_run_button(self) -> None:
+        """Plan §4 step 3: disable Run while either side is missing."""
+        ready = (
+            self.controller.has_profile()
+            and self.controller.get_last_enemy_stats() is not None
+        )
+        self._btn_run.configure(state="normal" if ready else "disabled")
+
+    # ── Player mini-fiche (left panel) ───────────────────────
 
     def _build_player_panel(self, parent: ctk.CTkFrame) -> None:
         ctk.CTkLabel(parent, text="⚔  Your character",
@@ -81,357 +158,332 @@ class SimulatorView(ctk.CTkFrame):
 
         profile = self.controller.get_profile()
         if not profile:
-            ctk.CTkLabel(parent,
-                         text="No profile loaded.\nGo to the Dashboard\nto import your stats.",
-                         font=FONT_BODY, text_color=C["muted"],
-                         justify="center").pack(pady=20)
+            ctk.CTkLabel(
+                parent,
+                text="No profile loaded.\nGo to the Dashboard to import\nyour stats first.",
+                font=FONT_BODY, text_color=C["muted"], justify="center",
+            ).pack(padx=16, pady=24)
+            # Quick nav.
+            ctk.CTkButton(
+                parent, text="Open Dashboard →",
+                font=FONT_SMALL, height=32, corner_radius=8,
+                fg_color="transparent",
+                border_color=C["card_alt"], border_width=1,
+                hover_color=C["border"], text_color=C["text"],
+                command=lambda: self.app.show_view("dashboard"),
+            ).pack(padx=24, pady=(0, 16))
             return
 
-        stats_f = ctk.CTkFrame(parent, fg_color=C["card_alt"], corner_radius=8)
-        stats_f.pack(padx=12, pady=(0, 8), fill="x")
-        for label, key in (("HP", "hp_total"), ("ATK", "attack_total")):
-            row = ctk.CTkFrame(stats_f, fg_color="transparent")
-            row.pack(fill="x", padx=12, pady=2)
+        # ── Hero stats: HP / ATK ─────────────────────────────
+        hero = ctk.CTkFrame(parent, fg_color=C["card_alt"], corner_radius=10)
+        hero.pack(fill="x", padx=12, pady=(0, 6))
+        for label, key, color in (
+            ("❤  Total HP", "hp_total",     C["lose"]),
+            ("⚔  Total ATK", "attack_total", C["accent2"]),
+        ):
+            row = ctk.CTkFrame(hero, fg_color="transparent")
+            row.pack(fill="x", padx=12, pady=4)
             ctk.CTkLabel(row, text=label, font=FONT_SMALL,
-                         text_color=C["muted"], width=40,
-                         anchor="w").pack(side="left")
+                         text_color=C["muted"], width=100, anchor="w").pack(
+                side="left")
             ctk.CTkLabel(row, text=fmt_number(profile.get(key, 0)),
-                         font=FONT_SUB, text_color=C["text"]).pack(
-                side="left", padx=8)
+                         font=FONT_SUB, text_color=color, anchor="e").pack(
+                side="right")
 
         atk_type = profile.get("attack_type", "?")
-        ctk.CTkLabel(stats_f,
-                     text=f"Type: {'🏹 Ranged' if atk_type == 'ranged' else '⚔ Melee'}",
-                     font=FONT_SMALL, text_color=C["muted"]).pack(
-            padx=12, pady=(0, 8), anchor="w")
+        ctk.CTkLabel(
+            hero,
+            text=f"Type: {'🏹 Ranged' if atk_type == 'ranged' else '⚔ Melee'}",
+            font=FONT_SMALL, text_color=C["muted"],
+        ).pack(padx=12, pady=(0, 8), anchor="w")
 
+        # ── Substats summary ─────────────────────────────────
+        self._build_substats_block(parent, profile)
+
+        # ── Skills row ───────────────────────────────────────
         skills = self.controller.get_active_skills()
         if skills:
-            sk_f = ctk.CTkFrame(parent, fg_color=C["card_alt"], corner_radius=8)
-            sk_f.pack(padx=12, pady=(0, 12), fill="x")
-            ctk.CTkLabel(sk_f, text="Skills:", font=FONT_SMALL,
-                         text_color=C["muted"]).pack(padx=12, pady=(8, 2), anchor="w")
+            sk_outer = ctk.CTkFrame(parent, fg_color=C["card_alt"], corner_radius=10)
+            sk_outer.pack(fill="x", padx=12, pady=(0, 6))
+            ctk.CTkLabel(sk_outer, text="Skills",
+                         font=FONT_SMALL, text_color=C["muted"]).pack(
+                padx=12, pady=(8, 4), anchor="w")
             for code, data in skills:
-                color = rarity_color(data.get("rarity", "common"))
-                ctk.CTkLabel(sk_f,
-                             text=f"  [{code.upper()}] {data.get('name', '?')}",
-                             font=FONT_SMALL, text_color=color).pack(
-                    padx=12, anchor="w")
-            ctk.CTkFrame(sk_f, fg_color="transparent", height=8).pack()
+                rar  = str(data.get("rarity", "common")).lower()
+                col  = rarity_color(rar)
+                name = data.get("name", code)
+                ctk.CTkLabel(
+                    sk_outer, text=f"  [{code.upper()}] {name}",
+                    font=FONT_SMALL, text_color=col,
+                ).pack(padx=12, anchor="w")
+            ctk.CTkFrame(sk_outer, fg_color="transparent", height=8).pack()
 
-        # ── Scan weapon row ────────────────────────────────
-        # One-shot OCR of the player's equipped weapon icon. The
-        # controller stashes the resulting (windup, recovery,
-        # projectile_travel_time, attack_type) under
-        # _last_player_weapon; the next simulate() call pops it via
-        # consume_player_weapon() and feeds it into the Fighter.
-        scan_w = ctk.CTkFrame(parent, fg_color="transparent")
-        scan_w.pack(padx=12, pady=(0, 12), fill="x")
-        self._lbl_scan_player_w = ctk.CTkLabel(
-            scan_w, text="", font=FONT_SMALL, text_color=C["muted"])
-        self._lbl_scan_player_w.pack(side="right", padx=(8, 0))
-        attach_scan_button(
-            parent_btn_frame=scan_w,
-            textbox=None,                        # no text output -- the
-                                                 # scanner persists the
-                                                 # result into the
-                                                 # controller cache
-            status_lbl=self._lbl_scan_player_w,
-            scan_key="player_weapon",
-            scan_fn=self.controller.scan,
-            captures_fn=self.controller.get_zone_captures,
-            on_scan_ready=None,
-            label="📷  Scan weapon",
-        )
+        # ── Companions row (3 pets + 1 mount, mini-icons) ────
+        comp_outer = ctk.CTkFrame(parent, fg_color=C["card_alt"], corner_radius=10)
+        comp_outer.pack(fill="x", padx=12, pady=(0, 6))
+        ctk.CTkLabel(comp_outer, text="Companions",
+                     font=FONT_SMALL, text_color=C["muted"]).pack(
+            padx=12, pady=(8, 4), anchor="w")
 
-    # ── Opponent panel ────────────────────────────────────────
+        comp_row = ctk.CTkFrame(comp_outer, fg_color="transparent")
+        comp_row.pack(padx=12, pady=(0, 8), anchor="w", fill="x")
+        pets = self.controller.get_pets() or {}
+        for slot in _PET_SLOTS:
+            pet  = pets.get(slot, {}) or {}
+            name = pet.get("__name__")
+            icon = load_pet_icon(name, size=28) if name else None
+            self._mini_icon(comp_row, icon, PET_ICONS.get(slot, "🐾"),
+                            tooltip=name or "(empty)").pack(
+                side="left", padx=2)
+        mount = self.controller.get_mount() or {}
+        m_name = mount.get("__name__")
+        m_icon = load_mount_icon(m_name, size=28) if m_name else None
+        self._mini_icon(comp_row, m_icon, MOUNT_ICON,
+                        tooltip=m_name or "(no mount)").pack(
+            side="left", padx=(10, 2))
+
+        # Phase 5 — the legacy "Scan weapon" row was removed: the player's
+        # weapon timing now lives on self._equipment["EQUIP_WEAPON"], populated
+        # by the Build view's per-slot 📷 (or the full Build scan). The
+        # simulator reads windup / recovery / range from the persisted build
+        # at fight time — no per-fight consume.
+
+    # ── Opponent mini-fiche (right panel) ────────────────────
 
     def _build_opponent_panel(self, parent: ctk.CTkFrame) -> None:
-        scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent",
-                                         corner_radius=0)
-        scroll.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
-        scroll.grid_columnconfigure(0, weight=1)
-
-        ctk.CTkLabel(scroll, text="🎯  Opponent",
+        ctk.CTkLabel(parent, text="🎯  Opponent",
                      font=FONT_SUB, text_color=C["text"]).pack(
             padx=16, pady=(14, 6), anchor="w")
 
-        ctk.CTkLabel(scroll, text="Opponent stats:",
-                     font=FONT_SMALL, text_color=C["muted"]).pack(
-            padx=16, anchor="w")
+        rec  = self.controller.get_last_enemy_stats()
+        prof = self.controller.get_last_enemy_profile()
 
-        self.opp_textbox = ctk.CTkTextbox(
-            scroll, height=120, font=("Consolas", 11),
-            fg_color=C["bg"], text_color=C["text"],
-            border_color=C["border"], border_width=1,
-        )
-        self.opp_textbox.pack(padx=12, pady=(4, 4), fill="x")
+        if rec is None:
+            # CTA path — Plan §4 step 1 right column.
+            ctk.CTkLabel(
+                parent,
+                text="No opponent scanned yet.\nUse 📷 Scan opponent below.",
+                font=FONT_BODY, text_color=C["muted"], justify="center",
+            ).pack(padx=16, pady=20)
+            self._build_opponent_scan_row(parent)
+            return
 
-        # ── Scan row (OCR capture for opponent) ────────────
-        scan_row = ctk.CTkFrame(scroll, fg_color="transparent")
-        scan_row.pack(padx=12, pady=(0, 6), fill="x")
-        self._lbl_scan_status = ctk.CTkLabel(
-            scan_row, text="", font=FONT_SMALL, text_color=C["muted"])
-        self._lbl_scan_status.pack(side="right", padx=(8, 0))
+        # ── Hero stats from EnemyComputedStats ───────────────
+        hero = ctk.CTkFrame(parent, fg_color=C["card_alt"], corner_radius=10)
+        hero.pack(fill="x", padx=12, pady=(0, 6))
+        for label, value, color in (
+            ("❤  Total HP", float(rec.total_health),  C["lose"]),
+            ("⚔  Total ATK", float(rec.total_damage), C["accent2"]),
+        ):
+            row = ctk.CTkFrame(hero, fg_color="transparent")
+            row.pack(fill="x", padx=12, pady=4)
+            ctk.CTkLabel(row, text=label, font=FONT_SMALL,
+                         text_color=C["muted"], width=100, anchor="w").pack(
+                side="left")
+            ctk.CTkLabel(row, text=fmt_number(value),
+                         font=FONT_SUB, text_color=color, anchor="e").pack(
+                side="right")
+
+        atk_type = "ranged" if rec.is_ranged_weapon else "melee"
+        ctk.CTkLabel(
+            hero,
+            text=f"Type: {'🏹 Ranged' if atk_type == 'ranged' else '⚔ Melee'}",
+            font=FONT_SMALL, text_color=C["muted"],
+        ).pack(padx=12, pady=(0, 8), anchor="w")
+
+        # ── Substats from EnemyComputedStats (decimals → %) ──
+        opp_substats = {
+            "crit_chance":    float(rec.critical_chance) * 100.0,
+            "crit_damage":    (float(rec.critical_damage) - 1.0) * 100.0,
+            "block_chance":   float(rec.block_chance) * 100.0,
+            "lifesteal":      float(rec.life_steal) * 100.0,
+            "double_chance":  float(rec.double_damage_chance) * 100.0,
+            "attack_speed":   (float(rec.attack_speed_multiplier) - 1.0) * 100.0,
+            "skill_damage":   (float(rec.skill_damage_multiplier) - 1.0) * 100.0,
+        }
+        self._build_substats_block(parent, opp_substats)
+
+        # ── Identified gear summary ───────────────────────────
+        if prof is not None:
+            self._build_opp_gear_block(parent, prof)
+
+        # ── Re-scan row (replaces textbox + skill picker) ────
+        self._build_opponent_scan_row(parent)
+
+    def _build_opponent_scan_row(self, parent: ctk.CTkFrame) -> None:
+        bar = ctk.CTkFrame(parent, fg_color="transparent")
+        bar.pack(padx=12, pady=(0, 12), fill="x")
+        self._lbl_scan_opp = ctk.CTkLabel(
+            bar, text="", font=FONT_SMALL, text_color=C["muted"])
+        self._lbl_scan_opp.pack(side="right", padx=(8, 0))
         attach_scan_button(
-            parent_btn_frame=scan_row,
-            textbox=self.opp_textbox,
-            status_lbl=self._lbl_scan_status,
+            parent_btn_frame=bar,
+            textbox=None,                         # the controller persists
+                                                  # the recompute internally
+            status_lbl=self._lbl_scan_opp,
             scan_key="opponent",
             scan_fn=self.controller.scan,
             captures_fn=self.controller.get_zone_captures,
-            on_scan_ready=self._auto_run_if_ready,
+            on_scan_ready=self._on_opponent_scanned,
+            label="📷  Scan opponent",
         )
 
-        type_f = ctk.CTkFrame(scroll, fg_color="transparent")
-        type_f.pack(padx=12, fill="x")
-        ctk.CTkLabel(type_f, text="Type:", font=FONT_SMALL,
-                     text_color=C["muted"]).pack(side="left")
-        self.opp_type = ctk.StringVar(value="ranged")
-        ctk.CTkRadioButton(type_f, text="🏹 Ranged",
-                           variable=self.opp_type, value="ranged",
-                           text_color=C["text"], font=FONT_SMALL).pack(
-            side="left", padx=10)
-        ctk.CTkRadioButton(type_f, text="⚔ Melee",
-                           variable=self.opp_type, value="melee",
-                           text_color=C["text"], font=FONT_SMALL).pack(
-            side="left", padx=4)
+    def _on_opponent_scanned(self) -> None:
+        """The OCR pipeline has stashed a fresh _last_enemy_stats. Refresh
+        the right panel so the user can see the new opponent before
+        clicking Run."""
+        self._refresh_panels()
+        self._lbl_status.configure(
+            text="✓ Opponent ready — click « Run » to simulate.",
+            text_color=C["win"])
 
-        ctk.CTkLabel(scroll, text="Opponent skills:",
+    # ── Shared sub-widgets ────────────────────────────────────
+
+    def _build_substats_block(self, parent: ctk.CTkFrame,
+                                stats: Dict) -> None:
+        """Mini list of non-zero substats. Same style on both panels."""
+        non_zero = [
+            (k, lab, float(stats.get(k, 0.0) or 0.0))
+            for k, lab in _SUBSTAT_ROWS
+            if float(stats.get(k, 0.0) or 0.0)
+        ]
+        if not non_zero:
+            return
+
+        outer = ctk.CTkFrame(parent, fg_color=C["card_alt"], corner_radius=10)
+        outer.pack(fill="x", padx=12, pady=(0, 6))
+        ctk.CTkLabel(outer, text="Substats",
                      font=FONT_SMALL, text_color=C["muted"]).pack(
-            padx=16, pady=(8, 2), anchor="w")
+            padx=12, pady=(8, 4), anchor="w")
+        for i, (_k, label, val) in enumerate(non_zero):
+            bg  = C["card"] if i % 2 == 0 else C["card_alt"]
+            row = ctk.CTkFrame(outer, fg_color=bg, corner_radius=4)
+            row.pack(fill="x", padx=8, pady=1)
+            row.grid_columnconfigure(1, weight=1)
+            ctk.CTkLabel(row, text=label, font=FONT_SMALL,
+                         text_color=C["muted"], anchor="w").grid(
+                row=0, column=0, padx=10, pady=3, sticky="w")
+            ctk.CTkLabel(row, text=f"{val:+.1f}%", font=FONT_MONO,
+                         text_color=C["text"], anchor="e").grid(
+                row=0, column=1, padx=10, pady=3, sticky="e")
+        ctk.CTkFrame(outer, fg_color="transparent", height=4).pack()
 
-        all_skills = self.controller.get_all_skills()
-        self._opp_skill_vars: Dict[str, ctk.BooleanVar] = {
-            code: ctk.BooleanVar(value=False) for code in all_skills
-        }
+    def _build_opp_gear_block(self, parent: ctk.CTkFrame, prof) -> None:
+        """Show a compact gear summary from EnemyIdentifiedProfile."""
+        n_items  = len(getattr(prof, "items", []) or [])
+        n_pets   = len(getattr(prof, "pets",  []) or [])
+        n_mount  = 1 if getattr(prof, "mount", None) is not None else 0
+        n_skills = len(getattr(prof, "skills", []) or [])
+        flv      = int(getattr(prof, "forge_level", 0) or 0)
 
-        grid, _btns = skill_icon_grid(
-            scroll, all_skills, self._opp_skill_vars,
-            cols=5, icon_size=38,
-            on_toggle=self._toggle_opp_skill,
-        )
-        grid.pack(padx=12, pady=(0, 4), fill="x")
+        outer = ctk.CTkFrame(parent, fg_color=C["card_alt"], corner_radius=10)
+        outer.pack(fill="x", padx=12, pady=(0, 6))
+        ctk.CTkLabel(outer, text="Identified gear",
+                     font=FONT_SMALL, text_color=C["muted"]).pack(
+            padx=12, pady=(8, 4), anchor="w")
 
-        self._opp_limit_lbl = ctk.CTkLabel(
-            scroll, text="", font=FONT_SMALL, text_color=C["lose"])
-        self._opp_limit_lbl.pack(pady=(2, 4))
+        bits = []
+        if flv:      bits.append(f"Forge Lv.{flv}")
+        bits.append(f"🛡 {n_items}/8 items")
+        bits.append(f"🐾 {n_pets} pets")
+        if n_mount:  bits.append(f"{MOUNT_ICON} mount")
+        if n_skills: bits.append(f"✨ {n_skills} skills")
+        ctk.CTkLabel(outer, text="   ".join(bits),
+                     font=FONT_SMALL, text_color=C["text"]).pack(
+            padx=12, pady=(0, 8), anchor="w")
 
-        ctk.CTkFrame(scroll, fg_color=C["border"], height=1).pack(
-            fill="x", padx=12, pady=(0, 4))
-
-        # Fixed button outside the scroll
-        btn_frame = ctk.CTkFrame(parent, fg_color=C["card"], corner_radius=0)
-        btn_frame.grid(row=1, column=0, sticky="ew", padx=0, pady=0)
-        btn_frame.grid_columnconfigure(0, weight=1)
-
-        self._lbl_status_opp = ctk.CTkLabel(
-            btn_frame, text="", font=FONT_SMALL, text_color=C["lose"])
-        self._lbl_status_opp.grid(row=0, column=0, padx=12, pady=(6, 0))
-
-        ctk.CTkButton(
-            btn_frame, text=f"▶  Run {N_SIMULATIONS} simulations",
-            font=FONT_SUB, height=40, corner_radius=8,
-            fg_color=C["accent"], hover_color=C["accent_hv"],
-            command=self._run,
-        ).grid(row=1, column=0, padx=12, pady=(4, 12), sticky="ew")
-
-    def _toggle_opp_skill(self, code: str) -> None:
-        """Toggle an opponent skill with a limit of 3."""
-        var      = self._opp_skill_vars[code]
-        selected = [c for c, v in self._opp_skill_vars.items() if v.get()]
-        if not var.get():
-            if len(selected) >= 3:
-                self._opp_limit_lbl.configure(text="⚠ Maximum 3 skills")
-                return
-            var.set(True)
+    def _mini_icon(self, parent: ctk.CTkBaseClass, icon, fallback_emoji: str,
+                    tooltip: str = "") -> ctk.CTkLabel:
+        """Small (28 px) icon block with emoji fallback."""
+        if icon is not None:
+            lbl = ctk.CTkLabel(parent, image=icon, text="",
+                                fg_color="transparent")
         else:
-            var.set(False)
-        self._opp_limit_lbl.configure(text="")
+            lbl = ctk.CTkLabel(parent, text=fallback_emoji,
+                                font=("Segoe UI", 18))
+        # Lightweight hover hint using the existing label text.
+        if tooltip:
+            def _enter(_e, n=tooltip, w=lbl, ic=icon, fb=fallback_emoji):
+                w.configure(image=None, text=n[:14])
+            def _leave(_e, w=lbl, ic=icon, fb=fallback_emoji):
+                w.configure(image=ic if ic else None,
+                            text="" if ic else fb)
+            lbl.bind("<Enter>", _enter)
+            lbl.bind("<Leave>", _leave)
+        return lbl
 
-    # ── Result panel ──────────────────────────────────────────
+    # ── Run flow ─────────────────────────────────────────────
 
-    def _build_result_panel(self, parent: ctk.CTkFrame) -> None:
-        parent.grid_columnconfigure((0, 1, 2), weight=1)
-
-        self._lbl_status = ctk.CTkLabel(
-            parent,
-            text="Fill in the opponent stats and run the simulation.",
-            font=FONT_BODY, text_color=C["muted"],
-        )
-        self._lbl_status.grid(row=0, column=0, columnspan=3, pady=20)
-
-        total_txt = f"/ {N_SIMULATIONS}"
-        self._lbl_win  = big_counter(parent, "WIN",  C["win"],  total_text=total_txt)
-        self._lbl_lose = big_counter(parent, "LOSE", C["lose"], total_text=total_txt)
-        self._lbl_draw = big_counter(parent, "DRAW", C["draw"], total_text=total_txt)
-        self._lbl_win._counter_frame.grid(row=1, column=0, padx=12, pady=8, sticky="ew")
-        self._lbl_lose._counter_frame.grid(row=1, column=1, padx=12, pady=8, sticky="ew")
-        self._lbl_draw._counter_frame.grid(row=1, column=2, padx=12, pady=8, sticky="ew")
-
-        self._progress = ctk.CTkProgressBar(parent, height=12, corner_radius=6,
-                                             progress_color=C["win"])
-        self._progress.grid(row=2, column=0, columnspan=3,
-                            padx=24, pady=(8, 0), sticky="ew")
-        self._progress.set(0)
-
-        self._lbl_verdict = ctk.CTkLabel(
-            parent, text="", font=FONT_SUB, text_color=C["text"])
-        self._lbl_verdict.grid(row=3, column=0, columnspan=3, pady=(8, 16))
-
-    # ── Logic ─────────────────────────────────────────────────
-
-    def _auto_run_if_ready(self) -> None:
-        """After an OCR capture fills the opponent textbox, auto-run the
-        simulation — but ONLY if at least one opponent skill is selected.
-        Otherwise keep the textbox populated and wait for the user to
-        pick the skills and click Run."""
-        selected = [c for c, v in self._opp_skill_vars.items() if v.get()]
-        if selected:
-            self._run()
-        else:
-            self._lbl_scan_status.configure(
-                text="✓ OCR complete — select opponent skills, then Run.",
-                text_color=C["muted"])
-
-    def _run(self) -> None:
+    def _on_run(self) -> None:
         if not self.controller.has_profile():
-            self._lbl_status_opp.configure(
-                text="⚠ No player profile. Go to the Dashboard.")
+            self._lbl_status.configure(
+                text="⚠ No player profile. Go to Dashboard first.",
+                text_color=C["lose"])
+            return
+        if self.controller.get_last_enemy_stats() is None:
+            self._lbl_status.configure(
+                text="⚠ No opponent scanned yet.",
+                text_color=C["lose"])
             return
 
-        text = self.opp_textbox.get("1.0", "end").strip()
-        if not text:
-            self._lbl_status_opp.configure(text="⚠ Paste the opponent stats.")
-            return
-
-        opp_selected = [c for c, v in self._opp_skill_vars.items() if v.get()]
-        if len(opp_selected) > 3:
-            self._lbl_status_opp.configure(text="⚠ Maximum 3 skills for the opponent.")
-            return
-
-        self._lbl_status_opp.configure(text="")
-
-        opp_stats = parse_profile_text(text)
-        opp_stats["attack_type"] = self.opp_type.get()
-        opp_stats  = finalize_bases(opp_stats)
-        opp_combat = combat_stats(opp_stats)
-
-        # ── Phase 3 — prefer recomputed stats when available ──
-        # The controller stashes EnemyComputedStats whenever the
-        # opponent zone was scanned via OCR. Override the OCR
-        # text-derived totals with the values rebuilt from the
-        # identified gear; the substats (crit, lifesteal, etc.)
-        # already came from the same OCR text so we leave them.
-        recomputed, _ = self.controller.consume_enemy_recompute()
-        if recomputed is not None:
-            opp_combat["hp_total"]     = float(recomputed.total_health)
-            opp_combat["attack_total"] = float(recomputed.total_damage)
-            opp_combat["attack_type"]  = (
-                "ranged" if recomputed.is_ranged_weapon else "melee"
-            )
-            # Discrete attack-speed model: thread the weapon's wind-up
-            # and recovery (recovery = AttackDuration − WindupTime)
-            # into the simulator so it floors swing/recovery to the
-            # nearest 0.1 s instead of using the legacy linear curve.
-            wu = float(recomputed.weapon_windup_time)
-            ad = float(recomputed.weapon_attack_duration)
-            opp_combat["weapon_windup"]   = wu
-            opp_combat["weapon_recovery"] = max(ad - wu, 0.0)
-            # Projectile travel time: 0 for melee, PVP_COMBAT_DISTANCE
-            # / speed for ranged. We use the PvP-specific distance
-            # (~1.5 units) instead of the weapon's nominal range
-            # (7.0) -- in PvP both fighters close in before firing,
-            # so the actual gap a projectile crosses is far below
-            # AttackRange. Real-combat measurement: Speed-20 weapons
-            # land impacts at ~0.075 s, not 0.35 s.
-            from backend.weapon.projectiles import PVP_COMBAT_DISTANCE
-            travel = 0.0
-            if recomputed.is_ranged_weapon:
-                speed = float(recomputed.projectile_speed or 0.0)
-                if speed > 0.0:
-                    travel = PVP_COMBAT_DISTANCE / speed
-            opp_combat["projectile_travel_time"] = travel
-            # Per-source HP sub-totals -- the simulator picks them
-            # up to apply 1.0/0.5/0.5/2.0 weighting per
-            # PvpBaseConfig.json instead of the legacy global x5.
-            opp_combat["hp_equip"]         = float(recomputed.equip_health)
-            opp_combat["hp_pet"]           = float(recomputed.pet_health)
-            opp_combat["hp_mount"]         = float(recomputed.mount_health)
-            opp_combat["hp_skill_passive"] = float(recomputed.skill_passive_health)
-            log.info(
-                "simulator: using recomputed enemy stats — "
-                "HP=%.0f Dmg=%.0f (text-OCR overridden); "
-                "weapon W=%.2fs R=%.2fs travel=%.3fs; "
-                "HP buckets equip=%.0f pet=%.0f mount=%.0f skill=%.0f",
-                recomputed.total_health, recomputed.total_damage,
-                wu, max(ad - wu, 0.0), travel,
-                recomputed.equip_health, recomputed.pet_health,
-                recomputed.mount_health, recomputed.skill_passive_health,
-            )
-        opp_skills = self.controller.get_skills_from_codes(opp_selected)
-
-        self._lbl_status.configure(text="⏳ Simulation running…",
-                                    text_color=C["muted"])
-        self._lbl_win.configure(text="…")
-        self._lbl_lose.configure(text="…")
-        self._lbl_draw.configure(text="…")
-        self._progress.set(0)
-        self._lbl_verdict.configure(text="")
+        self._lbl_status.configure(
+            text=f"⏳  Simulating {_N_SIMULATIONS_DEFAULT} fights…",
+            text_color=C["muted"])
+        self._btn_run.configure(state="disabled",
+                                 text="⏳  Simulating…")
+        self._clear_result_slot()
         self.update_idletasks()
 
-        # ── Player weapon scan -- enrich the player profile with the
-        # ── windup / recovery / projectile_travel_time derived from
-        # ── the user's last "scan player_weapon" capture. We pass the
-        # ── enriched profile via profile_override so the controller's
-        # ── existing combat_stats() picks the new fields up.
-        player_profile = None
-        pw_scan = self.controller.consume_player_weapon()
-        if pw_scan is not None:
-            base = self.controller.get_profile() or {}
-            player_profile = dict(base)
-            player_profile["weapon_windup"]          = pw_scan.get("weapon_windup")
-            player_profile["weapon_recovery"]        = pw_scan.get("weapon_recovery")
-            player_profile["projectile_travel_time"] = pw_scan.get(
-                "projectile_travel_time", 0.0)
-            # Only override attack_type if the profile didn't already
-            # have one (preserves the explicit ranged/melee toggle the
-            # user may have set on the dashboard).
-            if not player_profile.get("attack_type"):
-                player_profile["attack_type"] = pw_scan.get("attack_type", "melee")
-            log.info(
-                "simulator: applying player weapon scan W=%.2fs R=%.2fs "
-                "travel=%.3fs (type=%s)",
-                pw_scan.get("weapon_windup", 0.0),
-                pw_scan.get("weapon_recovery", 0.0),
-                pw_scan.get("projectile_travel_time", 0.0),
-                pw_scan.get("attack_type", "?"),
-            )
-
-        # Controller already dispatches on the Tk thread; no need for after()
-        self.controller.simulate(opp_combat, opp_skills, self._display_results,
-                                 profile_override=player_profile)
+        # Plan §11 D2: the controller peeks (does NOT consume) the cached
+        # enemy, so a second click on Run reuses the same scan.
+        self.controller.simulate_vs_last_enemy(self._display_results)
 
     def _display_results(self, wins: int, loses: int, draws: int) -> None:
-        self._lbl_win.configure(text=str(wins))
-        self._lbl_lose.configure(text=str(loses))
-        self._lbl_draw.configure(text=str(draws))
-        win_rate = wins / N_SIMULATIONS if N_SIMULATIONS else 0.0
-        self._progress.set(win_rate)
-        self._progress.configure(
-            progress_color=C["win"] if win_rate >= 0.5 else C["lose"])
+        self._refresh_run_button()
+        self._btn_run.configure(text=f"▶  Run {_N_SIMULATIONS_DEFAULT} fights")
+        self._lbl_status.configure(
+            text=f"✅  Done — {wins}W / {loses}L / {draws}D",
+            text_color=C["muted"])
+        self._render_result(wins, loses, draws)
 
-        pct = 100.0 / N_SIMULATIONS if N_SIMULATIONS else 0.0
-        if wins > loses:
-            verdict = f"✅  You win {wins * pct:.1f}% of the time"
-            color   = C["win"]
-        elif loses > wins:
-            verdict = f"❌  You lose {loses * pct:.1f}% of the time"
-            color   = C["lose"]
-        else:
-            verdict = f"🤝  Perfect tie ({draws * pct:.1f}% draws)"
-            color   = C["draw"]
+    def _render_result(self, wins: int, loses: int, draws: int) -> None:
+        self._clear_result_slot()
+        ResultDelta(
+            self._result_slot,
+            wins, loses, draws,
+            total=wins + loses + draws or _N_SIMULATIONS_DEFAULT,
+            title=f"Result — {_N_SIMULATIONS_DEFAULT} fights",
+            subtitle=None,
+            on_apply=None,
+            on_discard=None,
+        ).pack(fill="x")
 
-        self._lbl_verdict.configure(text=verdict, text_color=color)
-        self._lbl_status.configure(text="Simulation complete.",
-                                    text_color=C["muted"])
+    def _clear_result_slot(self) -> None:
+        for w in self._result_slot.winfo_children():
+            w.destroy()
+      # enemy, so a second click on Run reuses the same scan.
+        self.controller.simulate_vs_last_enemy(self._display_results)
+
+    def _display_results(self, wins: int, loses: int, draws: int) -> None:
+        self._refresh_run_button()
+        self._btn_run.configure(text=f"▶  Run {_N_SIMULATIONS_DEFAULT} fights")
+        self._lbl_status.configure(
+            text=f"✅  Done — {wins}W / {loses}L / {draws}D",
+            text_color=C["muted"])
+        self._render_result(wins, loses, draws)
+
+    def _render_result(self, wins: int, loses: int, draws: int) -> None:
+        self._clear_result_slot()
+        ResultDelta(
+            self._result_slot,
+            wins, loses, draws,
+            total=wins + loses + draws or _N_SIMULATIONS_DEFAULT,
+            title=f"Result — {_N_SIMULATIONS_DEFAULT} fights",
+            subtitle=None,
+            on_apply=None,
+            on_discard=None,
+        ).pack(fill="x")
+
+    def _clear_result_slot(self) -> None:
+        for w in self._result_slot.winfo_children():
+            w.destroy()

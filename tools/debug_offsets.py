@@ -18,9 +18,9 @@ def draw_offsets(img_path: str, mode: str = "opponent") -> None:
     draw = ImageDraw.Draw(img)
 
     if mode == "opponent":
-        from backend.scanner.offsets.opponent import offsets_for_capture
+        from scan.offsets.opponent import offsets_for_capture
     else:
-        from backend.scanner.offsets.player import offsets_for_capture
+        from scan.offsets.player import offsets_for_capture
 
     offsets = offsets_for_capture(W, H)
     slot_order = list(offsets.get("slot_order", []))

@@ -32,20 +32,17 @@ ZONE_DEFAULTS = {
     "pet":       {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
     "mount":     {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
     "skill":     {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
-    # Player's equipped weapon icon -- a single 1-bbox zone the user
-    # configures by drawing a tight box around the weapon icon on
-    # their own character screen. Consumed by the player_weapon
-    # scanner to derive windup / recovery / projectile_travel_time.
-    "player_weapon": {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
     # Player's full equipment panel (the 8-slot grid). Captured once;
     # the panel is identified slot-by-slot via the same template
     # matching pipeline as the opponent profile. Drives the per-piece
     # tracking saved in equipment.txt.
     "player_equipment": {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
-    # In-game wiki popup with the 4×2 item grid (used by the icon
-    # recognition tool to refresh AutoItemMapping with up-to-date
-    # in-game ItemNames after game updates rename items).
-    "wiki_grid":        {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
+    # In-game item detail popup (single piece). Calibrated once,
+    # reused by every per-slot 📷 button on the Build view: the user
+    # opens the popup for the piece they want to refresh, clicks the
+    # tile's camera, and scan/jobs/equipment_popup.scan(force_slot=...)
+    # rewrites just that section of equipment.txt.
+    "equipment_popup":  {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
 }
 
 # ── Simulation parameters ───────────────────────────────────

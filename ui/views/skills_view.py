@@ -1,9 +1,21 @@
 """
 ============================================================
   FORGE MASTER UI — Skills Management
-  3 slots (S1, S2, S3) — same pattern as pets/mount.
-  Tests a new skill against each equipped slot to find the
-  best one to replace.
+
+  Phase-3 refactor (UI_REFACTOR_PLAN §11):
+  3-tab layout — same flow as Mount / Pet / Equipment > Comparer:
+
+      [Équipés]   [Comparer]   [Librairie]
+
+    * Équipés   : 3 slot cards (S1 / S2 / S3) side-by-side.
+    * Comparer  : paste / scan a candidate, run the
+                  test_skill() simulation against ALL 3 slots,
+                  show one result per slot + recommend the
+                  best replacement (existing logic preserved).
+    * Librairie : LibraryList with rarity / type filters,
+                  per-row delete.
+
+  All shared widgets come from ui/cards.py.
 ============================================================
 """
 
@@ -18,7 +30,6 @@ from ui.theme import (
     FONT_SMALL,
     FONT_SUB,
     FONT_TINY,
-    RARITY_ORDER,
     fmt_number,
     load_skill_icon_by_name,
     rarity_color,
@@ -29,6 +40,7 @@ from ui.widgets import (
     build_wld_bars,
     confirm,
 )
+from ui.cards import LibraryList
 from backend.constants import N_SIMULATIONS
 
 # Slot identity (same pattern as PET_ICONS / MOUNT_ICON in theme.py)
@@ -51,18 +63,31 @@ class SkillsView(ctk.CTkFrame):
     def _build(self) -> None:
         build_header(self, "Skills Management")
 
-        self._scroll = ctk.CTkScrollableFrame(self, fg_color=C["bg"],
-                                               corner_radius=0)
-        self._scroll.grid(row=1, column=0, sticky="nsew")
-        self._scroll.grid_columnconfigure(0, weight=1)
+        self._tabs = ctk.CTkTabview(
+            self,
+            fg_color=C["bg"],
+            segmented_button_fg_color=C["card"],
+            segmented_button_selected_color=C["accent"],
+            segmented_button_selected_hover_color=C["accent"],
+        )
+        self._tabs.grid(row=1, column=0, sticky="nsew", padx=8, pady=(8, 8))
 
-        self._build_skill_cards()
-        self._build_import()
-        self._build_result_zone()
-        self._build_library()
+        self._build_equipped_tab(self._tabs.add("Équipés"))
+        self._build_compare_tab(self._tabs.add("Comparer"))
+        self._build_library_tab(self._tabs.add("Librairie"))
 
-    def _build_skill_cards(self) -> None:
-        skills_frame = ctk.CTkFrame(self._scroll, fg_color="transparent")
+    # ── Tab 1 — Équipés ──────────────────────────────────────
+
+    def _build_equipped_tab(self, parent: ctk.CTkFrame) -> None:
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure(0, weight=1)
+
+        scroll = ctk.CTkScrollableFrame(parent, fg_color=C["bg"],
+                                         corner_radius=0)
+        scroll.grid(row=0, column=0, sticky="nsew")
+        scroll.grid_columnconfigure(0, weight=1)
+
+        skills_frame = ctk.CTkFrame(scroll, fg_color="transparent")
         skills_frame.grid(row=0, column=0, padx=16, pady=16, sticky="ew")
         skills_frame.grid_columnconfigure((0, 1, 2), weight=1)
 
@@ -72,155 +97,32 @@ class SkillsView(ctk.CTkFrame):
             card = self._skill_slot_card(skills_frame, slot, data)
             card.grid(row=0, column=col, padx=6, pady=0, sticky="nsew")
 
-    def _build_import(self) -> None:
-        card, self._textbox, self._lbl_status = build_import_zone(
-            self._scroll,
-            title="Test a new skill",
-            hint="Paste the skill stats from the game "
-                 "(including the « Passive: +xx Base Damage +xx Base Health » line).",
-            primary_label="🔬  Simulate replacement",
-            primary_cmd=self._test_skill,
-            secondary_label="✏  Directly edit a slot",
-            secondary_cmd=self._edit_direct,
-            scan_key="skill",
-            scan_fn=self.controller.scan,
-            captures_fn=self.controller.get_zone_captures,
-            on_scan_ready=self._test_skill,
-        )
-        card.grid(row=1, column=0, padx=16, pady=(0, 8), sticky="ew")
+        # Quick-actions row.
+        bar = ctk.CTkFrame(scroll, fg_color="transparent")
+        bar.grid(row=1, column=0, padx=16, pady=(0, 16), sticky="ew")
+        bar.grid_columnconfigure((0, 1), weight=1)
 
-    def _build_result_zone(self) -> None:
-        self._result_outer = ctk.CTkFrame(self._scroll, fg_color="transparent")
-        self._result_outer.grid(row=2, column=0, padx=16, pady=(0, 16),
-                                sticky="ew")
-        self._result_outer.grid_columnconfigure(0, weight=1)
+        ctk.CTkButton(
+            bar, text="↪  Go to « Comparer »",
+            font=FONT_SMALL, height=34, corner_radius=8,
+            fg_color=C["accent"], hover_color=C["accent_hv"],
+            command=lambda: self._tabs.set("Comparer"),
+        ).grid(row=0, column=0, padx=(0, 4), sticky="ew")
 
-    def _build_library(self) -> None:
-        """Skills library (Lv.1 reference stats)."""
-        card = ctk.CTkFrame(self._scroll, fg_color=C["card"], corner_radius=12)
-        card.grid(row=3, column=0, padx=16, pady=(0, 16), sticky="ew")
-        card.grid_columnconfigure(0, weight=1)
-
-        header = ctk.CTkFrame(card, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", padx=20, pady=(16, 4))
-        header.grid_columnconfigure(0, weight=1)
-        ctk.CTkLabel(header, text="📚  Skills Library",
-                     font=FONT_SUB, text_color=C["text"]).grid(
-            row=0, column=0, sticky="w")
-        ctk.CTkLabel(header,
-                     text="Lv.1 reference stats are used only for swap comparisons. "
-                          "Equipped skills keep their current-level stats.",
-                     font=FONT_SMALL, text_color=C["muted"],
-                     wraplength=700, justify="left").grid(
-            row=1, column=0, sticky="w", pady=(2, 0))
-
-        library = self.controller.get_skills_library()
-
-        if not library:
-            ctk.CTkLabel(
-                card,
-                text="No skills in library. Paste a Lv.1 skill in the zone above "
-                     "and click « Simulate » — it will be added automatically.",
-                font=FONT_SMALL, text_color=C["muted"],
-                wraplength=700, justify="left").grid(
-                row=1, column=0, padx=20, pady=(0, 16), sticky="w")
-            return
-
-        lst = ctk.CTkFrame(card, fg_color="transparent")
-        lst.grid(row=1, column=0, padx=10, pady=(4, 12), sticky="ew")
-        lst.grid_columnconfigure(2, weight=1)
-
-        def _sort_key(n: str):
-            rar = str(library[n].get("rarity", "common")).lower()
-            idx = RARITY_ORDER.index(rar) if rar in RARITY_ORDER else 0
-            return (idx, n.lower())
-
-        for i, name in enumerate(sorted(library.keys(), key=_sort_key)):
-            entry = library[name]
-            bg = C["card_alt"] if i % 2 == 0 else C["card"]
-            row = ctk.CTkFrame(lst, fg_color=bg, corner_radius=6)
-            row.grid(row=i, column=0, columnspan=5, sticky="ew", padx=4, pady=2)
-            row.grid_columnconfigure(2, weight=1)
-
-            # Skill icon — PNG when available, else the type glyph.
-            sk_type   = str(entry.get("type", "damage"))
-            type_icon = "⚔" if sk_type == "damage" else "🛡"
-            icon_img  = load_skill_icon_by_name(name, size=36)
-            ctk.CTkLabel(
-                row,
-                image=icon_img if icon_img else None,
-                text="" if icon_img else type_icon,
-                font=("Segoe UI", 22),
-                width=44, height=44,
-            ).grid(row=0, column=0, padx=(8, 2), pady=4)
-
-            rar = str(entry.get("rarity", "common")).lower()
-            ctk.CTkLabel(row, text=rar.upper(),
-                         font=FONT_TINY, text_color=rarity_color(rar),
-                         width=80).grid(row=0, column=1, padx=(6, 6), pady=6)
-            ctk.CTkLabel(row, text=name, font=FONT_BODY,
-                         text_color=C["text"], anchor="w").grid(
-                row=0, column=2, padx=6, pady=6, sticky="w")
-
-            stats_txt = self._library_stat_line(entry)
-            ctk.CTkLabel(row, text=stats_txt, font=FONT_MONO_S,
-                         text_color=C["muted"]).grid(
-                row=0, column=3, padx=6, pady=6)
-
-            ctk.CTkButton(
-                row, text="🗑", width=32, height=26,
-                font=FONT_SMALL, corner_radius=6,
-                fg_color="transparent", hover_color=C["lose"],
-                text_color=C["muted"],
-                command=lambda n=name: self._delete_from_library(n),
-            ).grid(row=0, column=4, padx=(4, 10), pady=4)
-
-    @staticmethod
-    def _library_stat_line(entry: Dict) -> str:
-        """Summarize a library entry in one line."""
-        sk_type = str(entry.get("type", "damage"))
-        if sk_type == "damage":
-            dmg  = entry.get("damage", 0) or 0
-            hits = int(entry.get("hits", 1) or 1)
-            cd   = entry.get("cooldown", 0) or 0
-            core = f"⚔ {fmt_number(dmg)} × {hits}  CD {cd:g}s"
-        else:
-            dur = entry.get("buff_duration", 0) or 0
-            atk = entry.get("buff_atk", 0) or 0
-            hp  = entry.get("buff_hp",  0) or 0
-            bits = []
-            if atk: bits.append(f"+ATK {fmt_number(atk)}")
-            if hp:  bits.append(f"+HP {fmt_number(hp)}")
-            core = f"🛡 {dur:g}s  " + ("  ".join(bits) if bits else "—")
-        # Passive bonuses
-        pd = entry.get("passive_damage", 0) or 0
-        ph = entry.get("passive_hp",     0) or 0
-        passive = f"   Passive: ⚔+{fmt_number(pd)}  ❤+{fmt_number(ph)}"
-        return core + passive
-
-    def _delete_from_library(self, name: str) -> None:
-        if not confirm(
-            self.app, "Remove from library",
-            f"Remove « {name} » from the skills library?\n"
-            "Future imports of this name will need to be re-done at Lv.1.",
-            ok_label="Remove", danger=True,
-        ):
-            return
-        if self.controller.remove_skill_library(name):
-            self.app.refresh_current()
+        ctk.CTkButton(
+            bar, text="📚  Open library",
+            font=FONT_SMALL, height=34, corner_radius=8,
+            fg_color="transparent", border_color=C["card"], border_width=1,
+            hover_color=C["border"], text_color=C["text"],
+            command=lambda: self._tabs.set("Librairie"),
+        ).grid(row=0, column=1, padx=(4, 0), sticky="ew")
 
     # ── Skill slot card (equipped skill display) ─────────────
 
     def _skill_slot_card(self, parent: ctk.CTkBaseClass,
                           slot: str, data: Dict) -> ctk.CTkFrame:
-        """
-        Build a 'S1/S2/S3' card showing the equipped skill with its
-        current-level stats + passive bonuses + rarity / level badges.
-        If the slot is empty (no __name__), show the empty state.
-        """
         card = ctk.CTkFrame(parent, fg_color=C["card"], corner_radius=12)
 
-        # Top band: slot label
         slot_icon = _SLOT_ICONS.get(slot, "✨")
         ctk.CTkLabel(card, text=f"{slot_icon}  {slot}", font=FONT_SUB,
                      text_color=C["muted"]).pack(
@@ -228,13 +130,10 @@ class SkillsView(ctk.CTkFrame):
 
         name = data.get("__name__")
         if not name:
-            # Empty state
             ctk.CTkLabel(card, text="— empty slot —", font=FONT_BODY,
                          text_color=C["muted"]).pack(padx=16, pady=(4, 20))
             return card
 
-        # Identity band: skill icon (PNG if available, else type glyph) +
-        # name + rarity/level badges.
         head = ctk.CTkFrame(card, fg_color="transparent")
         head.pack(fill="x", padx=12, pady=(0, 6))
 
@@ -267,14 +166,12 @@ class SkillsView(ctk.CTkFrame):
                          text_color=C["accent"], anchor="w").pack(
                 side="left", padx=(8, 0))
 
-        # Stats block
         inner = ctk.CTkFrame(card, fg_color="transparent")
         inner.pack(fill="x", padx=10, pady=(0, 10))
         i = 0
         for label, value in self._active_stat_rows(data):
             self._stat_row(inner, label, value, row_index=i).pack(fill="x", pady=1)
             i += 1
-        # Passive bonuses — always shown if non-zero
         pd = float(data.get("passive_damage", 0) or 0)
         ph = float(data.get("passive_hp",     0) or 0)
         if pd:
@@ -289,7 +186,6 @@ class SkillsView(ctk.CTkFrame):
 
     @staticmethod
     def _active_stat_rows(data: Dict):
-        """Yield (label, pre-formatted value) pairs for the active part of a skill."""
         sk_type = str(data.get("type", "damage"))
         if sk_type == "damage":
             dmg  = float(data.get("damage", 0) or 0)
@@ -311,7 +207,6 @@ class SkillsView(ctk.CTkFrame):
     @staticmethod
     def _stat_row(parent: ctk.CTkBaseClass, label: str, value: str,
                    row_index: int = 0) -> ctk.CTkFrame:
-        """Zebra-striped row: label on the left, pre-formatted value on the right."""
         bg = C["card_alt"] if row_index % 2 == 0 else C["card"]
         row = ctk.CTkFrame(parent, fg_color=bg, corner_radius=4)
         row.grid_columnconfigure(1, weight=1)
@@ -323,9 +218,181 @@ class SkillsView(ctk.CTkFrame):
             row=0, column=1, padx=10, pady=4, sticky="e")
         return row
 
-    # ── Actions ───────────────────────────────────────────────
+    # ── Tab 2 — Comparer ─────────────────────────────────────
+    # Tests the candidate against all 3 equipped slots and renders
+    # one result card per slot — the "best slot to replace" output
+    # is preserved verbatim from the legacy view.
+
+    def _build_compare_tab(self, parent: ctk.CTkFrame) -> None:
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure(1, weight=1)
+
+        import_card, self._textbox, self._lbl_status = build_import_zone(
+            parent,
+            title="Test a new skill",
+            hint="Paste the skill stats from the game (including the « Passive: +xx Base Damage +xx Base Health » line).",
+            primary_label="🔬  Compare against 3 slots",
+            primary_cmd=self._test_skill,
+            secondary_label="✏  Edit a slot directly",
+            secondary_cmd=self._edit_direct,
+            scan_key="skill",
+            scan_fn=self.controller.scan,
+            captures_fn=self.controller.get_zone_captures,
+            on_scan_ready=self._test_skill,
+        )
+        import_card.grid(row=0, column=0, padx=16, pady=(12, 8), sticky="ew")
+
+        self._result_outer = ctk.CTkScrollableFrame(
+            parent, fg_color=C["bg"], corner_radius=0)
+        self._result_outer.grid(row=1, column=0, padx=16, pady=(0, 16),
+                                sticky="nsew")
+        self._result_outer.grid_columnconfigure(0, weight=1)
+
+        self._compare_placeholder()
+
+    def _compare_placeholder(self) -> None:
+        for w in self._result_outer.winfo_children():
+            w.destroy()
+        ctk.CTkLabel(
+            self._result_outer,
+            text="Paste or scan a candidate above, then hit « Compare ».\n"
+                 "We'll test it against each of your 3 active slots.",
+            font=FONT_SMALL, text_color=C["muted"],
+        ).pack(pady=24)
+
+    # ── Tab 3 — Librairie ────────────────────────────────────
+
+    def _build_library_tab(self, parent: ctk.CTkFrame) -> None:
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure(1, weight=1)
+
+        hint = ctk.CTkFrame(parent, fg_color=C["card"], corner_radius=12)
+        hint.grid(row=0, column=0, padx=16, pady=(12, 6), sticky="ew")
+        ctk.CTkLabel(
+            hint,
+            text="📚  Skills Library",
+            font=FONT_SUB, text_color=C["text"],
+        ).pack(padx=16, pady=(12, 2), anchor="w")
+        ctk.CTkLabel(
+            hint,
+            text=("Lv.1 reference stats — used only as the structural "
+                  "template when you paste a skill. Equipped skills keep "
+                  "their current-level stats."),
+            font=FONT_SMALL, text_color=C["muted"],
+            wraplength=700, justify="left",
+        ).pack(padx=16, pady=(0, 12), anchor="w")
+
+        library = self.controller.get_skills_library() or {}
+        items   = self._library_items(library)
+
+        filters = {}
+        if items:
+            filters["rarity"] = self._distinct(items, "rarity")
+            filters["type"]   = self._distinct(items, "type")
+
+        list_frame, _ctrl = LibraryList(
+            parent,
+            items,
+            title="Collected skills",
+            hint=None,
+            filters=filters or None,
+            on_action=self._library_use_as_candidate,
+            on_delete=self._library_delete,
+            icon_loader=lambda name: load_skill_icon_by_name(name, size=40),
+            fallback_emoji="✨",
+            max_height=420,
+        )
+        list_frame.grid(row=1, column=0, padx=16, pady=(0, 16), sticky="nsew")
+
+    def _library_items(self, library: Dict[str, Dict]) -> list:
+        rows = []
+        for name, entry in library.items():
+            rows.append({
+                "key":         name,
+                "name":        name,
+                "rarity":      str(entry.get("rarity", "common")).lower(),
+                "type":        str(entry.get("type", "damage")).lower(),
+                "hp_flat":     entry.get("passive_hp", 0),
+                "damage_flat": entry.get("damage", 0) or entry.get("passive_damage", 0),
+                "_lib_entry":  entry,
+            })
+        return rows
+
+    @staticmethod
+    def _distinct(items: list, key: str) -> list:
+        seen = []
+        for it in items:
+            v = it.get(key)
+            if v and v not in seen:
+                seen.append(v)
+        return seen
+
+    def _library_use_as_candidate(self, item: Dict) -> None:
+        """Push a library row into the Comparer tab as a candidate.
+        Re-builds a paste-like text so resolve_skill() can normalise it."""
+        name   = item.get("name", "?")
+        rarity = str(item.get("rarity", "common")).title()
+        entry  = item.get("_lib_entry") or {}
+        sk_type = str(entry.get("type", "damage"))
+
+        # Minimal paste: name + Lv.1 + the line resolve_skill needs.
+        # For damage skills, "total_damage" is parsed from a "Damage: X x N hits" pattern.
+        total_dmg = float(entry.get("damage", 0) or 0) * float(entry.get("hits", 1) or 1)
+        hits      = int(entry.get("hits", 1) or 1)
+        cd        = float(entry.get("cooldown", 0) or 0)
+        pd        = float(entry.get("passive_damage", 0) or 0)
+        ph        = float(entry.get("passive_hp", 0) or 0)
+
+        if sk_type == "damage":
+            lines = [
+                f"[{rarity}] {name}",
+                "Lv.1",
+                f"Damage: {int(total_dmg)} x {hits} hits",
+                f"Cooldown: {cd:g}s",
+                f"Passive: +{int(pd)} Base Damage  +{int(ph)} Base Health",
+            ]
+        else:
+            atk = float(entry.get("buff_atk", 0) or 0)
+            hp  = float(entry.get("buff_hp", 0) or 0)
+            dur = float(entry.get("buff_duration", 0) or 0)
+            lines = [
+                f"[{rarity}] {name}",
+                "Lv.1",
+                f"Buff: +{int(atk)} ATK  +{int(hp)} HP for {dur:g}s",
+                f"Cooldown: {cd:g}s",
+                f"Passive: +{int(pd)} Base Damage  +{int(ph)} Base Health",
+            ]
+
+        try:
+            self._tabs.set("Comparer")
+        except Exception:
+            pass
+        self._textbox.delete("1.0", "end")
+        self._textbox.insert("1.0", "\n".join(lines) + "\n")
+        self._test_skill()
+
+    def _library_delete(self, item: Dict) -> None:
+        name = item.get("name") or item.get("key")
+        if not name:
+            return
+        if not confirm(
+            self.app, "Remove from library",
+            f"Remove « {name} » from the skills library?\n"
+            "Future imports of this name will need to be re-done at Lv.1.",
+            ok_label="Remove", danger=True,
+        ):
+            return
+        if self.controller.remove_skill_library(name):
+            self.app.refresh_current()
+
+    # ── Compare actions (existing logic, unchanged) ──────────
 
     def _test_skill(self) -> None:
+        try:
+            self._tabs.set("Comparer")
+        except Exception:
+            pass
+
         if not self.controller.has_profile():
             self._lbl_status.configure(
                 text="⚠ No player profile. Go to Dashboard first.",
@@ -346,17 +413,14 @@ class SkillsView(ctk.CTkFrame):
                 text_color=C["lose"])
             return
 
-        if status == "unknown":
+        if status == "unknown_not_lvl1":
             name = meta.get("name") if meta else "?"
             self._lbl_status.configure(
-                text=f"⚠ « {name} » is not in the library — "
-                     "check the spelling or add it manually to skills_library.txt.",
+                text=f"⚠ « {name} » is not in the library — paste at Lv.1 to auto-add it.",
                 text_color=C["lose"])
             return
 
-        for w in self._result_outer.winfo_children():
-            w.destroy()
-
+        self._compare_placeholder()
         self._lbl_status.configure(text="⏳ Simulation running…",
                                     text_color=C["muted"])
         self.update_idletasks()
@@ -494,10 +558,10 @@ class SkillsView(ctk.CTkFrame):
                 text="⚠ Could not read the skill name.",
                 text_color=C["lose"])
             return
-        if status == "unknown":
+        if status == "unknown_not_lvl1":
             name = meta.get("name") if meta else "?"
             self._lbl_status.configure(
-                text=f"⚠ « {name} » is not in the library — check the spelling.",
+                text=f"⚠ « {name} » is not in the library — paste at Lv.1 to auto-add it.",
                 text_color=C["lose"])
             return
 

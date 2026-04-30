@@ -1,12 +1,32 @@
 """
 ============================================================
   FORGE MASTER UI — Equipment Comparator
-  Layout: text on the left | old/new stacked on the right
-  Auto-simulation (debounce 600 ms) on two-item detection.
+
+  Phase-3 refactor (UI_REFACTOR_PLAN §11):
+  Tabview with 3 tabs.
+
+      [Build actuel]   [Comparer]   [Librairie]
+
+    * Build actuel : 4×2 grid of the 8 persisted slots + Scan.
+    * Comparer    : OCR / paste comparator (auto-simulation on
+                    debounce 600 ms when two items are detected,
+                    or one item + an explicit slot pick).
+    * Librairie   : browsable, filtered list of every item in
+                    data/AutoItemMapping.json — filters on
+                    Age & Slot. No `apply` action: equipment
+                    swaps require pasted stats with rarity, so
+                    the row's « Comparer » button just jumps
+                    to the Comparer tab and pre-selects the
+                    matching slot.
+
+  All shared widgets come from ui/cards.py (Phase 2).
 ============================================================
 """
 
-from typing import Dict, Optional
+import json
+from pathlib import Path
+from tkinter import messagebox
+from typing import Dict, List, Optional
 import re
 
 import customtkinter as ctk
@@ -16,7 +36,6 @@ from backend.constants import (
     EQUIPMENT_SLOT_NAMES,
     N_SIMULATIONS,
 )
-from backend.calculator.stats import combat_stats
 
 from ui.theme import (
     C,
@@ -34,6 +53,7 @@ from ui.widgets import (
     companion_slot_card,
     confirm,
 )
+from ui.cards import LibraryList
 
 
 # Stats displayed on equipment — canonical in-game order.
@@ -116,6 +136,37 @@ class EquipmentView(ctk.CTkFrame):
         self.grid_rowconfigure(1, weight=1)
         self._build()
 
+        # Phase 5 §6.bis — refresh the Build grid whenever the controller
+        # mutates the persisted equipment dict (per-slot popup scan, full
+        # rescan, hand edit). The unsubscribe handle is dropped on view
+        # destroy so we don't repaint a freed widget.
+        try:
+            self._unsub_eq = self.controller.subscribe_equipment_changed(
+                self._on_equipment_changed
+            )
+            self.bind("<Destroy>", self._on_destroy, add="+")
+        except AttributeError:
+            # Older controller without the bus: fall back silently — the
+            # button-level callbacks still trigger a manual refresh.
+            self._unsub_eq = None
+
+    def _on_destroy(self, _event=None) -> None:
+        if getattr(self, "_unsub_eq", None) is not None:
+            try:
+                self._unsub_eq()
+            except Exception:
+                pass
+            self._unsub_eq = None
+
+    def _on_equipment_changed(self) -> None:
+        """Bus listener — repaint the Build grid if it still exists."""
+        try:
+            if self.winfo_exists() and getattr(self, "_build_grid", None) is not None:
+                self._refresh_build_slots()
+        except Exception:
+            # The view has likely been torn down between bus dispatches.
+            pass
+
     # ── Build ─────────────────────────────────────────────────
 
     def _build(self) -> None:
@@ -135,8 +186,10 @@ class EquipmentView(ctk.CTkFrame):
         self._tabs.grid(row=1, column=0, sticky="nsew", padx=8, pady=(8, 8))
         tab_build   = self._tabs.add("Build actuel")
         tab_compare = self._tabs.add("Comparer")
+        tab_library = self._tabs.add("Librairie")
         self._build_build_tab(tab_build)
         self._build_compare_tab(tab_compare)
+        self._build_library_tab(tab_library)
 
     # ── Tab: Build actuel ─────────────────────────────────────
     # 4×2 grid of the 8 persisted equipment slots + a "Scan Build" button
@@ -221,6 +274,19 @@ class EquipmentView(ctk.CTkFrame):
             row, col = divmod(i, 4)
             card.grid(row=row, column=col, padx=6, pady=6, sticky="nsew")
 
+            # Per-slot 📷 button (Phase 5) — overlay top-right of the card.
+            # Captures the 'equipment_popup' zone with force_slot=slot_key.
+            # The bus repaints the grid once set_equipment_slot fires.
+            scan_btn = ctk.CTkButton(
+                card, text="📷", width=26, height=22,
+                font=FONT_SMALL,
+                fg_color="transparent",
+                hover_color=C["card_alt"],
+                border_width=0,
+                command=lambda k=slot_key, n=slot_name: self._on_scan_slot_clicked(k, n),
+            )
+            scan_btn.place(relx=1.0, x=-6, y=6, anchor="ne")
+
         n_filled = sum(1 for v in equipment.values()
                        if isinstance(v, dict) and v.get("__name__"))
         self._build_status_lbl.configure(
@@ -229,12 +295,16 @@ class EquipmentView(ctk.CTkFrame):
         )
 
     def _on_build_scan_clicked(self) -> None:
-        """Trigger controller.scan('player_equipment') asynchronously and
-        refresh the grid once the scan persisted the new pieces."""
+        """Trigger controller.scan_player_equipment asynchronously.
+
+        The controller persists the result through set_equipment(), which
+        fires equipment_changed → _on_equipment_changed → refresh.
+        This handler only updates the status banner.
+        """
         self._build_status_lbl.configure(
             text="📷  Scanning ...", text_color=C["accent"])
 
-        def _on_done(text: str, status: str) -> None:
+        def _on_done(_result, status: str) -> None:
             # Dispatched onto the Tk thread by the controller.
             if status == "ocr_unavailable":
                 self._build_status_lbl.configure(
@@ -247,22 +317,75 @@ class EquipmentView(ctk.CTkFrame):
                          "set the bbox in the Zones tab first",
                     text_color=C["lose"])
                 return
-            if status == "ocr_error":
+            if status in ("capture_failed", "scan_error"):
                 self._build_status_lbl.configure(
-                    text="⚠  OCR failed", text_color=C["lose"])
+                    text=f"⚠  Scan failed: {status}", text_color=C["lose"])
                 return
-            # Success path: equipment.txt has been overwritten by the
-            # controller. Reload the grid from disk.
-            self._refresh_build_slots()
-            self._build_status_lbl.configure(
-                text="✅  Scan applied", text_color=C["win"])
+            if status == "no_match":
+                self._build_status_lbl.configure(
+                    text="⚠  No item recognised in the panel",
+                    text_color=C["lose"])
+                return
+            # ok / low_confidence — equipment.txt has been overwritten,
+            # the bus already triggered the repaint.
+            tag = "✅  Scan applied"
+            if status == "low_confidence":
+                tag = "⚠  Scan applied (low confidence)"
+            self._build_status_lbl.configure(text=tag, text_color=C["win"])
 
         try:
-            self.controller.scan(
-                zone_key="player_equipment", callback=_on_done)
+            self.controller.scan_player_equipment(callback=_on_done)
         except Exception as e:  # noqa: BLE001
             self._build_status_lbl.configure(
-                text=f"⚠  scan() raised: {e}",
+                text=f"⚠  scan_player_equipment raised: {e}",
+                text_color=C["lose"])
+
+    def _on_scan_slot_clicked(self, slot_key: str, slot_name: str) -> None:
+        """Per-tile 📷 — single-slot popup scan (Phase 5).
+
+        The user opens the in-game item detail popup, then clicks the
+        camera over the matching tile. The controller delegates to
+        scan/jobs/equipment_popup.scan() with force_slot=slot_key and
+        merges the result via set_equipment_slot, which fires the bus.
+        """
+        self._build_status_lbl.configure(
+            text=f"📷  Scanning {slot_name} ...", text_color=C["accent"])
+
+        def _on_done(_result, status: str) -> None:
+            if status == "zone_not_configured":
+                messagebox.showinfo(
+                    "Scan slot",
+                    "Configure the 'equipment_popup' zone first "
+                    "(Zones tab → equipment_popup).",
+                )
+                self._build_status_lbl.configure(
+                    text="⚠  Zone equipment_popup not configured",
+                    text_color=C["lose"])
+                return
+            if status == "ocr_unavailable":
+                self._build_status_lbl.configure(
+                    text="⚠  OCR unavailable -- install rapidocr_onnxruntime",
+                    text_color=C["lose"])
+                return
+            if status in ("capture_failed", "scan_error"):
+                self._build_status_lbl.configure(
+                    text=f"⚠  {slot_name}: {status}", text_color=C["lose"])
+                return
+            if status == "no_match":
+                self._build_status_lbl.configure(
+                    text=f"⚠  {slot_name}: no item recognised in popup",
+                    text_color=C["lose"])
+                return
+            tag = f"✅  {slot_name} updated"
+            if status == "low_confidence":
+                tag = f"⚠  {slot_name} updated (low confidence)"
+            self._build_status_lbl.configure(text=tag, text_color=C["win"])
+
+        try:
+            self.controller.scan_equipment_slot(slot_key, _on_done)
+        except Exception as e:  # noqa: BLE001
+            self._build_status_lbl.configure(
+                text=f"⚠  scan_equipment_slot raised: {e}",
                 text_color=C["lose"])
 
     # ── Tab: Comparer ─────────────────────────────────────────
@@ -342,18 +465,6 @@ class EquipmentView(ctk.CTkFrame):
             captures_fn=self.controller.get_zone_captures,
             on_scan_ready=self._on_scan_ready,
         )
-
-        # ── Calibrate icons → wiki (opens a Toplevel popup) ────
-        # Lets the user refresh data/AutoItemMapping.json + the PNG
-        # filenames in data/icons/equipment/ from the in-game wiki
-        # popup. Useful after game updates rename items.
-        ctk.CTkButton(
-            self._scan_row, text="🔍  Calibrate icons → wiki",
-            font=FONT_SMALL, width=200,
-            fg_color="transparent",
-            border_color=C["card"], border_width=1,
-            command=self._open_wiki_calibration,
-        ).pack(side="left", padx=(8, 0))
 
         # ── Right: old + new ──────────────────────────────────
         right = ctk.CTkFrame(body, fg_color="transparent", corner_radius=0)
@@ -493,7 +604,7 @@ class EquipmentView(ctk.CTkFrame):
         self._lbl_status.configure(text="⏳ Simulation running…")
         self._build_bottom_loading()
 
-        se_old = combat_stats(self.controller.get_profile())
+        se_old = self.controller.preview_stats(self.controller.get_profile())
         skills = self.controller.get_active_skills()
 
         self.controller.simulate(
@@ -697,15 +808,105 @@ class EquipmentView(ctk.CTkFrame):
             # locked onto without typing anything.
             self._on_text_change()
 
-    # ── Wiki calibration popup ─────────────────────────────────
+    # ── Tab: Librairie ───────────────────────────────────────
+    # Browsable, filtered list of every item in
+    # data/AutoItemMapping.json. No apply / delete actions
+    # because equipment swaps require pasted stats with rarity.
+    # The row's « Comparer » button jumps to the Comparer tab
+    # and pre-selects the row's slot.
 
-    def _open_wiki_calibration(self) -> None:
-        """Open the icon calibration popup. Imported lazily to avoid
-        circular imports at boot."""
+    _AUTO_ITEM_MAPPING: Optional[List[Dict]] = None  # class-level cache
+
+    @classmethod
+    def _load_item_mapping(cls) -> List[Dict]:
+        if cls._AUTO_ITEM_MAPPING is not None:
+            return cls._AUTO_ITEM_MAPPING
         try:
-            from ui.views.wiki_calibration import WikiCalibrationDialog
-        except Exception as e:  # noqa: BLE001
-            self._lbl_err.configure(
-                text=f"⚠ Cannot open calibration popup: {e}")
+            project_root = Path(__file__).resolve().parents[2]
+            path = project_root / "data" / "AutoItemMapping.json"
+            with path.open(encoding="utf-8") as fh:
+                raw = json.load(fh)
+        except Exception:
+            cls._AUTO_ITEM_MAPPING = []
+            return cls._AUTO_ITEM_MAPPING
+        rows: List[Dict] = []
+        for entry in raw.values():
+            if not isinstance(entry, dict):
+                continue
+            rows.append({
+                "key":         f"{entry.get('Age')}_{entry.get('Type')}_{entry.get('Idx')}",
+                "name":        entry.get("ItemName") or entry.get("SpriteName") or "?",
+                "age":         str(entry.get("AgeName", "")),
+                "slot":        str(entry.get("TypeName", "")),
+                # Rarity is unknown at the static-balancing level (every
+                # drop rolls its own rarity) — fold to "common" so the
+                # LibraryList rarity styling stays neutral.
+                "rarity":      "common",
+                "sprite":      entry.get("SpriteName"),
+            })
+        rows.sort(key=lambda r: (r["age"], r["slot"], r["name"]))
+        cls._AUTO_ITEM_MAPPING = rows
+        return rows
+
+    def _build_library_tab(self, parent: ctk.CTkFrame) -> None:
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure(1, weight=1)
+
+        hint = ctk.CTkFrame(parent, fg_color=C["card"], corner_radius=12)
+        hint.grid(row=0, column=0, padx=16, pady=(12, 6), sticky="ew")
+        ctk.CTkLabel(
+            hint,
+            text="📚  Equipment Library",
+            font=FONT_SUB, text_color=C["text"],
+        ).pack(padx=16, pady=(12, 2), anchor="w")
+        ctk.CTkLabel(
+            hint,
+            text=("Reference list pulled from data/AutoItemMapping.json. "
+                  "Click « Comparer » on a row to jump to the Comparer "
+                  "tab with the matching slot pre-selected — paste the "
+                  "actual rolled stats there to run the simulation."),
+            font=FONT_SMALL, text_color=C["muted"],
+            wraplength=700, justify="left",
+        ).pack(padx=16, pady=(0, 12), anchor="w")
+
+        items = self._load_item_mapping()
+
+        if not items:
+            ctk.CTkLabel(
+                parent,
+                text="(no items found — data/AutoItemMapping.json is missing or empty)",
+                font=FONT_SMALL, text_color=C["muted"],
+            ).grid(row=1, column=0, padx=16, pady=24, sticky="n")
             return
-        WikiCalibrationDialog(self, self.controller)
+
+        ages  = sorted({it["age"]  for it in items if it["age"]})
+        slots = sorted({it["slot"] for it in items if it["slot"]})
+
+        list_frame, _ctrl = LibraryList(
+            parent,
+            items,
+            title=f"All items ({len(items)})",
+            hint=None,
+            filters={"age": ages, "slot": slots},
+            on_action=self._library_jump_to_compare,
+            on_delete=None,
+            icon_loader=None,    # equipment icons require age + slot folders;
+                                  # skipped here for simplicity (see plan §13.W7)
+            fallback_emoji="🛡",
+            max_height=440,
+        )
+        list_frame.grid(row=1, column=0, padx=16, pady=(0, 16), sticky="nsew")
+
+    def _library_jump_to_compare(self, item: Dict) -> None:
+        """Switch to the Comparer tab and lock the slot picker on the
+        slot of the clicked row, leaving the user to paste stats."""
+        slot_name = item.get("slot")
+        slot_key  = _SLOT_LABEL_TO_KEY.get(slot_name)
+        if slot_key:
+            self.focus_slot(slot_key)
+        else:
+            try:
+                self._tabs.set("Comparer")
+            except Exception:
+                pass
+

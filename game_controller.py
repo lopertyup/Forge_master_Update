@@ -94,6 +94,11 @@ class GameController:
         self._skills_library: Dict[str, Dict] = {}
         self._zones:          Dict[str, Dict] = {}   # OCR capture zones
         self._tk_root                         = None  # for thread-safe after()
+        # Subscribers notified after every set_equipment / set_equipment_slot.
+        # Lets the Build / Dashboard / Comparator / Simulator views refresh
+        # themselves automatically when the persisted build mutates
+        # (Phase 5 §6.bis R1..R5 and S9 — equipment_changed bus).
+        self._equipment_listeners: List[Callable[[], None]] = []
         self.reload()
 
     def set_tk_root(self, root) -> None:
@@ -209,9 +214,9 @@ class GameController:
     # ── Enemy recompute cache (Phase 3 wiring) ──────────────
     #
     # Whenever scan(zone_key="opponent", ...) finishes the
-    # controller also runs backend.pipeline on the same
-    # capture and stores the result here. The simulator view
-    # can then prefer these recomputed totals over the raw OCR
+    # controller also runs scan.jobs.opponent.recompute_from_capture
+    # on the same capture and stores the result here. The simulator
+    # view can then prefer these recomputed totals over the raw OCR
     # ones when feeding `simulate()`.
 
     def get_last_enemy_stats(self):
@@ -229,23 +234,6 @@ class GameController:
         self._last_enemy_stats = None
         self._last_enemy_profile = None
         return stats, prof
-
-    # ── Player weapon scan ──────────────────────────────────────
-    #
-    # Same one-shot cache pattern as the opponent: scan() stashes
-    # the latest scan_player_weapon_image() result into
-    # _last_player_weapon and the simulator pops it via
-    # consume_player_weapon() before each fight.
-
-    def get_last_player_weapon(self):
-        """Read-only peek at the cached player weapon scan."""
-        return getattr(self, "_last_player_weapon", None)
-
-    def consume_player_weapon(self):
-        """Pop and return the cached player weapon stat dict."""
-        data = getattr(self, "_last_player_weapon", None)
-        self._last_player_weapon = None
-        return data
 
     # ── Player equipment (8 slots) ──────────────────────────
     #
@@ -267,14 +255,58 @@ class GameController:
         return dict(self._equipment.get(slot, {}))
 
     def set_equipment(self, equipment: Dict[str, Dict]) -> None:
-        """Replace the whole 8-slot dict and persist."""
+        """Replace the whole 8-slot dict, persist, and broadcast to listeners."""
         self._equipment = {k: dict(v) for k, v in equipment.items()}
         save_equipment(self._equipment)
+        self._notify_equipment_changed()
 
     def set_equipment_slot(self, slot: str, data: Dict) -> None:
-        """Update one slot in-place + persist."""
+        """Update one slot in-place, persist, and broadcast to listeners."""
         self._equipment[slot] = dict(data)
         save_equipment(self._equipment)
+        self._notify_equipment_changed()
+
+    # ── Equipment-changed bus ───────────────────────────────
+    #
+    # Phase 5 §6.bis — every set_equipment* call must propagate to the
+    # views (Build / Dashboard / Comparator / Simulator) so derived
+    # stats stay in sync. Callbacks are stored as plain refs (the views
+    # already live for the whole app lifetime) and dispatched on the
+    # Tk thread when a root is registered.
+
+    def subscribe_equipment_changed(
+        self, fn: Callable[[], None],
+    ) -> Callable[[], None]:
+        """Register `fn` as an equipment_changed listener.
+
+        Returns an `unsubscribe()` callable so views with a non-trivial
+        lifecycle can detach themselves cleanly. Idempotent: registering
+        the same fn twice still only fires it once per change.
+        """
+        if fn not in self._equipment_listeners:
+            self._equipment_listeners.append(fn)
+
+        def _unsubscribe() -> None:
+            try:
+                self._equipment_listeners.remove(fn)
+            except ValueError:
+                pass
+
+        return _unsubscribe
+
+    def _notify_equipment_changed(self) -> None:
+        """Fire every equipment_changed listener (Tk-safe via _dispatch)."""
+        for fn in list(self._equipment_listeners):
+            try:
+                # Bounce through the Tk thread when possible — repaints
+                # belong on the main loop, not on whichever scan daemon
+                # called set_equipment*().
+                if self._tk_root is not None:
+                    self._tk_root.after(0, fn)
+                else:
+                    fn()
+            except Exception:
+                log.exception("equipment_changed listener raised")
 
 
     def get_zones(self) -> Dict[str, Dict]:
@@ -300,6 +332,117 @@ class GameController:
     def is_zone_configured(self, zone_key: str) -> bool:
         """True iff every bbox in this zone has non-zero area."""
         return zone_store.is_zone_configured(zone_key, zones=self._zones)
+
+    # ── Equipment scan (Phase 5) ────────────────────────────
+    #
+    # Two flavours, both delegating to scan/jobs/* (see PHASE5_HANDOFF.txt):
+    #   * scan_player_equipment(cb)           : 8-tile panel, one shot.
+    #   * scan_equipment_slot(slot, cb)       : single piece via popup.
+    # Both merge their result into self._equipment via set_equipment* and
+    # therefore broadcast equipment_changed automatically.
+    #
+    # Callback contract (Tk-thread, dispatched by _dispatch):
+    #   cb(result, status) where result is a scan.types.ScanResult or None,
+    #   and status one of:
+    #     "ok" / "low_confidence" / "no_match" / "scan_error"
+    #     "ocr_unavailable" / "capture_failed" / "zone_not_configured"
+
+    def scan_player_equipment(
+        self,
+        callback: Callable[[object, str], None],
+    ) -> None:
+        """Capture the 'player_equipment' zone, run scan.jobs.player_equipment,
+        merge ``debug['slot_dict']`` into the persisted build, notify views.
+        """
+        z = self._zones.get("player_equipment")
+        if z is None or not z.get("bboxes"):
+            self._dispatch(callback, None, "zone_not_configured")
+            return
+        bboxes = [tuple(b) for b in (z.get("bboxes") or [])]
+        if not bboxes or all(all(c == 0 for c in b) for b in bboxes):
+            self._dispatch(callback, None, "zone_not_configured")
+            return
+
+        def _run() -> None:
+            from backend.scanner import ocr  # lazy import (Pillow only on first scan)
+            from scan.jobs import player_equipment as job  # type: ignore
+
+            if not ocr.is_available():
+                self._dispatch(callback, None, "ocr_unavailable")
+                return
+            img = ocr.capture_region(bboxes[0])
+            if img is None:
+                self._dispatch(callback, None, "capture_failed")
+                return
+            try:
+                result = job.scan(img)
+            except Exception:
+                log.exception("scan_player_equipment crashed")
+                self._dispatch(callback, None, "scan_error")
+                return
+
+            slot_dict = (getattr(result, "debug", None) or {}).get("slot_dict") or {}
+            if slot_dict:
+                # Merge: keep slots not present in the scan (defensive — the
+                # job currently returns all 8, but a partial run shouldn't
+                # wipe the rest of the build).
+                merged = {**self._equipment, **slot_dict}
+                self.set_equipment(merged)
+                log.info(
+                    "scan_player_equipment: %d slots merged "
+                    "(%d non-empty in scan)",
+                    len(slot_dict),
+                    sum(1 for v in slot_dict.values()
+                        if isinstance(v, dict)
+                        and (v.get("hp_flat") or v.get("damage_flat"))),
+                )
+            self._dispatch(callback, result, getattr(result, "status", "ok"))
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def scan_equipment_slot(
+        self,
+        slot: str,
+        callback: Callable[[object, str], None],
+    ) -> None:
+        """Single-slot popup scan. ``slot`` is an EQUIPMENT_SLOTS key
+        (EQUIP_HELMET / EQUIP_BODY / ...). The bbox used is the
+        'equipment_popup' zone — see ZonesView for calibration.
+        """
+        z = self._zones.get("equipment_popup")
+        if z is None or not z.get("bboxes"):
+            self._dispatch(callback, None, "zone_not_configured")
+            return
+        bboxes = [tuple(b) for b in (z.get("bboxes") or [])]
+        if not bboxes or all(all(c == 0 for c in b) for b in bboxes):
+            self._dispatch(callback, None, "zone_not_configured")
+            return
+
+        def _run() -> None:
+            from backend.scanner import ocr
+            from scan.jobs import equipment_popup as job  # type: ignore
+
+            if not ocr.is_available():
+                self._dispatch(callback, None, "ocr_unavailable")
+                return
+            img = ocr.capture_region(bboxes[0])
+            if img is None:
+                self._dispatch(callback, None, "capture_failed")
+                return
+            try:
+                result = job.scan(img, force_slot=slot)
+            except Exception:
+                log.exception("scan_equipment_slot(%r) crashed", slot)
+                self._dispatch(callback, None, "scan_error")
+                return
+
+            slot_dict = (getattr(result, "debug", None) or {}).get("slot_dict") or {}
+            for section, sd in slot_dict.items():
+                # set_equipment_slot persists + fires equipment_changed.
+                self.set_equipment_slot(section, sd)
+            self._dispatch(callback, result, getattr(result, "status", "ok"))
+
+        threading.Thread(target=_run, daemon=True).start()
 
     def scan(
         self,
@@ -398,7 +541,12 @@ class GameController:
             # won't see a recompute cache hit.
             if zone_key == "opponent" and bboxes:
                 try:
-                    from backend import pipeline as enemy_pipeline
+                    # Phase 6 — opponent recompute now lives in scan.jobs.opponent.
+                    # Public API kept binary-compatible with the old
+                    # backend.pipeline.recompute_from_capture so the rest of the
+                    # controller doesn't notice the swap. backend/pipeline.py
+                    # stays on disk until Phase 7 cleans it up.
+                    from scan.jobs import opponent as enemy_pipeline  # type: ignore
                     img = ocr.capture_region(bboxes[0])
                     if img is not None:
                         e_stats, e_prof, _ = enemy_pipeline.recompute_from_capture(
@@ -423,135 +571,15 @@ class GameController:
                         "simulator will use OCR text only",
                     )
 
-            # Player weapon scan -- one-shot: capture the user-drawn
-            # weapon icon bbox and store the derived windup / recovery
-            # / projectile_travel_time so the simulator can pick them
-            # up via consume_player_weapon() on the next fight.
-            elif zone_key == "player_weapon" and bboxes:
-                try:
-                    from backend.scanner import weapon as player_weapon_scanner
-                    img = ocr.capture_region(bboxes[0])
-                    if img is not None:
-                        scan = player_weapon_scanner.scan_player_weapon_image(img)
-                        if scan is not None:
-                            self._last_player_weapon = scan
-                            log.info(
-                                "player_weapon: age=%s idx=%s type=%s "
-                                "W=%.2fs R=%.2fs travel=%.3fs",
-                                scan.get("weapon_age"),
-                                scan.get("weapon_idx"),
-                                scan.get("attack_type"),
-                                scan.get("weapon_windup", 0.0),
-                                scan.get("weapon_recovery", 0.0),
-                                scan.get("projectile_travel_time", 0.0),
-                            )
-                except Exception:
-                    log.exception(
-                        "scan: player_weapon scanner failed -- "
-                        "simulator will use legacy timing for the player",
-                    )
-
-            # Player equipment scan -- one-shot capture of the user's
-            # full equipment panel. The result is persisted directly
-            # into equipment.txt so subsequent simulations and the
-            # Build view see the up-to-date 8 pieces. No "consume"
-            # cache here -- the persisted dict IS the source of truth.
-            elif zone_key == "player_equipment" and bboxes:
-                try:
-                    from backend.scanner import player_equipment as player_equipment_scanner
-                    img = ocr.capture_region(bboxes[0])
-                    if img is not None:
-                        eq_dict = player_equipment_scanner.scan_player_equipment_image(img)
-                        if eq_dict is not None:
-                            self.set_equipment(eq_dict)
-                            log.info(
-                                "player_equipment: %d slots scanned, persisted to equipment.txt",
-                                sum(1 for v in eq_dict.values()
-                                    if v.get("hp_flat") or v.get("damage_flat")),
-                            )
-                except Exception:
-                    log.exception(
-                        "scan: player_equipment scanner failed -- "
-                        "build dict left untouched",
-                    )
+            # Note: 'player_weapon' and 'player_equipment' used to be
+            # handled here by the legacy scanners. Phase 5 moved them
+            # to dedicated controller methods (scan_player_equipment,
+            # scan_equipment_slot) that delegate to scan/jobs/* — the
+            # generic OCR-text scan() no longer carries that side effect.
 
             self._dispatch(callback, text, status)
 
         threading.Thread(target=_run, daemon=True).start()
-
-    # ── Wiki-grid scan (icon recognition / library calibration) ──
-    #
-    # Capture the in-game wiki popup (a 4×2 item grid), template-match
-    # each cell against data/icons/equipment/{Age}/{Slot}/, OCR the name
-    # beneath each icon, and dispatch the results back on the Tk thread.
-    # The caller (Equipment Comparator → Calibrate icons) can then let
-    # the user validate selectively before persisting via apply_wiki_results.
-
-    def scan_wiki_grid(
-        self,
-        age: int,
-        slot: str,
-        threshold: float,
-        callback: Callable[[List, str], None],
-    ) -> None:
-        """Capture the wiki_grid zone + run icon recognition.
-
-        Dispatches (matches: list[CellMatch], status: str) on the Tk thread.
-        Status: "ok" / "zone_not_configured" / "ocr_unavailable" /
-        "capture_failed" / "scan_error".
-        """
-        z = self._zones.get("wiki_grid")
-        if z is None:
-            self._dispatch(callback, [], "zone_not_configured")
-            return
-
-        bboxes = [tuple(b) for b in (z.get("bboxes") or [])]
-        if not bboxes or all(all(c == 0 for c in b) for b in bboxes):
-            self._dispatch(callback, [], "zone_not_configured")
-            return
-
-        def _run() -> None:
-            from backend.scanner import ocr  # type: ignore
-            from backend.scanner import icon_recognition  # type: ignore
-            if not ocr.is_available():
-                self._dispatch(callback, [], "ocr_unavailable")
-                return
-            try:
-                img = ocr.capture_region(bboxes[0])
-                if img is None:
-                    self._dispatch(callback, [], "capture_failed")
-                    return
-                matches = icon_recognition.scan_grid(
-                    img, age=age, slot=slot, threshold=threshold,
-                )
-                self._dispatch(callback, matches, "ok")
-            except Exception:
-                log.exception("scan_wiki_grid: failed")
-                self._dispatch(callback, [], "scan_error")
-
-        threading.Thread(target=_run, daemon=True).start()
-
-    def apply_wiki_results(
-        self,
-        matches: List,
-        age: int,
-        slot: str,
-        selected_indices: List[int],
-        threshold: float,
-        dry_run: bool = False,
-    ):
-        """Persist user-validated matches: rename PNGs + update
-        AutoItemMapping. Synchronous (cheap disk ops).
-
-        Returns the ApplyReport from icon_recognition.
-        """
-        from backend.scanner import icon_recognition  # type: ignore
-        return icon_recognition.apply_results(
-            matches, age=age, slot=slot,
-            threshold=threshold,
-            selected_indices=selected_indices,
-            dry_run=dry_run,
-        )
 
     # ── Main simulation (opponent = pasted build) ───────────
 
@@ -594,6 +622,151 @@ class GameController:
             self._dispatch(callback, w, l, d)
 
         threading.Thread(target=_run, daemon=True).start()
+
+    # ── Profile preview (consumed by Equipment swap-flow) ──
+    #
+    # combat_stats() turns a raw profile dict into the stat-engine dict
+    # that simulate() consumes as `opponent_stats`. The equipment
+    # comparator uses it to bake the « current build » into a frozen
+    # opponent before re-running the sim with the candidate as player.
+    # Exposing it through the controller keeps Plan §11 phase 5 §6
+    # satisfied (no `from backend` for logic in the swap-flow views).
+
+    def preview_stats(self, profile: Optional[Dict] = None) -> Dict:
+        """Return the combat-stats dict for `profile` (defaults to the
+        currently loaded player profile). Mirrors what simulate()
+        applies internally — useful when a view needs to freeze a
+        snapshot of the current build before swapping a piece in.
+        """
+        p = profile if profile is not None else self._profile
+        return combat_stats(p or {})
+
+    # ── Simulator wrapper (consumed by ui/views/simulator.py) ──
+    #
+    # Builds the opponent_combat dict from the cached enemy scan
+    # (peek, not consume — D2 of Plan §11 phase 4) so the
+    # simulator view stays free of any backend.* import.
+
+    def simulate_vs_last_enemy(
+        self,
+        callback: Callable[[int, int, int], None],
+        opponent_skills: Optional[List] = None,
+    ) -> None:
+        """Run a 1k-fight simulation against the last-scanned opponent.
+
+        Reads the cached EnemyComputedStats / EnemyIdentifiedProfile
+        without consuming them so subsequent clicks reuse the same
+        scan. Dispatches (wins, loses, draws) on the Tk thread.
+
+        Returns (0, 0, 0) when no profile is loaded or no opponent
+        was ever scanned.
+        """
+        if self._profile is None:
+            self._dispatch(callback, 0, 0, 0)
+            return
+        rec = getattr(self, "_last_enemy_stats", None)
+        if rec is None:
+            self._dispatch(callback, 0, 0, 0)
+            return
+
+        # Combat-stats dict shaped like backend.calculator.stats.combat_stats:
+        # totals + substats from EnemyComputedStats (decimal → percent)
+        # + per-source HP buckets + weapon timing.
+        opp_combat: Dict = {
+            "hp_total":     float(rec.total_health),
+            "attack_total": float(rec.total_damage),
+            "attack_type":  "ranged" if rec.is_ranged_weapon else "melee",
+            # Substats: decimal multipliers in EnemyComputedStats →
+            # percent points consumed by the simulator.
+            "crit_chance":     float(rec.critical_chance) * 100.0,
+            "crit_damage":     (float(rec.critical_damage) - 1.0) * 100.0,
+            "block_chance":    float(rec.block_chance) * 100.0,
+            "double_chance":   float(rec.double_damage_chance) * 100.0,
+            "lifesteal":       float(rec.life_steal) * 100.0,
+            "health_regen":    float(rec.health_regen) * 100.0,
+            "attack_speed":    (float(rec.attack_speed_multiplier) - 1.0) * 100.0,
+            "skill_damage":    (float(rec.skill_damage_multiplier) - 1.0) * 100.0,
+            "skill_cooldown":  float(rec.skill_cooldown_reduction) * 100.0,
+            # Weapon timing (windup / recovery floored to 0.1 s
+            # in the simulator's discrete model).
+            "weapon_windup":   float(rec.weapon_windup_time),
+            "weapon_recovery": max(
+                float(rec.weapon_attack_duration) - float(rec.weapon_windup_time),
+                0.0,
+            ),
+            # Per-source HP sub-totals (1.0/0.5/0.5/2.0 applied
+            # by the PvP engine — PvpBaseConfig.json).
+            "hp_equip":          float(rec.equip_health),
+            "hp_pet":            float(rec.pet_health),
+            "hp_mount":          float(rec.mount_health),
+            "hp_skill_passive":  float(rec.skill_passive_health),
+        }
+
+        # Projectile travel time — 0 for melee, PVP_COMBAT_DISTANCE / speed
+        # for ranged. The PvP-specific distance (~1.5 units) replaces the
+        # weapon's nominal range (7.0).
+        travel = 0.0
+        if rec.is_ranged_weapon:
+            from backend.weapon.projectiles import PVP_COMBAT_DISTANCE
+            speed = float(rec.projectile_speed or 0.0)
+            if speed > 0.0:
+                travel = PVP_COMBAT_DISTANCE / speed
+        opp_combat["projectile_travel_time"] = travel
+
+        # Player weapon timing now lives on self._equipment["EQUIP_WEAPON"]
+        # (populated by scan_player_equipment / scan_equipment_slot via the
+        # scan/jobs/_weapon_enrich.py port). The simulator reads it from
+        # the persisted profile/build path; no per-fight "consume" step.
+        player_profile = None
+
+        log.info(
+            "simulate_vs_last_enemy: HP=%.0f Dmg=%.0f type=%s; "
+            "weapon W=%.2fs R=%.2fs travel=%.3fs; HP buckets "
+            "equip=%.0f pet=%.0f mount=%.0f skill=%.0f",
+            rec.total_health, rec.total_damage,
+            opp_combat["attack_type"],
+            opp_combat["weapon_windup"],
+            opp_combat["weapon_recovery"],
+            opp_combat["projectile_travel_time"],
+            rec.equip_health, rec.pet_health,
+            rec.mount_health, rec.skill_passive_health,
+        )
+
+        self.simulate(
+            opp_combat,
+            opponent_skills if opponent_skills is not None else [],
+            callback,
+            profile_override=player_profile,
+        )
+
+
+    # ── Optimizer wrapper (consumed by ui/views/optimizer_view.py) ──
+    #
+    # Forwards directly to backend.calculator.optimizer.analyze_profile
+    # so the view stays free of any backend.* import (Plan §4.C.4 / D1).
+
+    def run_optimizer(
+        self,
+        n_points: int = 8,
+        n_sims:   int = 200,
+        progress_cb = None,
+        stat_cb     = None,
+        stop_flag   = None,
+    ):
+        """Run the marginal stat-by-stat analysis and return the sorted
+        verdict list. ``profile`` is the current player profile (the
+        controller injects it so the view never touches it directly).
+        """
+        from backend.calculator.optimizer import analyze_profile
+        return analyze_profile(
+            profile=self.get_profile(),
+            skills=self.get_active_skills(),
+            n_points=n_points,
+            n_sims=n_sims,
+            progress_cb=progress_cb,
+            stat_cb=stat_cb,
+            stop_flag=stop_flag,
+        )
 
     # ── Equipment ───────────────────────────────────────────
 
@@ -1185,23 +1358,25 @@ class GameController:
 
         Order: flat stats first (totals then bases), then substats in the
         canonical in-game order (crit / block / regen / ... / health).
+        Kept as a back-compat helper — new views read STAT_LABELS /
+        STAT_DISPLAY_ORDER from ui.theme directly instead.
         """
         return [
-            ("hp_total",       "❤  Total HP",          True),
-            ("attack_total",   "⚔  Total ATK",          True),
-            ("hp_base",        "   Base HP",            True),
-            ("attack_base",    "   Base ATK",           True),
-            ("crit_chance",    "🎯 Crit Chance",         False),
-            ("crit_damage",    "💥 Crit Damage",         False),
-            ("block_chance",   "🛡  Block Chance",       False),
+            ("hp_total",       "❤  Total HP",   True),
+            ("attack_total",   "⚔  Total ATK",  True),
+            ("hp_base",        "   Base HP",    True),
+            ("attack_base",    "   Base ATK",   True),
+            ("crit_chance",    "🎯 Crit Chance",     False),
+            ("crit_damage",    "💥 Crit Damage",     False),
+            ("block_chance",   "🛡  Block Chance",   False),
             ("health_regen",   "♻  Health Regen",       False),
-            ("lifesteal",      "🩸 Lifesteal",           False),
+            ("lifesteal",      "🩸 Lifesteal",       False),
             ("double_chance",  "✌  Double Chance",      False),
             ("damage_pct",     "⚔  Damage %",           False),
             ("melee_pct",      "⚔  Melee %",            False),
             ("ranged_pct",     "⚔  Ranged %",           False),
             ("attack_speed",   "⚡ Attack Speed",        False),
             ("skill_damage",   "✨ Skill Damage",        False),
-            ("skill_cooldown", "❄  Skill Cooldown",      False),
-            ("health_pct",     "❤  Health %",            False),
+            ("skill_cooldown", "⏱  Skill CD",           False),
+            ("health_pct",     "❤  Health %",           False),
         ]
