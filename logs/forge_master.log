@@ -73,3 +73,7 @@ Traceback (most recent call last):
 ModuleNotFoundError: No module named 'backend.calculator.constants'
 15:57:37 [INFO   ] __main__: Starting Forge Master UI
 15:57:37 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+21:50:12 [INFO   ] __main__: Starting Forge Master UI
+21:50:13 [INFO   ] game_controller: GameController.reload: profile=OK, pets=3, skills=3/3, lib_pets=0, lib_mount=0, lib_skills=0, zones=9
+21:56:07 [INFO   ] backend.scanner.ocr: OCR ready — engine: rapidocr_onnxruntime (PP-OCR model)
+21:56:09 [INFO   ] backend.simulation.engine: simulate_batch: process pool ready (7 workers)
