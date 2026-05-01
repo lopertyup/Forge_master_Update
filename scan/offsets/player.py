@@ -18,9 +18,9 @@
 
       Helmet, Body, Gloves, Necklace, Ring, Weapon, Shoe, Belt
 
-  ⚠ Direct port of ``backend.scanner.offsets.player``. Same
+  Direct port of the legacy player offsets. Same
   numbers, same JSON schema. Phase 7 of the refactor (cf.
-  SCAN_REFACTOR.txt §7) deletes the legacy module.
+  PLAN_REFACTO_SCAN.txt).
 ============================================================
 """
 

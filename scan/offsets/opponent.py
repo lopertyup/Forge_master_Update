@@ -24,11 +24,11 @@
 
       Helmet, Body, Gloves, Necklace, Ring, Weapon, Shoe, Belt
 
-  ⚠ This is a direct port of ``backend.scanner.offsets.opponent``.
+  This is a direct port of the legacy opponent offsets.
   Numbers and JSON schema are byte-identical so a calibration
   performed before the migration keeps working unchanged. The
   legacy module is preserved during the migration; Phase 7 of
-  the refactor (cf. SCAN_REFACTOR.txt §7) deletes it.
+  the refactor (cf. PLAN_REFACTO_SCAN.txt).
 ============================================================
 """
 

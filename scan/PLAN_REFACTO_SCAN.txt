@@ -1,0 +1,792 @@
+================================================================================
+  FORGE MASTER - PLAN DE REFONTE DU SYSTEME DE SCAN ET DE PERSISTANCE
+  Version corrigee apres revue humaine
+================================================================================
+
+Ce document est une specification de travail. Il doit guider une refonte
+complete, mais chaque phase doit rester compilable et testable.
+
+Vision cible validee :
+
+  1. `data/` a la racine du projet est la source de verite pour les donnees
+     runtime partagees :
+       - `data/colors.json`
+       - `data/libraries.py`
+       - `data/library_ops.py`
+       - `data/icons/...`
+       - futures librairies de nomenclature canonique.
+
+  2. Les scans joueur sont OCR purs :
+       - equipment_popup
+       - player_equipment
+       - pet
+       - mount
+       - skill
+
+     Ces jobs ne doivent plus faire d'identification visuelle par icone,
+     couleur ou reference image. Ils lisent le texte OCR, normalisent, parsers,
+     puis construisent un dict canonique.
+
+  3. Seul le scan adversaire garde la strategie visuelle :
+       - scan.core
+       - scan.colors
+       - scan.refs
+       - data/icons
+
+     Raison : sur l'adversaire, les infos OCR disponibles ne suffisent pas.
+     Les icones, couleurs et levels restent necessaires.
+
+  4. La persistance joueur est refondue completement. L'ancien fonctionnement
+     profile.txt + equipment.txt + pets.txt + mount.txt + skills.txt devient
+     caduc apres migration. Toute sauvegarde passe par un nouveau store profile
+     centralise dans `backend/persistence/profile_store/`.
+
+  5. Les nouveaux noms canoniques deviennent la norme :
+       - Equipment slots : Helmet, Body, Gloves, Necklace, Ring, Weapon, Shoe, Belt
+       - Skill slots     : Skill_1, Skill_2, Skill_3
+       - Pet slots       : Pet_1, Pet_2, Pet_3
+       - Mount slot      : Mount
+
+     Ces noms doivent aussi s'aligner sur `data/icons/equipment/<Age>/<Slot>/`.
+
+
+================================================================================
+  TABLE DES MATIERES
+================================================================================
+
+  0. Regles globales
+  1. Architecture cible
+  2. Invariants non negociables
+  3. Phase A - Nomenclature canonique dans data/
+  4. Phase B - Persistance profile centralisee
+  5. Phase C - Jobs scan joueur OCR purs
+  6. Phase D - Controller et UI
+  7. Phase E - Migration backend/scanner vers scan/
+  8. Smoke tests finaux
+  9. Checklist de commits
+
+
+================================================================================
+  0. REGLES GLOBALES
+================================================================================
+
+R0. Avant chaque etape, lire les fichiers cites dans l'etape.
+
+R1. Une etape = un commit logique. Ne pas melanger persistance, OCR, UI et
+    deplacement de modules dans le meme commit.
+
+R2. Apres chaque etape, executer au minimum :
+
+      python -m compileall backend scan ui data game_controller.py main.py
+      python -c "import game_controller"
+
+    Si pytest est disponible :
+
+      python -m pytest
+
+R3. Ne jamais supprimer un fichier appele par le code avant d'avoir migre tous
+    ses callers ou ajoute un shim temporaire.
+
+R4. Les anciens fichiers de persistance peuvent devenir caducs, mais leur
+    migration doit etre explicite, testee et sauvegarder l'existant en `.bak`.
+
+R5. Ne jamais modifier les JSON de librairie metier par accident. Les fichiers
+    `data/*.json` sont des donnees runtime, pas des sorties de tests.
+
+R6. Les jobs scan ne font jamais de Tk, jamais de popup UI, jamais de save
+    direct. Ils retournent un `ScanResult`.
+
+R7. Toute sauvegarde joueur passe par le controller, puis par le profile store.
+
+
+================================================================================
+  1. ARCHITECTURE CIBLE
+================================================================================
+
+Arborescence cible pertinente :
+
+  data/
+    __init__.py
+    libraries.py
+    library_ops.py
+    colors.json
+    canonical.py                 NEW - constantes canoniques partagees
+    icons/
+      equipment/<Age>/<Slot>/*.png
+      pets/*.png
+      mount/*.png
+      skills/*.png
+
+  scan/
+    core.py                      adversaire uniquement
+    colors.py                    adversaire uniquement, lit data/colors.json
+    refs.py                      adversaire uniquement, lit data/icons
+    types.py
+    offsets/
+      opponent.py
+      player.py
+    jobs/
+      equipment_popup.py         OCR pur
+      player_equipment.py        OCR pur
+      pet.py                     OCR pur
+      mount.py                   OCR pur
+      skill.py                   OCR pur
+      opponent.py                OCR + visuel
+      _title.py                  OCR helper commun
+      _lv.py                     OCR helper commun
+      _weapon_enrich.py          enrichissement data/WeaponLibrary.json
+      _flat.py                   garde possible, adversaire/debug uniquement
+      _panel.py                  garde possible, adversaire uniquement
+    ocr/                         NEW - ex backend/scanner OCR texte
+      __init__.py
+      engine.py
+      fix.py
+      debug.py
+      parsers/
+        common.py
+        profile.py
+        equipment.py
+        companion.py
+        skill.py
+    enemy/                       NEW - types/parser adversaire
+      __init__.py
+      types.py
+      parser.py
+
+  backend/
+    constants.py                 constantes backend/simulation uniquement
+    persistence/
+      __init__.py
+      _io.py
+      _migrate_profile.py         migration legacy
+      profile_store/              NEW - dossier/module de persistance joueur
+        __init__.py
+        schema.py
+        codecs.py
+        store.py
+        profile.txt               fichier runtime principal
+        profile_meta.json          optionnel : version schema, migration
+      zones.py
+      window.py
+      libraries.py
+      equipment.py                shim temporaire ou supprime en fin
+      companions.py               shim temporaire ou supprime en fin
+      skills.py                   shim temporaire ou supprime en fin
+    scanner/                      shims temporaires, supprime en fin
+
+Note importante :
+
+  Le dossier `backend/data/` ne doit pas revenir.
+  Le dossier `scan/data/` ne doit pas revenir.
+
+
+================================================================================
+  2. INVARIANTS NON NEGOCIABLES
+================================================================================
+
+V1. Skill Cooldown est un float signe. Jamais `abs()`, jamais cast positif.
+
+V2. Pet et Mount lisent toujours les deux stats principales :
+    `hp_flat` ET `damage_flat`.
+
+V3. Les substats sont variables : 0..N entrees. Le parser ne doit jamais
+    supposer un nombre fixe de lignes.
+
+V4. Les scans de comparaison n'ecrivent rien. Ils simulent et renvoient le
+    resultat. La sauvegarde attend une confirmation utilisateur.
+
+V5. Jobs joueur OCR purs :
+
+      scan/jobs/equipment_popup.py
+      scan/jobs/player_equipment.py
+      scan/jobs/pet.py
+      scan/jobs/mount.py
+      scan/jobs/skill.py
+
+    Interdits dans ces fichiers :
+
+      from scan.core ...
+      from scan.colors ...
+      from scan.refs ...
+      from ._flat import run_flat_scan
+      from ._panel import identify_panel
+      from ..core ...
+      from ..colors ...
+      from ..refs ...
+
+    Exception temporaire autorisee pendant transition :
+      importer une constante canonique depuis `data.canonical`.
+
+V6. Seul `scan/jobs/opponent.py` peut utiliser core/colors/refs pour identifier
+    visuellement icones, ages et rarities.
+
+V7. OpenCV reste optionnel. `scan.core` doit pouvoir etre importe sans cv2.
+
+V8. Les noms canoniques de slots sont ceux de `data.canonical`, pas les anciens
+    `EQUIP_*`, `PET1`, `S1`.
+
+V9. Toute ecriture profile recalcule les totaux derives et substats totals.
+
+V10. Les skills ne contribuent pas a `substats_total`, mais leurs passifs HP et
+     Damage contribuent aux totaux de combat si le simulateur les utilise deja.
+
+V11. `game_controller.py` est la frontiere : UI -> controller -> scan/backend.
+     Les vues UI ne sauvegardent pas directement.
+
+V12. Les anciens modules `backend.scanner.*` doivent rester shimes tant qu'un
+     import direct existe.
+
+
+================================================================================
+  3. PHASE A - NOMENCLATURE CANONIQUE DANS data/
+================================================================================
+
+But :
+  Poser une source de verite stable pour les noms de slots, ages, rarities et
+  mappings texte -> forme canonique. Cette phase ne change pas encore les
+  comportements.
+
+Fichiers a lire :
+  - data/libraries.py
+  - data/README-DATA.txt
+  - backend/constants.py
+  - backend/scanner/ocr_types.py
+  - scan/refs.py
+  - ui/theme.py
+
+Creer `data/canonical.py` :
+
+  EQUIPMENT_SLOTS = (
+      "Helmet", "Body", "Gloves", "Necklace",
+      "Ring", "Weapon", "Shoe", "Belt",
+  )
+
+  SKILL_SLOTS = ("Skill_1", "Skill_2", "Skill_3")
+  PET_SLOTS = ("Pet_1", "Pet_2", "Pet_3")
+  MOUNT_SLOT = "Mount"
+
+  RARITIES = ("Common", "Rare", "Epic", "Legendary", "Ultimate", "Mythic")
+
+  AGES = (
+      "Primitive", "Medieval", "Early-Modern", "Modern", "Space",
+      "Interstellar", "Multiverse", "Quantum", "Underworld", "Divine",
+  )
+
+  AGE_NAME_TO_INT = {...}
+  AGE_INT_TO_NAME = {...}
+
+  SLOT_TO_JSON_TYPE = {
+      "Helmet": "Helmet",
+      "Body": "Armour",
+      "Gloves": "Gloves",
+      "Necklace": "Necklace",
+      "Ring": "Ring",
+      "Weapon": "Weapon",
+      "Shoe": "Shoes",
+      "Belt": "Belt",
+  }
+
+  SUBSTAT_KEYS = (
+      "Crit Chance", "Crit Damage", "Block Chance", "Health Regen",
+      "Lifesteal", "Double Chance", "Damage%", "Melee%", "Ranged%",
+      "Attack Speed", "Skill Damage", "Skill Cooldown", "Health%",
+  )
+
+  SUBSTAT_ALIASES = {
+      # OCR labels / legacy snake_case -> canonical display key
+  }
+
+  LEGACY_EQUIPMENT_SLOT_MAP = {
+      "EQUIP_HELMET": "Helmet",
+      ...
+  }
+
+  LEGACY_PET_SLOT_MAP = {"PET1": "Pet_1", ...}
+  LEGACY_SKILL_SLOT_MAP = {"S1": "Skill_1", ...}
+
+Regles :
+  - `backend/constants.py` peut re-exporter certaines constantes si necessaire
+    pour la compatibilite, mais la source de verite est `data.canonical`.
+  - `scan.colors.AGE_NAME_TO_INT` doit a terme importer ou mirrorer depuis
+    `data.canonical`, sans recreer une divergence.
+  - `scan.refs` et `ui.theme` doivent utiliser les memes noms d'age/slot.
+
+Verification :
+  - `python -c "from data import canonical; print(canonical.EQUIPMENT_SLOTS)"`
+  - `python -m compileall data backend scan ui`
+
+
+================================================================================
+  4. PHASE B - PERSISTANCE PROFILE CENTRALISEE
+================================================================================
+
+But :
+  Remplacer l'ancien systeme eclate par un seul store profile centralise.
+
+Ancien systeme :
+  - backend/profile.txt
+  - backend/equipment.txt
+  - backend/pets.txt
+  - backend/mount.txt
+  - backend/skills.txt
+
+Nouveau systeme :
+  - backend/persistence/profile_store/profile.txt
+  - backend/persistence/profile_store/profile_meta.json optionnel
+
+Format Python canonique :
+
+  profile = {
+      "equipment": {
+          "Helmet": {
+              "__name__": str,
+              "__level__": int,
+              "__age__": int,
+              "__rarity__": str,
+              "__idx__": int,
+              "hp_flat": float,
+              "damage_flat": float,
+              "substats": dict[str, float],
+              "attack_type": "melee"|"ranged"|"",
+              "weapon_attack_range": float,
+              "weapon_windup": float,
+              "weapon_recovery": float,
+              "projectile_speed": float,
+              "projectile_travel_time": float,
+          },
+          ...
+      },
+      "skills": {
+          "Skill_1": {
+              "__name__": str,
+              "__level__": int,
+              "__rarity__": str,
+              "hp_flat": float,
+              "damage_flat": float,
+              "type": "buff"|"damage"|"",
+              "substats": {},
+          },
+          ...
+      },
+      "pets": {
+          "Pet_1": {
+              "__name__": str,
+              "__level__": int,
+              "__rarity__": str,
+              "hp_flat": float,
+              "damage_flat": float,
+              "substats": dict[str, float],
+          },
+          ...
+      },
+      "mount": {
+          "Mount": {
+              "__name__": str,
+              "__level__": int,
+              "__rarity__": str,
+              "hp_flat": float,
+              "damage_flat": float,
+              "substats": dict[str, float],
+          }
+      },
+      "substats_total": dict[str, float],
+      "base_profile": {
+          # stats OCR du profil joueur si encore utiles :
+          # hp_total, attack_total, hp_base, attack_base, attack_type...
+      },
+  }
+
+API cible :
+
+  backend/persistence/profile_store/store.py
+
+    load_profile() -> dict
+    save_profile(profile: dict) -> None
+    empty_profile() -> dict
+    compute_substats_total(profile: dict) -> dict[str, float]
+    set_equipment_slot(profile: dict, slot: str, value: dict) -> dict
+    set_pet_slot(profile: dict, slot: str, value: dict) -> dict
+    set_mount(profile: dict, value: dict) -> dict
+    set_skill_slot(profile: dict, slot: str, value: dict) -> dict
+
+Format fichier `profile.txt` :
+
+  # FORGE MASTER - player profile
+  # schema_version = 2
+
+  [BASE_PROFILE]
+  hp_total = ...
+  attack_total = ...
+  attack_type = ...
+
+  [EQUIPMENT]
+  [Helmet]
+  Name = [Quantum] Energy Helmet
+  Level = Lv. 87
+  HP = 12345678
+  Damage = 0
+  Substat (Crit Chance) = +11.5%
+  Substat (Skill Cooldown) = -8.0%
+
+  [Body]
+  ...
+
+  [SKILLS]
+  [Skill_1]
+  Name = [Ultimate] Fireball
+  Level = Lv. 12
+  HP = 0
+  Damage = 43400
+  Type = damage
+
+  [PETS]
+  [Pet_1]
+  Name = [Ultimate] Stampede
+  Level = Lv. 7
+  HP = 1200000
+  Damage = 450000
+  Substat (Crit Damage) = +15.0%
+
+  [MOUNT]
+  [Mount]
+  Name = [Legendary] Tiger
+  Level = Lv. 4
+  HP = 800000
+  Damage = 120000
+
+  [SUBSTATS_TOTAL]
+  Crit Chance = 0.0
+  Crit Damage = 0.0
+  Skill Cooldown = -8.0
+
+Migration :
+
+  Creer `backend/persistence/_migrate_profile.py`.
+
+  Fonction :
+
+    migrate_legacy_profile_once() -> bool
+
+  Regles :
+    1. Si le nouveau profile_store/profile.txt existe et contient
+       `schema_version = 2`, ne rien faire.
+    2. Sinon, lire les anciens fichiers s'ils existent.
+    3. Convertir les anciens slots vers les noms canoniques via
+       `data.canonical.LEGACY_*_MAP`.
+    4. Sauvegarder le nouveau profile.
+    5. Renommer les anciens fichiers en `.legacy.bak` apres sauvegarde reussie.
+    6. Ne jamais supprimer silencieusement une donnee non migree.
+
+Compatibilite transitoire :
+  - `backend/persistence/profile.py` devient un shim temporaire vers
+    `profile_store.store`.
+  - `backend/persistence/equipment.py`, `companions.py`, `skills.py` peuvent
+    rester sous forme de shims pendant la migration du controller.
+  - Ces shims doivent emettre un warning clair, mais ne doivent pas casser
+    tant que des callers existent.
+
+Tests a ajouter :
+  - round-trip save/load profile complet
+  - Skill Cooldown negatif preserve
+  - substats 0..N preservees
+  - migration legacy vers schema v2
+  - anciens noms `EQUIP_*`, `PET1`, `S1` convertis vers noms canoniques
+  - `SUBSTATS_TOTAL` recalcule a chaque save
+
+
+================================================================================
+  5. PHASE C - JOBS SCAN JOUEUR OCR PURS
+================================================================================
+
+But :
+  Supprimer la dependance des scans joueur a l'identification visuelle.
+  L'OCR doit fournir toutes les informations necessaires.
+
+Parser cible :
+
+  scan/ocr/parsers/equipment.py
+    parse_equipment_popup_text(text: str, *, slot: str) -> dict
+
+  scan/ocr/parsers/companion.py
+    parse_companion_text(text: str) -> dict
+
+  scan/ocr/parsers/skill.py
+    parse_skill_text(text: str) -> dict
+
+  Chaque parser retourne un dict canonique directement compatible avec le
+  profile store.
+
+Regles communes :
+  - `ocr_image(capture)` lit le texte.
+  - `fix_ocr(text, context=...)` normalise.
+  - Parser dedie extrait name, level, rarity/age, hp_flat, damage_flat,
+    substats et type si skill.
+  - Les substats sont mappees via `data.canonical.SUBSTAT_ALIASES`.
+  - Le job retourne `ScanResult(status=..., matches=[], debug={"slot_dict": ...})`.
+  - Pas de `scan.core`, pas de `scan.refs`, pas de `scan.colors`.
+
+equipment_popup.py :
+  - `force_slot` obligatoire.
+  - OCR lit le popup detail.
+  - La balise `[Age]` donne `__age__`.
+  - Le nom OCR donne `__name__`.
+  - Le level OCR donne `__level__`.
+  - HP/Damage/substats viennent du texte.
+  - Si `slot == "Weapon"`, appeler `enrich_weapon_slot`.
+  - Ne pas matcher l'icone.
+  - Ne pas lire la couleur.
+
+player_equipment.py :
+  - Decouper le panel en 8 zones selon `scan/offsets/player.py`.
+  - Pour chaque slot canonique, OCR de la zone correspondante.
+  - Parser comme equipment.
+  - Si un slot est incomplet, garder le slot avec `status="low_confidence"`
+    et debug detaillant les champs manquants.
+  - Ne pas appeler `_panel.identify_panel`.
+
+pet.py et mount.py :
+  - OCR popup.
+  - Lire rarity, name, level, HP, Damage, substats.
+  - Construire un slot dict canonique.
+  - Ne pas appeler `_flat.run_flat_scan`.
+
+skill.py :
+  - OCR popup.
+  - Lire rarity, name, level.
+  - Lire passifs :
+      "+X Base Damage" -> damage_flat
+      "+X Base Health" -> hp_flat
+  - Determiner `type` :
+      active damage detecte -> "damage"
+      sinon -> "buff"
+  - `substats` doit etre `{}`.
+  - Ne pas appeler `_flat.run_flat_scan`.
+
+_flat.py et _panel.py :
+  - Garder temporairement si utile pour adversaire/debug.
+  - Ajouter un commentaire :
+      "Interdit aux jobs joueur. Usage adversaire ou legacy/debug uniquement."
+  - A terme, si aucun caller hors adversaire ne les utilise, les isoler ou les
+    supprimer.
+
+Verification stricte :
+
+  rg -n "from \\.\\.core|from \\.\\.colors|from \\.\\.refs|from \\.core|from \\.colors|from \\.refs|_flat|_panel" scan/jobs/equipment_popup.py scan/jobs/player_equipment.py scan/jobs/pet.py scan/jobs/mount.py scan/jobs/skill.py
+
+  Doit etre vide, sauf commentaires temporaires explicitement acceptes.
+
+
+================================================================================
+  6. PHASE D - CONTROLLER ET UI
+================================================================================
+
+But :
+  Faire passer toutes les operations joueur par le nouveau profile store.
+
+game_controller.py cible :
+  - `self._profile_store` ou `self._profile` contient le dict schema v2 complet.
+  - `get_equipment()`, `get_pets()`, `get_mount()`, `get_skill_slots()`
+    retournent des vues derivees du profile complet.
+  - `set_equipment_slot(slot, data)`
+  - `set_pet_slot(slot, data)`
+  - `set_mount(data)`
+  - `set_skill_slot(slot, data)`
+  - Chaque setter :
+      1. merge dans profile
+      2. recalcule substats_total
+      3. save_profile(profile)
+      4. notifie les listeners
+
+Events a conserver/ajouter :
+  - equipment_changed
+  - pets_changed
+  - mount_changed
+  - skills_changed
+  - profile_changed si utile
+
+Cas d'usage :
+
+  Cas 1 - comparaison double equipment :
+    1. scanner l'item equipe par OCR pur
+    2. scanner l'item candidat par OCR pur
+    3. simuler le remplacement
+    4. callback vers UI
+    5. aucune sauvegarde avant confirmation
+
+  Cas 2 - scan simple d'un slot equipment :
+    1. equipment_popup.scan(..., force_slot=slot)
+    2. set_equipment_slot(slot, slot_dict)
+    3. sauvegarde immediate car action explicite sur ce slot
+
+  Cas 3 - pet/mount/skill :
+    1. scan OCR pur
+    2. simuler sur les slots possibles
+    3. callback vers UI
+    4. sauvegarde seulement quand l'utilisateur choisit/applique
+
+UI :
+  - Aucune vue ne doit appeler directement save_*.
+  - Les vues appellent le controller.
+  - Aucune popup ne demande Age, Rarity ou Slot si l'OCR les donne.
+  - Si OCR incomplet, afficher low_confidence avec champs manquants.
+
+Verification :
+  rg -n "save_equipment|save_pets|save_mount|save_skills|save_profile" ui game_controller.py
+
+  Les appels `save_profile` doivent etre limites au nouveau chemin controller
+  centralise ou au profile store.
+
+
+================================================================================
+  7. PHASE E - MIGRATION backend/scanner VERS scan/
+================================================================================
+
+But :
+  Deplacer l'OCR texte sous `scan/ocr/` et les types adversaire sous
+  `scan/enemy/`, sans casser les imports existants pendant la transition.
+
+Etape E1 - OCR engine/fix/debug :
+
+  git mv backend/scanner/ocr.py        scan/ocr/engine.py
+  git mv backend/scanner/fix_ocr.py    scan/ocr/fix.py
+  git mv backend/scanner/debug_scan.py scan/ocr/debug.py
+
+  Creer `scan/ocr/__init__.py` :
+
+    from .engine import is_available, capture_region, ocr_image, run_ocr
+    from .fix import fix_ocr
+    from . import debug
+
+  Shims obligatoires :
+
+    backend/scanner/ocr.py
+    backend/scanner/fix_ocr.py
+    backend/scanner/debug_scan.py
+    backend/scanner/__init__.py
+
+  Chaque shim re-exporte depuis `scan.ocr.*`.
+
+Etape E2 - parsers texte :
+
+  Deplacer/splitter `backend/scanner/text_parser.py` vers :
+
+    scan/ocr/parsers/common.py
+    scan/ocr/parsers/profile.py
+    scan/ocr/parsers/equipment.py
+    scan/ocr/parsers/companion.py
+    scan/ocr/parsers/skill.py
+
+  Shim obligatoire :
+
+    backend/scanner/text_parser.py
+
+  Il doit re-exporter les anciens noms :
+    parse_flat, extract, extract_flat, parse_profile_text,
+    parse_equipment, parse_companion, parse_companion_meta,
+    parse_pet, parse_mount, parse_skill_meta.
+
+Etape E3 - types/parser adversaire :
+
+  git mv backend/scanner/ocr_types.py  scan/enemy/types.py
+  git mv backend/scanner/ocr_parser.py scan/enemy/parser.py
+
+  Shims obligatoires :
+
+    backend/scanner/ocr_types.py
+    backend/scanner/ocr_parser.py
+
+Etape E4 - migration callers :
+
+  Remplacer progressivement :
+
+    backend.scanner.ocr          -> scan.ocr
+    backend.scanner.fix_ocr      -> scan.ocr.fix
+    backend.scanner.debug_scan   -> scan.ocr.debug
+    backend.scanner.text_parser  -> scan.ocr.parsers.*
+    backend.scanner.ocr_types    -> scan.enemy.types
+    backend.scanner.ocr_parser   -> scan.enemy.parser
+
+Etape E5 - suppression backend/scanner :
+
+  Seulement quand :
+
+    rg -n "backend\\.scanner|from backend import scanner" --glob "*.py" .
+
+  ne renvoie plus rien hors shims.
+
+
+================================================================================
+  8. SMOKE TESTS FINAUX
+================================================================================
+
+1. Lancer l'application.
+   - aucun crash import
+   - profile_store/profile.txt cree si absent
+
+2. Dashboard/Profile OCR.
+   - base_profile mis a jour
+   - sauvegarde via profile store
+
+3. Equipment scan simple.
+   - OCR pur
+   - un seul slot modifie
+   - profile_store/profile.txt mis a jour
+   - substats_total recalcule
+
+4. Equipment compare double.
+   - deux OCR purs
+   - simulation lancee
+   - aucune sauvegarde avant confirmation
+
+5. Pet scan.
+   - HP et Damage lus
+   - substats lus
+   - simulation sur Pet_1..Pet_3
+   - sauvegarde seulement apres choix
+
+6. Mount scan.
+   - HP et Damage lus
+   - substats lus
+   - sauvegarde apres confirmation
+
+7. Skill scan.
+   - Base Damage et Base Health lus
+   - Type determine
+   - Skill Cooldown signe preserve si present ailleurs
+
+8. Opponent scan.
+   - continue a utiliser OCR + visuel
+   - win-rate plausible
+   - aucun effet de bord sur profile joueur
+
+9. Migration legacy.
+   - ancien backend/equipment.txt, pets.txt, mount.txt, skills.txt convertis
+   - anciens fichiers renommes en `.legacy.bak`
+   - aucun ancien fichier regenere ensuite
+
+
+================================================================================
+  9. CHECKLIST DE COMMITS
+================================================================================
+
+01. feat(data): add canonical names and aliases
+02. feat(persistence): introduce profile_store schema and codecs
+03. feat(persistence): migrate legacy profile files to profile_store
+04. refactor(controller): load and save through profile_store
+05. refactor(scan/ocr): create OCR parsers package
+06. refactor(scan/jobs): make equipment popup OCR-only
+07. refactor(scan/jobs): make player equipment OCR-only
+08. refactor(scan/jobs): make pet and mount OCR-only
+09. refactor(scan/jobs): make skill OCR-only
+10. refactor(ui): route all saves through controller
+11. refactor(scan): introduce scan.ocr with backend.scanner shims
+12. refactor(scan): move enemy types/parser with shims
+13. refactor: migrate callers away from backend.scanner
+14. chore: remove deprecated persistence shims
+15. chore: remove backend.scanner shims
+16. docs: update README-SCAN and data README
+
+
+================================================================================
+  FIN DU DOCUMENT
+================================================================================

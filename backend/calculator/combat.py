@@ -5,7 +5,7 @@
   Recompute an opponent's HP and Damage from the ground up
   using the same formulas as the in-game ``StatEngine``. Game
   reference data is loaded from ``data/`` via
-  ``backend.data.libraries``.
+  ``data.libraries``.
 
   Why recompute when the OCR already reads the displayed
   totals? Because the OCR is unreliable on multi-digit values
@@ -38,7 +38,7 @@ import logging
 import math
 from typing import Any, Dict
 
-from ..scanner.ocr_types import (
+from scan.enemy.types import (
     EnemyComputedStats,
     EnemyIdentifiedProfile,
     IdentifiedItem,

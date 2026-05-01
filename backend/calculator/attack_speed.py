@@ -202,11 +202,11 @@ def _binary_search_req_bonus(predicate, low: float = 1.0,
 # ============================================================
 #
 # WeaponLibrary is read through the central chargeur in
-# ``backend.data.libraries`` so the codebase keeps a single JSON
+# ``data.libraries`` so the codebase keeps a single JSON
 # loader (V2 of the architecture plan: "QU'UN chargeur JSON
 # actif").
 
-from ..data.libraries import get_lib as _get_lib, reset_cache as _reset_libs
+from data.libraries import get_lib as _get_lib, reset_cache as _reset_libs
 
 
 def _load_wl() -> Dict:

@@ -24,7 +24,13 @@ from backend.constants import (
     PETS_STATS_KEYS,
 )
 from backend.constants import SKILL_PASSIVE_LV1
-from backend.scanner.text_parser import (
+from data.canonical import (
+    LEGACY_EQUIPMENT_SLOT_MAP,
+    LEGACY_PET_SLOT_MAP,
+    LEGACY_SKILL_SLOT_MAP,
+    MOUNT_SLOT,
+)
+from scan.ocr.parsers import (
     parse_companion_meta,
     parse_equipment,
     parse_mount,
@@ -33,28 +39,15 @@ from backend.scanner.text_parser import (
     parse_skill_meta,
 )
 from backend.persistence import (
-    SKILL_SLOTS,
-    empty_equipment,
-    empty_skill,
-    load_equipment,
-    load_mount,
     load_mount_library,
-    load_pets,
     load_pets_library,
-    load_profile,
-    load_skill_slots,
-    load_skills,
     load_skills_library,
     load_zones,
-    save_equipment,
-    save_mount,
     save_mount_library,
-    save_pets,
     save_pets_library,
-    save_profile,
-    save_skills,
     save_skills_library,
 )
+from backend.persistence.profile_store import store as profile_store
 from backend import zone_store
 from backend.simulation.engine import simulate_batch
 from backend.calculator.stats import (
@@ -70,6 +63,96 @@ from backend.calculator.stats import (
 
 log = logging.getLogger(__name__)
 
+SKILL_SLOTS = tuple(LEGACY_SKILL_SLOT_MAP.keys())
+_CANONICAL_EQUIPMENT_TO_LEGACY = {v: k for k, v in LEGACY_EQUIPMENT_SLOT_MAP.items()}
+_CANONICAL_PET_TO_LEGACY = {v: k for k, v in LEGACY_PET_SLOT_MAP.items()}
+_CANONICAL_SKILL_TO_LEGACY = {v: k for k, v in LEGACY_SKILL_SLOT_MAP.items()}
+
+_SUBSTAT_TO_LEGACY = {
+    "Crit Chance": "crit_chance",
+    "Crit Damage": "crit_damage",
+    "Block Chance": "block_chance",
+    "Health Regen": "health_regen",
+    "Lifesteal": "lifesteal",
+    "Double Chance": "double_chance",
+    "Damage%": "damage_pct",
+    "Melee%": "melee_pct",
+    "Ranged%": "ranged_pct",
+    "Attack Speed": "attack_speed",
+    "Skill Damage": "skill_damage",
+    "Skill Cooldown": "skill_cooldown",
+    "Health%": "health_pct",
+}
+
+
+def empty_skill() -> Dict:
+    return {
+        "type": "",
+        "name": "",
+        "damage": 0.0,
+        "hits": 0.0,
+        "cooldown": 0.0,
+        "buff_duration": 0.0,
+        "buff_atk": 0.0,
+        "buff_hp": 0.0,
+        "passive_damage": 0.0,
+        "passive_hp": 0.0,
+    }
+
+
+def _legacy_stats_from_substats(entry: Dict) -> Dict:
+    out = dict(entry or {})
+    for key, value in (out.pop("substats", {}) or {}).items():
+        out[_SUBSTAT_TO_LEGACY.get(key, key)] = value
+    return out
+
+
+def _legacy_equipment_from_profile(profile: Dict) -> Dict[str, Dict]:
+    out: Dict[str, Dict] = {}
+    for canonical, entry in (profile.get("equipment") or {}).items():
+        legacy = _CANONICAL_EQUIPMENT_TO_LEGACY.get(canonical, canonical)
+        out[legacy] = _legacy_stats_from_substats(entry)
+    return out
+
+
+def _legacy_pets_from_profile(profile: Dict) -> Dict[str, Dict]:
+    out = {legacy: {k: 0.0 for k in PETS_STATS_KEYS} for legacy in LEGACY_PET_SLOT_MAP}
+    for canonical, entry in (profile.get("pets") or {}).items():
+        legacy = _CANONICAL_PET_TO_LEGACY.get(canonical)
+        if legacy:
+            out[legacy] = _legacy_stats_from_substats(entry)
+    return out
+
+
+def _legacy_mount_from_profile(profile: Dict) -> Dict:
+    return _legacy_stats_from_substats((profile.get("mount") or {}).get(MOUNT_SLOT) or {})
+
+
+def _legacy_skill_from_profile(entry: Dict) -> Dict:
+    out = empty_skill()
+    out.update({
+        "__name__": entry.get("__name__", ""),
+        "__rarity__": entry.get("__rarity__", ""),
+        "__level__": entry.get("__level__", 0),
+        "name": entry.get("__name__", ""),
+        "type": entry.get("type", ""),
+        "passive_damage": float(entry.get("damage_flat", 0.0) or 0.0),
+        "passive_hp": float(entry.get("hp_flat", 0.0) or 0.0),
+    })
+    for key in ("damage", "hits", "cooldown", "buff_duration", "buff_atk", "buff_hp"):
+        if key in entry:
+            out[key] = float(entry.get(key, 0.0) or 0.0)
+    return out
+
+
+def _legacy_skill_slots_from_profile(profile: Dict) -> Dict[str, Dict]:
+    out = {slot: empty_skill() for slot in SKILL_SLOTS}
+    for canonical, entry in (profile.get("skills") or {}).items():
+        legacy = _CANONICAL_SKILL_TO_LEGACY.get(canonical)
+        if legacy:
+            out[legacy] = _legacy_skill_from_profile(entry)
+    return out
+
 # ── Debug OCR flag ───────────────────────────────────────────
 # Mettre à True pour activer les dumps d'images et de texte OCR.
 # Mettre à False pour désactiver complètement (aucun import debug_scan).
@@ -84,6 +167,7 @@ class GameController:
 
     def __init__(self) -> None:
         self._profile: Optional[Dict]        = None
+        self._profile_store: Dict            = {}
         self._skills:  List[Tuple[str, Dict]] = []   # equipped skills (S1/S2/S3 → data)
         self._skill_slots:    Dict[str, Dict] = {}   # raw {slot_label: data}
         self._pets:           Dict[str, Dict] = {}
@@ -107,11 +191,15 @@ class GameController:
 
     def reload(self) -> None:
         """Reload profile + pets + mount + skills + libraries + zones from disk."""
-        self._profile, self._skills = load_profile()
-        self._skill_slots           = load_skill_slots()
-        self._pets                  = load_pets()
-        self._mount                 = load_mount()
-        self._equipment             = load_equipment()
+        self._profile_store         = profile_store.load_profile()
+        self._profile               = dict(self._profile_store.get("base_profile") or {}) or None
+        self._skill_slots           = _legacy_skill_slots_from_profile(self._profile_store)
+        self._skills                = [(s, self._skill_slots[s])
+                                       for s in SKILL_SLOTS
+                                       if self._skill_slots[s].get("__name__")]
+        self._pets                  = _legacy_pets_from_profile(self._profile_store)
+        self._mount                 = _legacy_mount_from_profile(self._profile_store)
+        self._equipment             = _legacy_equipment_from_profile(self._profile_store)
         self._pets_library          = load_pets_library()
         self._mount_library         = load_mount_library()
         self._skills_library        = load_skills_library()
@@ -178,7 +266,11 @@ class GameController:
         are persisted separately via set_skill().
         """
         self._profile = profile
-        save_profile(profile)
+        self._profile_store["base_profile"] = dict(profile or {})
+        self._save_player_profile()
+
+    def _save_player_profile(self) -> None:
+        profile_store.save_profile(self._profile_store)
 
     # ── Thread-safe helpers ─────────────────────────────────
 
@@ -237,11 +329,11 @@ class GameController:
 
     # ── Player equipment (8 slots) ──────────────────────────
     #
-    # Persistent build mirroring pets.txt / mount.txt. Updated in
+    # Persistent build mirrored in profile_store. Updated in
     # two ways:
     #   * full re-scan via the "player_equipment" zone (fills all 8
     #     slots from one screenshot), or
-    #   * hand-edit of equipment.txt / set_equipment_slot() from the
+    #   * hand-edit via set_equipment_slot() from the
     #     Build UI view.
     # The simulator reads it through compute_hp_buckets() to derive
     # the per-source HP pools (P2.8).
@@ -257,13 +349,20 @@ class GameController:
     def set_equipment(self, equipment: Dict[str, Dict]) -> None:
         """Replace the whole 8-slot dict, persist, and broadcast to listeners."""
         self._equipment = {k: dict(v) for k, v in equipment.items()}
-        save_equipment(self._equipment)
+        for raw_slot, value in self._equipment.items():
+            slot = LEGACY_EQUIPMENT_SLOT_MAP.get(raw_slot, raw_slot)
+            self._profile_store = profile_store.set_equipment_slot(
+                self._profile_store, slot, value or {})
+        self._save_player_profile()
         self._notify_equipment_changed()
 
     def set_equipment_slot(self, slot: str, data: Dict) -> None:
         """Update one slot in-place, persist, and broadcast to listeners."""
         self._equipment[slot] = dict(data)
-        save_equipment(self._equipment)
+        canonical = LEGACY_EQUIPMENT_SLOT_MAP.get(slot, slot)
+        self._profile_store = profile_store.set_equipment_slot(
+            self._profile_store, canonical, data or {})
+        self._save_player_profile()
         self._notify_equipment_changed()
 
     # ── Equipment-changed bus ───────────────────────────────
@@ -364,7 +463,7 @@ class GameController:
             return
 
         def _run() -> None:
-            from backend.scanner import ocr  # lazy import (Pillow only on first scan)
+            from scan import ocr  # lazy import (Pillow only on first scan)
             from scan.jobs import player_equipment as job  # type: ignore
 
             if not ocr.is_available():
@@ -419,7 +518,7 @@ class GameController:
             return
 
         def _run() -> None:
-            from backend.scanner import ocr
+            from scan import ocr
             from scan.jobs import equipment_popup as job  # type: ignore
 
             if not ocr.is_available():
@@ -470,8 +569,8 @@ class GameController:
             return
 
         def _run() -> None:
-            from backend.scanner import ocr   # lazy import — Pillow only loaded on first scan
-            from backend.scanner.fix_ocr import fix_ocr  # normalize OCR artifacts
+            from scan import ocr   # lazy import — Pillow only loaded on first scan
+            from scan.ocr.fix import fix_ocr  # normalize OCR artifacts
 
             if not ocr.is_available():
                 self._dispatch(callback, "", "ocr_unavailable")
@@ -480,7 +579,7 @@ class GameController:
             # Stamp + debug_scan uniquement si DEBUG_OCR est actif.
             stamp = None
             if DEBUG_OCR:
-                from backend.scanner import debug_scan
+                from scan.ocr import debug as debug_scan
                 try:
                     stamp = debug_scan.new_stamp()
                 except Exception:
@@ -782,7 +881,7 @@ class GameController:
             popup): same behaviour as before -- both pieces are parsed
             from OCR, ``apply_change`` swaps full substats + flat.
           * **Single item + ``slot`` arg** (post-P2.9 path): the equipped
-            piece is loaded from the persisted ``equipment.txt`` build.
+            piece is loaded from the persisted ``profile_store`` build.
             Only flat hp / damage / attack_type are swapped via
             ``apply_change_flat_only`` because per-piece substats are
             not (yet) tracked. The candidate's substats are still
@@ -807,7 +906,7 @@ class GameController:
         equipped_slot = self._equipment.get(slot)
         if not equipped_slot or not (equipped_slot.get("hp_flat")
                                      or equipped_slot.get("damage_flat")):
-            log.info("compare_equipment: slot %s empty in equipment.txt", slot)
+            log.info("compare_equipment: slot %s empty in profile_store", slot)
             return None
         # Translate the persisted slot to the eq dict shape consumed by
         # apply_change_flat_only (only hp_flat / damage_flat / attack_type
@@ -826,7 +925,8 @@ class GameController:
 
     def apply_equipment(self, new_profile: Dict) -> None:
         self._profile = new_profile
-        save_profile(new_profile, self._skills)
+        self._profile_store["base_profile"] = dict(new_profile or {})
+        self._save_player_profile()
 
     # ── Pets ────────────────────────────────────────────────
 
@@ -862,7 +962,10 @@ class GameController:
 
     def set_pet(self, name: str, pet: Dict) -> None:
         self._pets[name] = pet
-        save_pets(self._pets)
+        slot = LEGACY_PET_SLOT_MAP.get(name, name)
+        self._profile_store = profile_store.set_pet_slot(
+            self._profile_store, slot, pet or {})
+        self._save_player_profile()
 
     def test_pet(
         self,
@@ -931,7 +1034,8 @@ class GameController:
 
     def set_mount(self, mount: Dict) -> None:
         self._mount = mount
-        save_mount(mount)
+        self._profile_store = profile_store.set_mount(self._profile_store, mount or {})
+        self._save_player_profile()
 
     def test_mount(
         self,
@@ -1075,9 +1179,10 @@ class GameController:
         old_slot = dict(self._skill_slots.get(slot) or empty_skill())
         new_slot = dict(skill)
 
-        # Update the on-disk skill slot
         self._skill_slots[slot] = new_slot
-        save_skills(self._skill_slots)
+        canonical_slot = LEGACY_SKILL_SLOT_MAP.get(slot, slot)
+        self._profile_store = profile_store.set_skill_slot(
+            self._profile_store, canonical_slot, new_slot)
 
         # Refresh in-memory equipped list (mirror name → "name" for sim)
         self._skills = [(s, self._skill_slots[s])
@@ -1088,7 +1193,8 @@ class GameController:
         if self._profile is not None:
             new_profile = apply_skill(self._profile, old_slot, new_slot)
             self._profile = new_profile
-            save_profile(new_profile)
+            self._profile_store["base_profile"] = dict(new_profile or {})
+        self._save_player_profile()
 
     def test_skill(
         self,

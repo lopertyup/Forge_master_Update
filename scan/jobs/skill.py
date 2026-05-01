@@ -1,77 +1,57 @@
-"""
-============================================================
-  FORGE MASTER — Skill popup scan (Phase 3)
-
-  Single-cell scan: identifies the skill shown in a Skill
-  popup. Same shape as ``scan.jobs.pet`` / ``scan.jobs.mount``
-  but uses the skill-flavoured text parser
-  (``parse_skill_meta``) which knows about the passive block
-  ``Passive: +43.4k Base Damage +347k Base Health`` and the
-  cast-damage line.
-
-  STRAT C (cf. SCAN_REFACTOR.txt §3):
-
-      1. OCR title  → ``[Rarity]`` balise + name + Lv.NN
-      2. Fallback   → identify_rarity_from_color on the popup
-                      border when the OCR balise is illegible
-      3. Match      → autocrop_capture(crop) ↔ flat refs from
-                      ``data/icons/skills/``
-      4. Return     → ScanResult with one Candidate carrying
-                      {name, rarity, level} ready to be
-                      converted into ``IdentifiedSkill`` by
-                      the controller.
-
-  Skills also carry a ``Lv.X/Y`` capacity badge on top of the
-  icon (cf. SCAN_REFACTOR.txt §11.D). The matcher's
-  auto-crop tolerates it; the badge is NOT used as a level
-  source — the cartouche bottom-left is the canonical Lv.NN
-  field, exactly like pets and mounts.
-
-  Public API:
-
-      scan(capture, *, libs=None, debug_dir=None,
-           threshold=DEFAULT_THRESHOLD,
-           force_slot=None, force_age=None) -> ScanResult
-============================================================
-"""
+"""OCR-only skill popup scan job."""
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 from PIL import Image
 
-from ..core import DEFAULT_THRESHOLD
-from ..types import ScanResult
+from scan.ocr import fix_ocr, is_available, ocr_image
+from scan.ocr.parsers.skill import parse_skill_text
 
-from ._flat import run_flat_scan
+from ..types import Candidate, ScanResult
+
+log = logging.getLogger(__name__)
+DEFAULT_THRESHOLD = 0.0
 
 
 def scan(
     capture: Image.Image,
     *,
-    libs:       Optional[Dict[str, Any]] = None,
-    debug_dir:  Optional[Path]           = None,
-    threshold:  float                    = DEFAULT_THRESHOLD,
-    force_slot: Optional[str]            = None,
-    force_age:  Optional[int]            = None,
+    libs: Optional[Dict[str, Any]] = None,
+    debug_dir: Optional[Path] = None,
+    threshold: float = DEFAULT_THRESHOLD,
+    force_slot: Optional[str] = None,
+    force_age: Optional[int] = None,
 ) -> ScanResult:
-    """Identify the skill shown in a Skill popup capture.
+    if capture is None:
+        return ScanResult(matches=[], status="no_match", debug={"reason": "capture is None"})
+    if not is_available():
+        return ScanResult(matches=[], status="ocr_unavailable", debug={})
+    try:
+        raw = ocr_image(capture, debug_zone="skill")
+        text = fix_ocr(raw, context="skill")
+        slot = parse_skill_text(text)
+    except Exception:
+        log.exception("scan.jobs.skill: OCR parse failed")
+        return ScanResult(matches=[], status="scan_error", debug={})
 
-    ``force_slot`` and ``force_age`` are accepted but ignored —
-    skills have no slot and no age. Kept in the signature for
-    parity with the rest of ``scan.jobs.*``.
-    """
-    return run_flat_scan(
-        capture,
-        category="skills",
-        kind="skill",
-        threshold=threshold,
-        debug_zone="skill",
-        debug_dir=debug_dir,
-        libs=libs,
+    missing = slot.pop("missing_fields", [])
+    status = "low_confidence" if missing else "ok"
+    candidate = Candidate(
+        name=str(slot.get("__name__") or ""),
+        score=1.0 if not missing else 0.5,
+        rarity=str(slot.get("__rarity__") or ""),
+        payload=dict(slot),
+    )
+    return ScanResult(
+        matches=[candidate] if candidate.name else [],
+        status=status if candidate.name else "no_match",
+        debug={"slot_dict": slot, "raw_text": raw, "ocr_text": text, "missing_fields": missing},
     )
 
 
 __all__ = ["scan"]
+

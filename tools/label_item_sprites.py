@@ -44,7 +44,7 @@ from PIL import Image, ImageTk
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from backend.data.libraries import DATA_DIR, AGE_TO_SPRITESHEET  # noqa: E402
+from data.libraries import DATA_DIR, AGE_TO_SPRITESHEET  # noqa: E402
 
 log = logging.getLogger(__name__)
 

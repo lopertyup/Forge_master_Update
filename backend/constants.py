@@ -1,4 +1,4 @@
-"""
+﻿"""
 ============================================================
   FORGE MASTER — Shared constants
   All backend "configuration parameters" live here to avoid
@@ -7,6 +7,16 @@
 """
 
 import os
+
+from data.canonical import (
+    AGES,
+    EQUIPMENT_SLOTS as CANONICAL_EQUIPMENT_SLOTS,
+    MOUNT_SLOT,
+    PET_SLOTS,
+    RARITIES,
+    SKILL_SLOTS as CANONICAL_SKILL_SLOTS,
+    SUBSTAT_KEYS,
+)
 
 # ── Paths ───────────────────────────────────────────────────
 _DIR = os.path.dirname(os.path.abspath(__file__))
@@ -35,13 +45,13 @@ ZONE_DEFAULTS = {
     # Player's full equipment panel (the 8-slot grid). Captured once;
     # the panel is identified slot-by-slot via the same template
     # matching pipeline as the opponent profile. Drives the per-piece
-    # tracking saved in equipment.txt.
+    # tracking saved in profile_store.
     "player_equipment": {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
     # In-game item detail popup (single piece). Calibrated once,
     # reused by every per-slot 📷 button on the Build view: the user
     # opens the popup for the piece they want to refresh, clicks the
     # tile's camera, and scan/jobs/equipment_popup.scan(force_slot=...)
-    # rewrites just that section of equipment.txt.
+    # rewrites just that section of profile_store.
     "equipment_popup":  {"captures": 1, "bboxes": [[0, 0, 0, 0]]},
 }
 
@@ -106,10 +116,9 @@ CAST_BURST_DURATION      = 2.0
 
 # ── Equipment schema (chantier P2) ──────────────────────────
 #
-# The player's equipped 8 pieces are persisted in equipment.txt
-# with one section per slot. Slots match the canonical in-game
-# order used by the enemy pipeline (see SLOT_ORDER in
-# enemy_ocr_types.py). Each slot stores:
+# The player's equipped 8 pieces are persisted in profile_store.
+# Slots match the canonical in-game order used by the scan pipeline.
+# Each slot stores:
 #   - identity : __name__, __rarity__, __age__, __idx__, __level__
 #   - cached   : hp_flat, damage_flat (level-scaled from
 #                ItemBalancingLibrary), attack_type (weapon only)
@@ -203,27 +212,7 @@ PERCENT_STATS_KEYS = [
     "health_pct", "damage_pct", "melee_pct", "ranged_pct",
 ]
 
-# ── Game balance constants ──────────────────────────────────
-# Source: data/_reference/ItemBalancingConfig.json (patch 22/04/2026).
-# These values almost never change between patches, so we hardcode them
-# here rather than reading the JSON at runtime. If a future patch shifts
-# them, edit these constants in place.
-PLAYER_BASE_DAMAGE                = 10.0
-PLAYER_BASE_HEALTH                = 80.0
-PLAYER_BASE_CRIT_DAMAGE           = 0.20    # +20% base crit damage
-PLAYER_MELEE_DAMAGE_MULTIPLIER    = 1.6     # melee dmg = base × 1.6
-PLAYER_POWER_DAMAGE_MULTIPLIER    = 8.0
-LEVEL_SCALING_BASE                = 1.01    # per-level item stat scaling
-ITEM_BASE_MAX_LEVEL               = 98      # raisable via TechTree
-SELL_BASE_PRICE                   = 20.0
-ENEMY_RANGED_DAMAGE_MULTIPLIER    = 0.67    # enemies do less damage at range
 
-
-# ── Game balance constants ──────────────────────────────────
-# Source: data/_reference/ItemBalancingConfig.json (patch 22/04/2026).
-# These values almost never change between patches, so we hardcode them
-# here rather than reading the JSON at runtime. If a future patch shifts
-# them, edit these constants in place.
 PLAYER_BASE_DAMAGE                = 10.0
 PLAYER_BASE_HEALTH                = 80.0
 PLAYER_BASE_CRIT_DAMAGE           = 0.20    # +20% base crit damage

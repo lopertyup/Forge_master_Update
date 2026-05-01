@@ -96,7 +96,7 @@ def _run_ocr(crop: Image.Image,
              debug_stamp: Optional[str] = None) -> str:
     """OCR a single crop. Returns ``""`` on any failure."""
     try:
-        from backend.scanner import ocr as _ocr
+        from scan import ocr as _ocr
     except Exception:  # pragma: no cover - defensive
         return ""
     if not _ocr.is_available():

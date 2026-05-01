@@ -1,277 +1,189 @@
 ================================================================================
-  FORGE MASTER — Dossier backend/
-  Toute la logique métier de l'application (zéro UI, zéro Tk)
+  FORGE MASTER - Dossier backend/
+  Logique metier, persistance joueur, calculs et simulation
 ================================================================================
 
-Ce dossier contient le code Python qui transforme les captures d'écran et les
-fichiers utilisateur en simulations PvP. Aucun import depuis ui/ ; tout passe
-par GameController (à la racine du projet) qui sert de pont entre l'interface
-et le backend.
+`backend/` ne contient pas d'UI et n'importe jamais depuis `ui/`.
+L'interface passe par `game_controller.py`, qui orchestre ensuite les modules
+backend, `scan/` et `data/`.
 
-────────────────────────────────────────────────────────────────────────────────
-1. ARCHITECTURE EN COUCHES (de bas en haut)
-────────────────────────────────────────────────────────────────────────────────
+Etat post-refactor scan/persistence :
 
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │  pipeline.py                — orchestrateur opponent → stats           │
-  ├─────────────────────────────────────────────────────────────────────────┤
-  │  simulation/                — moteur de combat tick-by-tick            │
-  │  calculator/                — math pure (stats, optimizer, item_keys)  │
-  │  scanner/                   — image + OCR + parsers texte              │
-  │  weapon/                    — physique des armes (projectiles, BP)     │
-  │  data/                      — chargeur unique des JSON sous data/      │
-  │  persistence/               — I/O des .txt utilisateur                 │
-  │  constants.py               — constantes partagées                     │
-  │  zone_store.py              — logique métier des zones OCR             │
-  └─────────────────────────────────────────────────────────────────────────┘
+  - `backend/scanner/` a ete supprime.
+  - L'OCR texte vit dans `scan/ocr/`.
+  - Les types et parsers adversaire vivent dans `scan/enemy/`.
+  - Le pipeline adversaire vit dans `scan/jobs/opponent.py`.
+  - La persistance joueur canonique vit dans
+    `backend/persistence/profile_store/`.
 
-Règle de dépendance (à respecter à chaque modification) :
-    constants ← data ← weapon ← scanner ← calculator ← simulation ← pipeline
-    persistence et zone_store sont à part : ils ne dépendent que de constants.
 
-Tout import à l'intérieur de backend/ est RELATIF ("from .X" / "from ..Y").
-Aucune ligne `from backend.X` dans les modules internes — sinon le moindre
-renommage de dossier casse tout. Cette règle est vérifiée par le smoke test.
+--------------------------------------------------------------------------------
+1. ARCHITECTURE ACTUELLE
+--------------------------------------------------------------------------------
 
-────────────────────────────────────────────────────────────────────────────────
-2. INVENTAIRE DES MODULES
-────────────────────────────────────────────────────────────────────────────────
+  backend/
+    constants.py                 Constantes backend et zones OCR.
+    zone_store.py                Chargement, validation et sauvegarde zones.
 
-  RACINE backend/
-  ┌─────────────────────────────────────┬──────────────────────────────────────┐
-  │ Fichier                             │ Rôle                                 │
-  ├─────────────────────────────────────┼──────────────────────────────────────┤
-  │ constants.py                        │ Constantes partagées (PvP multis,    │
-  │                                     │ chemins .txt utilisateur, zones).    │
-  │ pipeline.py                         │ Orchestrateur opponent (~170 lignes).│
-  │                                     │ scanner → calculator pour produire   │
-  │                                     │ EnemyComputedStats à partir d'une    │
-  │                                     │ capture PIL.Image.                   │
-  │ zone_store.py                       │ Logique métier des zones OCR         │
-  │                                     │ (charger / valider / sauver bboxes). │
-  └─────────────────────────────────────┴──────────────────────────────────────┘
+    calculator/
+      stats.py                   Stats PvP joueur, apply_* et combat_stats.
+      combat.py                  Recalcule les stats adversaire depuis un
+                                 EnemyIdentifiedProfile + libs JSON.
+      attack_speed.py            Formule attack speed officielle.
+      optimizer.py               Analyse marginale des stats.
+      item_keys.py               API publique pour les cles JSON.
 
-  data/
-  ┌─────────────────────────────────────┬──────────────────────────────────────┐
-  │ libraries.py                        │ Chargeur lazy + cache thread-safe    │
-  │                                     │ pour les JSON sous <root>/data/.     │
-  │                                     │ Centralise aussi les breakpoints     │
-  │                                     │ d'attaque (helper/weapon atq speed). │
-  │                                     │ V2 : SEUL chargeur JSON du backend.  │
-  │ library_ops.py                      │ Opérations sur les libs utilisateur  │
-  │                                     │ pets/mount/skill (find_key,          │
-  │                                     │ resolve_companion, lv1_version_of).  │
-  └─────────────────────────────────────┴──────────────────────────────────────┘
+    simulation/
+      engine.py                  Moteur PvP tick-by-tick.
 
-  weapon/
-  ┌─────────────────────────────────────┬──────────────────────────────────────┐
-  │ projectiles.py                      │ Vitesse + travel time des armes      │
-  │                                     │ ranged (fallback table + JSON).      │
-  │ breakpoints.py                      │ Helpers autour des breakpoints       │
-  │                                     │ pré-calculés. Délègue le chargement  │
-  │                                     │ à data.libraries (V2).               │
-  └─────────────────────────────────────┴──────────────────────────────────────┘
+    weapon/
+      projectiles.py             Vitesse et travel time des projectiles.
+      breakpoints.py             Helpers derives de la formule attack speed.
 
-  calculator/  (calcul pur, zéro I/O)
-  ┌─────────────────────────────────────┬──────────────────────────────────────┐
-  │ stats.py                            │ apply_change / pvp_hp_total /        │
-  │                                     │ swing_time. Math du combat PvP.      │
-  │ combat.py                           │ Recompute opponent depuis identifié  │
-  │                                     │ + libs JSON → EnemyComputedStats.    │
-  │ attack_speed.py                     │ Formule attack-speed + tables de     │
-  │                                     │ breakpoints (1611/1611 validés).     │
-  │ optimizer.py                        │ Analyse marginale : pour chaque stat │
-  │                                     │ teste +Δ vs −Δ et donne KEEP /       │
-  │                                     │ INCREASE / DECREASE.                 │
-  │ item_keys.py                        │ API publique des clés JSON           │
-  │                                     │ (item_key, pet_key, stat_type,       │
-  │                                     │ level_info_for). Évite que le        │
-  │                                     │ scanner accède aux _privées de       │
-  │                                     │ combat.py.                           │
-  └─────────────────────────────────────┴──────────────────────────────────────┘
+    persistence/
+      profile_store/             Store canonique schema v2 du profil joueur.
+      _migrate_profile.py         Migration legacy vers profile_store.
+      profile.py                 Shim temporaire vers profile_store.
+      equipment.py               Shim temporaire vers profile_store.
+      companions.py              Shim temporaire vers profile_store.
+      skills.py                  Shim temporaire vers profile_store.
+      libraries.py               Bibliotheques utilisateur pets/mount/skills.
+      zones.py                   I/O zones.json.
+      window.py                  I/O window.json.
 
-  scanner/  (image + OCR + parsing texte)
-  ┌─────────────────────────────────────┬──────────────────────────────────────┐
-  │ ocr.py                              │ Wrapper RapidOCR avec colour fix     │
-  │                                     │ + capture_region (PIL).              │
-  │ fix_ocr.py                          │ Recoloriage UI + corrections post-OCR│
-  │                                     │ (937 lignes très spécialisées).      │
-  │ debug_scan.py                       │ Dumps debug_scan/ horodatés.         │
-  │ icon_recognition.py                 │ Outil admin de calibration ORB       │
-  │                                     │ (wiki grid).                         │
-  │ icon_matcher.py                     │ Template matching SAD 32×32 pour    │
-  │                                     │ items / pets / mount / skills.       │
-  │ ocr_types.py                        │ Dataclasses des 3 couches OCR        │
-  │                                     │ (Raw / Identified / Computed).       │
-  │ ocr_parser.py                       │ Substats + displayed_totals depuis   │
-  │                                     │ texte OCR opponent.                  │
-  │ text_parser.py                      │ Parsers texte génériques (profil,    │
-  │                                     │ équipement, companion, skill).       │
-  │ panel.py                            │ identify_equipment_panel partagé     │
-  │                                     │ entre opponent et joueur (8 slots).  │
-  │ player_equipment.py                 │ Scanner panel équipement joueur.     │
-  │ weapon.py                           │ Scanner d'icône d'arme joueur seule. │
-  │ offsets/opponent.py                 │ Sub-zones de la capture opponent     │
-  │                                     │ (8 items + 3 pets + mount + 3 skills)│
-  │ offsets/player.py                   │ Sub-zones du panel équipement joueur │
-  │                                     │ (8 items uniquement).                │
-  └─────────────────────────────────────┴──────────────────────────────────────┘
+Regle pratique :
+  - Calcul pur -> `backend/calculator/`
+  - Combat -> `backend/simulation/`
+  - Donnees jeu JSON/icones -> `data/`
+  - OCR et scan -> `scan/`
+  - Persistance joueur -> `backend/persistence/profile_store/`
+  - Orchestration UI -> `game_controller.py`
 
-  simulation/
-  ┌─────────────────────────────────────┬──────────────────────────────────────┐
-  │ engine.py                           │ Fighter, SkillInstance, simulate,    │
-  │                                     │ simulate_batch. Le moteur PvP        │
-  │                                     │ tick-by-tick.                        │
-  └─────────────────────────────────────┴──────────────────────────────────────┘
 
-  persistence/  (intouché par le refactor d'avril 2026)
-  ┌─────────────────────────────────────┬──────────────────────────────────────┐
-  │ _io.py                              │ Helpers bas niveau, _LIBRARY_KEYS.   │
-  │ profile.py                          │ profile.txt I/O.                     │
-  │ skills.py                           │ skills.txt I/O (3 slots).            │
-  │ companions.py                       │ pets.txt + mount.txt I/O.            │
-  │ equipment.py                        │ equipment.txt I/O (8 slots).         │
-  │ libraries.py                        │ pets_library / mount_library /       │
-  │                                     │ skills_library (collections user).   │
-  │ zones.py                            │ zones.json I/O.                      │
-  │ window.py                           │ window.json I/O (geometry Tk).       │
-  └─────────────────────────────────────┴──────────────────────────────────────┘
+--------------------------------------------------------------------------------
+2. PERSISTANCE JOUEUR
+--------------------------------------------------------------------------------
 
-────────────────────────────────────────────────────────────────────────────────
-3. POINTS D'ENTRÉE PUBLICS (par rôle)
-────────────────────────────────────────────────────────────────────────────────
+Source de verite locale :
 
-  Tu veux…                                  | Appelle…
-  ------------------------------------------|--------------------------------------
-  Lire le profil joueur depuis disque       | persistence.load_profile()
-  Sauver le profil joueur                   | persistence.save_profile(p)
-  Parser un bloc texte profil OCR'é         | scanner.text_parser.parse_profile_text
-  Parser un pet/mount OCR'é                 | scanner.text_parser.parse_companion_meta
-  Charger les libs JSON du jeu              | data.libraries.load_libs()
-  Stats finales d'un profil prêt à fight    | calculator.stats.combat_stats(p)
-  HP PvP pondéré (V1 invariant)             | calculator.stats.pvp_hp_total(p)
-  Simuler N combats joueur vs ennemi        | simulation.engine.simulate_batch
-  Recalculer un opponent depuis capture     | scan.jobs.opponent.recompute_from_capture (cf. scan/)
-  Identifier les 8 pièces du joueur         | scan.jobs.player_equipment.scan (cf. scan/)
-  Scanner UNE pièce via popup détail        | scan.jobs.equipment_popup.scan(force_slot=…)
-  Optimiser un profil (stat par stat)       | calculator.optimizer.analyze_profile
-  Breakpoints d'attack speed                | calculator.attack_speed.compute_breakpoint_tables
-  Charger / valider une zone OCR            | zone_store.load / is_zone_configured
+  backend/persistence/profile_store/profile.txt
 
-────────────────────────────────────────────────────────────────────────────────
-4. INVARIANTS À NE JAMAIS CASSER
-────────────────────────────────────────────────────────────────────────────────
+Ce fichier est un etat utilisateur genere par l'application. Il est ignore par
+Git pour eviter de publier un profil personnel; s'il est absent,
+`profile_store` recree un profil vide.
 
-  V1  PvP HP. Toute simulation utilise pvp_hp_total(profile), JAMAIS hp_total
-      brut. Les multiplicateurs PvP par source (équipement 1.0, pet 0.5,
-      skill 0.5, mount 2.0) sont définis dans constants.py.
+API canonique :
 
-  V2  Chargeur JSON unique. Tout fichier sous data/*.json se lit via
-      data.libraries.load_libs() ou get_lib(name). Les caches isolés sont
-      interdits — ils ré-ouvrent les mêmes fichiers et divergent.
+  from backend.persistence.profile_store import store
 
-  V3  Imports relatifs. Aucun "from backend.X" dans backend/. Les modules
-      utilisent "from .X" (même sous-dossier) ou "from ..Y" (un niveau plus
-      haut).
+  store.load_profile() -> dict
+  store.save_profile(profile: dict) -> None
+  store.empty_profile() -> dict
+  store.set_equipment_slot(profile, slot, value) -> dict
+  store.set_pet_slot(profile, slot, value) -> dict
+  store.set_mount(profile, value) -> dict
+  store.set_skill_slot(profile, slot, value) -> dict
+  store.compute_substats_total(profile) -> dict[str, float]
 
-  V4  Précision OCR > approximations. Le calculator ne tolère pas un fallback
-      du genre "AttackDuration = 1.5 par défaut" : il lit RealAttackDuration
-      en priorité (validé wiki, 1.10-1.20 par arme).
+Schema logique :
 
-  V5  skill_cooldown négatif. Une valeur "+X% Skill Cooldown" lue avec un
-      signe NÉGATIF signifie une RÉDUCTION du cooldown. Le moteur traite
-      donc skill_cooldown comme un signed float et l'applique
-      multiplicativement : (1 + skill_cooldown_pct/100).
+  profile = {
+      "equipment": {"Helmet": {...}, ...},
+      "skills": {"Skill_1": {...}, ...},
+      "pets": {"Pet_1": {...}, ...},
+      "mount": {"Mount": {...}},
+      "substats_total": {...},
+      "base_profile": {...},
+  }
 
-  V6  Pas de shim de compat. Le module forge_master.py a été supprimé. Si tu
-      vois un nouveau "from backend.forge_master import …" apparaître dans
-      un PR, c'est une régression — pointer vers le module direct.
+Les anciens fichiers `backend/profile.txt`, `equipment.txt`, `pets.txt`,
+`mount.txt` et `skills.txt` sont legacy. La migration est portee par
+`backend/persistence/_migrate_profile.py`. Les modules `profile.py`,
+`equipment.py`, `companions.py` et `skills.py` restent des shims de
+compatibilite vers `profile_store`, mais le nouveau code ne doit plus les
+utiliser comme API principale.
 
-  V7  Stats utilisateur ≠ stats jeu. Les .txt utilisateur (profile.txt,
-      pets.txt, …) restent au format texte simple — ils sont versionnés à
-      part dans persistence/. Aucun nouveau champ n'y est ajouté sans
-      mise à jour du loader correspondant.
 
-────────────────────────────────────────────────────────────────────────────────
-5. PIPELINES TYPE
-────────────────────────────────────────────────────────────────────────────────
+--------------------------------------------------------------------------------
+3. SCAN ET ADVERSAIRE
+--------------------------------------------------------------------------------
 
-  A.  L'utilisateur change un pet. La vue compare actuel vs candidat.
-      ──────────────────────────────────────────────────────────────────────
-      ui                                                       | game_controller
-      ───────────────────────────────────────────────────────────────────────
-      [user clique "remplacer Whirly Bull par Saber Tooth"]    |
-      → controller.swap_pet(slot, candidate_text)              |
-        → scanner.text_parser.parse_companion_meta(text)       |
-        → data.library_ops.resolve_companion(meta, pets_lib)   |
-        → data.library_ops.lv1_version_of(actuel)              |
-        → calculator.stats.apply_pet(profile, candidat)        |
-        → simulation.engine.simulate_batch(profile_actuel,     |
-                                            profile_candidat)  |
-        → renvoyer win_rate à la vue                           |
+Le backend ne contient plus de scanner.
 
-  B.  L'utilisateur scanne un opponent (zone "opponent").
-      ──────────────────────────────────────────────────────────────────────
-      → controller.scan_zone("opponent", callback)
-        → scanner.ocr.capture_region(bbox)
-        → scanner.ocr.ocr_image(img)              # texte
-        → pipeline.recompute_from_capture(img, ocr_text=...)
-            → scanner.offsets.opponent.offsets_for_capture(W, H)
-            → scanner.panel.identify_equipment_panel(img, offsets)
-            → scanner.icon_matcher.identify_all(...)  # pets/mount/skills
-            → scanner.ocr_parser.parse_enemy_text(ocr_text)
-            → calculator.combat.calculate_enemy_stats(profile, libs)
-        → controller stocke EnemyComputedStats pour la prochaine simulation
+Pipeline adversaire actuel :
 
-  C.  L'utilisateur lance le simulator avec son profil joueur sauvegardé.
-      ──────────────────────────────────────────────────────────────────────
-      → controller.simulate(player_profile, enemy_profile)
-        → calculator.stats.combat_stats(player) / combat_stats(enemy)
-        → simulation.engine.simulate_batch(player_cs, enemy_cs, n=1000)
-        → renvoyer (wins, losses, draws, win_rate, mean_duration, ...)
+  scan.ocr.ocr_image(capture)              -> texte OCR
+  scan.offsets.opponent.offsets_for_capture
+  scan.jobs._panel.identify_panel          -> 8 equipements + mount
+  scan.refs / scan.core / scan.colors      -> identification visuelle
+  scan.enemy.parser.parse_enemy_text       -> totals + substats OCR
+  backend.calculator.combat.calculate_enemy_stats
 
-────────────────────────────────────────────────────────────────────────────────
-6. AJOUTER UNE NOUVELLE FONCTIONNALITÉ — CHECKLIST
-────────────────────────────────────────────────────────────────────────────────
+Point d'entree public :
 
-  1. Trouver la BONNE COUCHE :
-     - Calcul pur (formule) → calculator/
-     - Lecture/écriture des .txt user → persistence/
-     - Lecture des JSON jeu → passer par data.libraries
-     - Image / OCR / parsing texte → scanner/
-     - Combat tick-by-tick → simulation/engine.py
-     - Orchestration multi-couche → pipeline.py (rester fin)
+  scan.jobs.opponent.recompute_from_capture(capture, ocr_text=None)
 
-  2. Imports relatifs uniquement (cf. V3).
+Les scans joueur OCR purs sont dans :
 
-  3. Si la fonctionnalité a besoin d'une lib JSON nouvelle :
-     - L'ajouter dans data/libraries.py (_LIB_FILES) — ne PAS créer
-       un loader privé ailleurs.
-     - Mettre à jour data/README.txt.
+  scan/jobs/equipment_popup.py
+  scan/jobs/player_equipment.py
+  scan/jobs/pet.py
+  scan/jobs/mount.py
+  scan/jobs/skill.py
 
-  4. Tests : les tests/ référencent les modules par chemin complet
-     (ex: backend.scanner.text_parser). Vérifier qu'aucun ancien chemin
-     ne traîne.
 
-  5. UI : si la fonctionnalité doit apparaître dans une vue, c'est
-     game_controller.py qui expose la méthode publique. Les vues n'importent
-     JAMAIS directement depuis backend/* — toujours via le controller.
+--------------------------------------------------------------------------------
+4. DONNEES JEU
+--------------------------------------------------------------------------------
 
-────────────────────────────────────────────────────────────────────────────────
-7. HISTORIQUE
-────────────────────────────────────────────────────────────────────────────────
+Les JSON et icones runtime sont dans `data/`.
 
-  Avril 2026 — refactor architectural majeur :
-    - Préfixe "enemy_*" supprimé (modules génériques renommés).
-    - Couplage privé→privé éliminé via calculator/item_keys.py.
-    - Chargeur JSON centralisé dans data/libraries.py.
-    - parser.py scindé : utilitaires bas-niveau gardés dans
-      scanner/text_parser.py, qui remplace l'ancien.
-    - forge_master.py (shim de compat) supprimé.
-    - Tous les imports externes mis à jour (game_controller, ui,
-      tools, tests).
-    Voir ARCHITECTURE_PLAN.txt pour le détail de la migration.
+APIs principales :
+
+  data.libraries.load_libs()
+  data.libraries.get_lib(name)
+  data.library_ops.resolve_companion(...)
+  data.library_ops.lv1_version_of(...)
+
+`backend/data/` n'existe plus et ne doit pas revenir.
+
+
+--------------------------------------------------------------------------------
+5. INVARIANTS
+--------------------------------------------------------------------------------
+
+V1. Les vues UI ne sauvegardent pas directement. Elles appellent le controller.
+
+V2. Toute sauvegarde joueur passe par `profile_store` via le controller.
+
+V3. `Skill Cooldown` est un float signe. Ne jamais appliquer `abs()`.
+
+V4. Pet et Mount gardent toujours `hp_flat` et `damage_flat`.
+
+V5. Les skills ne contribuent pas a `substats_total`; equipment, pets et mount
+    y contribuent.
+
+V6. Le scan joueur est OCR pur. Seul le scan adversaire utilise core/colors/refs.
+
+V7. OpenCV reste optionnel pour `scan.core`.
+
+V8. Les constantes PvP restent dans `backend/constants.py`.
+
+V9. `backend/zones.json`, `backend/window.json`, `logs/`, `__pycache__/` et
+    les fichiers `.legacy.bak` sont des artefacts locaux non destines au depot
+    GitHub.
+
+
+--------------------------------------------------------------------------------
+6. SMOKE TESTS
+--------------------------------------------------------------------------------
+
+Apres modification backend importante :
+
+  python -m compileall backend scan ui data game_controller.py main.py
+  python -c "import game_controller; print('import ok')"
+  python -m pytest
 
 ================================================================================
-  Dernière mise à jour : fin avril 2026
+  Derniere mise a jour : apres refactor scan/persistence
 ================================================================================

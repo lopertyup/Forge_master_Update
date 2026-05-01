@@ -7,7 +7,7 @@
   the result so subsequent scans are zero-IO.
 
   Three loading modes covering every job in the unified
-  pipeline (cf. SCAN_REFACTOR.txt §3):
+  pipeline (cf. PLAN_REFACTO_SCAN.txt):
 
       mode="exact"     — ``data/icons/equipment/<Age>/<Slot>/``
                          A single (age, slot) folder. Used by
@@ -53,6 +53,12 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from PIL import Image
 
+from data.canonical import (
+    AGE_INT_TO_NAME,
+    EQUIPMENT_SLOT_TO_ICON_FOLDER,
+    SLOT_TO_TYPE_ID as CANONICAL_SLOT_TO_TYPE_ID,
+)
+
 from .core import autocrop_reference, to_gray_arr, to_rgb_arr
 
 log = logging.getLogger(__name__)
@@ -65,7 +71,7 @@ log = logging.getLogger(__name__)
 # scan/ lives at the project root (next to backend/), so two
 # parents up is the project root and ``data/`` is the sibling
 # of ``backend``. We keep our own copy of the path constants
-# rather than importing them from backend.data.libraries to
+# rather than importing them from data.libraries to
 # minimise coupling — the only reason to share that module is
 # the AutoItemMapping dict, which we lazy-load via load_libs
 # inside each loader so the import graph stays clean.
@@ -75,47 +81,18 @@ _DATA_DIR  = _ROOT / "data"
 _ICONS_DIR = _DATA_DIR / "icons"
 
 
-# Mirror of backend.data.libraries.AGE_INT_TO_FOLDER. Kept
+# Mirror of data.libraries.AGE_INT_TO_FOLDER. Kept
 # here so scan/ can be imported without pulling backend on
 # headless test runs. Must stay in sync with the backend copy.
-AGE_INT_TO_FOLDER: Dict[int, str] = {
-    0: "Primitive",
-    1: "Medieval",
-    2: "Early-Modern",
-    3: "Modern",
-    4: "Space",
-    5: "Interstellar",
-    6: "Multiverse",
-    7: "Quantum",
-    8: "Underworld",
-    9: "Divine",
-}
+AGE_INT_TO_FOLDER: Dict[int, str] = dict(AGE_INT_TO_NAME)
 
-# Mirror of backend.data.libraries.SLOT_TO_FOLDER.
-SLOT_TO_FOLDER: Dict[str, str] = {
-    "Helmet":   "Headgear",
-    "Body":     "Armor",
-    "Gloves":   "Glove",
-    "Necklace": "Neck",
-    "Ring":     "Ring",
-    "Weapon":   "Weapon",
-    "Shoe":     "Foot",
-    "Belt":     "Belt",
-}
+# Mirror of data.libraries.SLOT_TO_FOLDER.
+SLOT_TO_FOLDER: Dict[str, str] = dict(EQUIPMENT_SLOT_TO_ICON_FOLDER)
 
 # Slot type ids (mirrors AutoItemMapping.Type) — needed by
 # equipment loaders to filter the auto-mapping JSON entries
 # down to the right slot.
-SLOT_TO_TYPE_ID: Dict[str, int] = {
-    "Helmet":   0,
-    "Body":     1,
-    "Gloves":   2,
-    "Necklace": 3,
-    "Ring":     4,
-    "Weapon":   5,
-    "Shoe":     6,
-    "Belt":     7,
-}
+SLOT_TO_TYPE_ID: Dict[str, int] = dict(CANONICAL_SLOT_TO_TYPE_ID)
 
 
 # Categories accepted by load_references. Equipment lives in
@@ -176,7 +153,7 @@ def reset_caches() -> None:
     Call if reference PNGs are renamed at runtime (e.g. an
     admin script that batch-edits ``data/icons/``) so
     subsequent scans pick up the new filenames. Cf.
-    SCAN_REFACTOR.txt §8 V1.
+    PLAN_REFACTO_SCAN.txt.
     """
     _cache.clear()
 
@@ -193,7 +170,7 @@ def list_supported_categories() -> Tuple[str, ...]:
 
 
 def _load_libs() -> Dict[str, Any]:
-    """Thin wrapper around ``backend.data.libraries.load_libs``.
+    """Thin wrapper around ``data.libraries.load_libs``.
 
     Lazy-imported so ``scan.refs`` can be exercised in tests
     that stub ``data/icons`` but do not provide a full backend
@@ -202,9 +179,9 @@ def _load_libs() -> Dict[str, Any]:
     warning" exactly like the legacy implementation.
     """
     try:
-        from backend.data.libraries import load_libs as _load
+        from data.libraries import load_libs as _load
     except Exception:  # pragma: no cover - defensive
-        log.exception("scan.refs: cannot import backend.data.libraries")
+        log.exception("scan.refs: cannot import data.libraries")
         return {}
     try:
         return _load() or {}

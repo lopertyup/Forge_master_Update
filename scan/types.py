@@ -5,7 +5,7 @@
   Two responsibilities:
 
     1. Re-export the OCR layer's dataclasses from
-       ``backend.scanner.ocr_types`` so callers in scan.jobs.*
+       ``scan.enemy.types`` so callers in scan.jobs.*
        only ever import from one place. The OCR types are
        NOT touched by this refactor — only relocated.
 
@@ -39,17 +39,16 @@ from typing import Any, Dict, List, Optional
 
 
 # ────────────────────────────────────────────────────────────
-#  Re-exports from backend.scanner.ocr_types
+#  Re-exports from scan.enemy.types
 # ────────────────────────────────────────────────────────────
 #
-# The OCR pipeline lives in backend.scanner.ocr_types and stays
-# there — this refactor only re-routes visual identification.
+# The enemy OCR pipeline lives in scan.enemy.types.
 # We re-export the dataclasses so scan/jobs/*.py can do:
 #
 #     from scan.types import IdentifiedItem, ScanResult, ...
 #
 # without ever needing to know the OCR layer's import path.
-from backend.scanner.ocr_types import (  # noqa: F401  (re-export)
+from scan.enemy.types import (  # noqa: F401  (re-export)
     SLOT_ORDER,
     SLOT_TO_JSON_TYPE,
     OcrEquipmentSlot,

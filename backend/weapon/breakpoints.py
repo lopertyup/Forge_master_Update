@@ -4,7 +4,7 @@
 
   Helpers around the pre-computed breakpoint JSON tables stored
   in ``helper/weapon atq speed/``. The actual file loading is
-  handled by ``backend.data.libraries`` so the codebase only ever
+  handled by ``data.libraries`` so the codebase only ever
   has one chargeur JSON (V2 of the architecture plan).
 
   Public API:
@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from ..data import libraries as _libs
+from data import libraries as _libs
 
 
 # Re-export so callers can keep using the same import surface.

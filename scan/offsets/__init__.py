@@ -23,7 +23,7 @@
   under ``data/`` and are loaded transparently.
 
   Both modules are direct ports of the previous
-  ``backend.scanner.offsets`` package — same numbers, same
+  legacy offsets package — same numbers, same
   schema. Phase 7 of the refactor will delete the legacy copy.
 ============================================================
 """

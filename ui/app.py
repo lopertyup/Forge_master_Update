@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 # Side-nav layout — 8 sections matching UI_REFACTOR_PLAN §0:
 # Dashboard, Simulator, Equipment, Skills, Mount, Pets, Optimizer, Zones.
 # (build_view was folded into Equipment as the "Build actuel" tab.
-# Wiki calibration was retired in Phase 7 of SCAN_REFACTOR — the
+# Wiki calibration was retired during the scan refactor — the
 # unified scan/ pipeline self-calibrates per-tile so renames are
 # done by the in-game patches, not by an admin tool.)
 _NAV_ITEMS = [

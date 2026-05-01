@@ -339,9 +339,9 @@ def apply_change_flat_only(profile: Dict, old_eq: Dict, new_eq: Dict) -> Dict:
     """Swap only the FLAT hp/damage of an equipment piece.
 
     Used by the comparator when the equipped piece is taken from the
-    persisted equipment.txt -- which caches level-scaled hp_flat /
+    persisted profile_store -- which caches level-scaled hp_flat /
     damage_flat / attack_type, but NOT per-piece substats (those still
-    live aggregated in profile.txt). Substat fields on the profile are
+    live aggregated in the profile store). Substat fields on the profile are
     therefore left untouched, and the candidate's substats are
     SHOWN but not folded back in.
 

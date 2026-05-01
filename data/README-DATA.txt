@@ -1,227 +1,220 @@
 ================================================================================
-  FORGE MASTER — Dossier data/
-  Source de vérité runtime pour toutes les valeurs du jeu
+  FORGE MASTER - Dossier data/
+  Source runtime des donnees jeu, calibrations et icones
 ================================================================================
 
-Ce dossier contient TOUTES les données auxquelles le code Forge Master accède
-au runtime. Aucune lecture de fichier n'a lieu en dehors de data/ (à part
-icons_checker/ qui a été migré ici aussi sous data/icons/).
+`data/` contient les donnees de jeu lues par le code au runtime :
 
-────────────────────────────────────────────────────────────────────────────────
-1. RÈGLES D'OR
-────────────────────────────────────────────────────────────────────────────────
+  - bibliotheques JSON officielles ou derivees,
+  - mappings nom <-> id,
+  - calibrations de couleurs,
+  - icones de reference.
 
-  1. data/ est en LECTURE-SEULE pour le runtime SAUF pour l'outil de calibration
-     icon_recognition (qui peut renommer des PNG dans data/icons/equipment/ et
-     mettre à jour data/AutoItemMapping.json).
+Ce dossier n'est pas le seul dossier lu/ecrit par l'application : la
+persistance utilisateur vit dans `backend/persistence/profile_store/`,
+les zones dans `backend/zones.json` et l'etat de fenetre dans
+`backend/window.json`.
 
-  2. Avant CHAQUE écriture dans data/, le code fait un backup horodaté dans
-     _archive/ (ex: AutoItemMapping_YYYYMMDD_HHMMSS.json).
 
-  3. Le dossier 2026_04_22/ à la racine du projet est un DUMP du patch officiel
-     du 22/04/2026, gardé pour comparaison/extraction. Il N'EST PAS lu au
-     runtime — seul data/ l'est.
+--------------------------------------------------------------------------------
+1. REGLES
+--------------------------------------------------------------------------------
 
-  4. Les noms in-game (pets, mounts, skills, items) suivent la convention :
-       - espace entre les mots
-       - majuscule en première lettre de chaque mot
-     Exemples : "Saber Tooth", "Cannon Barrage", "Brown Horse", "Higher Morale"
+R1. Les JSON metier de `data/` ne sont pas des sorties de tests. Ne pas les
+    modifier par accident.
 
-────────────────────────────────────────────────────────────────────────────────
-2. INVENTAIRE DES FICHIERS
-────────────────────────────────────────────────────────────────────────────────
+R2. Les loaders runtime passent par :
 
-A. MAPPINGS NOM ↔ ID
-   Ces fichiers convertissent les noms reconnus par OCR (ou tapés à la main)
-   vers les clés numériques utilisées par les libraries.
+      data.libraries.load_libs()
+      data.libraries.get_lib(name)
 
-  AutoItemMapping.json     — items équipement
-        clé:   "{Age}_{Type}_{Idx}"   (ex: "9_5_3" = Divine Weapon Idx 3)
-        valeur: {Age, AgeName, Type, TypeName, Idx, ItemName, SpriteName, ...}
-        232 entrées (10 ages × 8 slots × 1-8 items)
+R3. `data/colors.json` est la calibration runtime des couleurs HSV. Le fallback
+    Python dans `scan/colors.py` sert seulement de resilience.
 
-  AutoPetMapping.json      — 25 pets
-        clé:   "{'Rarity': 'X', 'Id': N}"
-        valeur: {Rarity, Id, PetName, SpriteName}
+R4. Les noms visibles en jeu utilisent la convention display name :
+    espaces entre les mots et majuscule initiale.
 
-  AutoMountMapping.json    — 15 mounts
-        clé:   "{'Rarity': 'X', 'Id': N}"
-        valeur: {Rarity, Id, MountName, SpriteName}
+R5. `backend/data/` et `scan/data/` ne doivent pas revenir.
 
-  AutoSkillMapping.json    — 18 skills
-        clé:   nom display avec espaces ("Cannon Barrage", "Higher Morale", …)
-        valeur: {Type, Rarity, SpriteName}
-        Note: la clé peut différer de SkillLibrary.json qui utilise CamelCase
-              ("CannonBarrage"). Le code de lookup doit normaliser (strip
-              espaces).
 
-B. STATS DES ITEMS (équipement, armes)
+--------------------------------------------------------------------------------
+2. FICHIERS PYTHON
+--------------------------------------------------------------------------------
 
-  ItemBalancingLibrary.json — STATS BRUTES par level pour chaque item
-        clé:   "{'Age': N, 'Type': 'Weapon'/'Helmet'/..., 'Idx': N}"
-        valeur: {ItemId, EquipmentStats: [...], weapon_meta: {...}}
-        232 entrées (le superset de tous les items du jeu).
+  __init__.py
+    Package marker.
 
-        Champ weapon_meta (présent uniquement sur les armes) :
-            {
-              "is_ranged":         bool,    (depuis AttackRange > 1.0)
-              "attack_range":      float,
-              "windup_time":       float,   (cf. WeaponLibrary)
-              "attack_duration":   float,   (RealAttackDuration de pref)
-              "projectile_speed":  float|null
-            }
+  canonical.py
+    Source Python des noms canoniques partages :
+      - slots equipment : Helmet, Body, Gloves, Necklace, Ring, Weapon, Shoe, Belt
+      - slots skills : Skill_1, Skill_2, Skill_3
+      - slots pets : Pet_1, Pet_2, Pet_3
+      - mount : Mount
+      - ages, rarities
+      - aliases OCR de substats
+      - mappings legacy -> canonique
 
-  WeaponLibrary.json        — physique des armes
-        clé:   "{'Age': N, 'Type': 'Weapon', 'Idx': N}"
-        valeur: {ItemId, AttackRange, WindupTime, AttackDuration,
-                 RealAttackDuration, IsRanged, IsAiming, ProjectileId, ...}
-        75 armes (63 normales + 12 skins Age 999/1000).
+  libraries.py
+    Chargeur lazy + cache des JSON de `data/`.
+    Charge uniquement les JSON runtime de `data/`. L'API publique reste
+    `load_libs()` / `get_lib()`.
 
-        ⚠️ AttackDuration = 1.5 pour TOUTES les armes (placeholder du JSON).
-           La VRAIE valeur est dans RealAttackDuration (1.10–1.20 par arme).
-           Le code attack_speed_calculator lit RealAttackDuration en priorité.
+  library_ops.py
+    Operations sur les bibliotheques utilisateur :
+      - find_key
+      - remove_entry
+      - resolve_companion
+      - lv1_version_of
 
-C. STATS DES PETS / MOUNTS / SKILLS
 
-  PetLibrary.json           — id ↔ Type (Balanced/Damage/Health) — 25 pets
-  PetBalancingLibrary.json  — multipliers par Type (3 entrées) :
-        Balanced: 1.0/1.0,  Damage: 1.5/0.5,  Health: 0.5/1.5
-  PetUpgradeLibrary.json    — stats par level (6 raretés × 100 levels)
+--------------------------------------------------------------------------------
+3. JSON RUNTIME
+--------------------------------------------------------------------------------
 
-  MountLibrary.json         — id ↔ metadata (15 mounts)
-  MountUpgradeLibrary.json  — stats par level (StatNature à ignorer, traiter flat)
+A. Mappings nom -> identifiant
 
-  SkillLibrary.json         — 18 skills × 100 levels (Damage/HealthPerLevel)
-  SkillPassiveLibrary.json  — passifs (rarity → list[level, base_dmg, base_hp])
+  AutoItemMapping.json
+    Mapping equipements.
+    Cle : "{Age}_{Type}_{Idx}".
+    Valeur : Age, AgeName, Type, TypeName, Idx, ItemName, SpriteName, ...
 
-D. CONFIG GLOBALE
+  AutoPetMapping.json
+    Mapping pets par rarity/id.
 
-  StatConfigLibrary.json    — defaults par stat (AttackSpeed mult=1.0,
-                              CritChance=0.0, BlockChance=0.0, …)
-  AscensionConfigsLibrary.json — paliers d'ascension par item
+  AutoMountMapping.json
+    Mapping mounts par rarity/id.
 
-E. IMAGES
+  AutoSkillMapping.json
+    Mapping skills par display name.
 
-  icons/
-    ├── equipment/{Age}/{Slot}/*.png   — 231 PNG, 10 ages × 8 slots
-    ├── pets/*.png                     — 25 PNG
-    ├── mount/*.png                    — 15 PNG
-    └── skills/*.png                   — 18 PNG
+B. Equipements et armes
 
-  Les noms de fichiers utilisent la convention "Display Name.png" (espaces +
-  majuscules), à part le dossier equipment/ qui garde temporairement le format
-  IconAgeSlotName.png en attendant la calibration via icon_recognition.
+  ItemBalancingLibrary.json
+    Stats brutes par level pour les equipements.
+    Les entrees arme portent aussi `weapon_meta` quand disponible.
 
-F. SOUS-DOSSIERS
+  WeaponLibrary.json
+    Physique des armes :
+      AttackRange, WindupTime, AttackDuration, RealAttackDuration,
+      IsRanged, IsAiming, ProjectileId, ...
 
-  _archive/                 — backups + fichiers obsolètes archivés.
-                              À supprimer manuellement via Windows Explorer
-                              (le mount FUSE Linux ne permet pas l'unlink).
-  _reference/               — fichiers gardés pour analyse de futurs patches
-                              (ex: ItemBalancingConfig.json, PvpBaseConfig.json).
-                              NON LU au runtime.
+    `RealAttackDuration` est prioritaire pour les timings. `AttackDuration`
+    reste un fallback.
 
-────────────────────────────────────────────────────────────────────────────────
-3. SOURCE DE VÉRITÉ PAR DOMAINE
-────────────────────────────────────────────────────────────────────────────────
+C. Pets, mounts, skills
 
-  Domaine                          | Fichier(s)
-  ---------------------------------|-----------------------------------------
-  Stats armes (windup, range)      | WeaponLibrary.json
-  Stats items (HP/DMG par level)   | ItemBalancingLibrary.json
-  Multipliers pet                  | PetBalancingLibrary.json (3 entrées)
-                                   | + PetUpgradeLibrary.json (par level)
-  Stats pet par level              | PetUpgradeLibrary.json
-  Stats mount par level            | MountUpgradeLibrary.json (traité flat)
-  Stats skills                     | SkillLibrary.json
-  Passifs skills                   | SkillPassiveLibrary.json
-  Defaults par stat                | StatConfigLibrary.json
-  Mapping nom ↔ id                 | Auto{Item,Pet,Mount,Skill}Mapping.json
-  Calcul attack speed              | backend/calculator/attack_speed.py
-                                   | (formule, PAS de fichier de table)
-  Breakpoints attack speed         | helper/weapon atq speed/*.json
-                                   | (chargés via backend/data/libraries.py)
+  PetLibrary.json
+  PetBalancingLibrary.json
+  PetUpgradeLibrary.json
 
-────────────────────────────────────────────────────────────────────────────────
-4. CONVENTIONS DES CLÉS
-────────────────────────────────────────────────────────────────────────────────
+  MountLibrary.json
+  MountUpgradeLibrary.json
 
-  Items / armes :
-        Format Python repr d'un dict :
-            "{'Age': 9, 'Type': 'Weapon', 'Idx': 3}"
-        Age range : 0..9 normaux + 10000 default + 999/1000 skins.
+  SkillLibrary.json
+  SkillPassiveLibrary.json
 
-  Pets / mounts :
-        Format Python repr :
-            "{'Rarity': 'Common', 'Id': 0}"
-        Rarities : Common, Rare, Epic, Legendary, Ultimate, Mythic.
+D. Configuration globale
 
-  Skills (SkillLibrary) :
-        Clé = nom CamelCase ("CannonBarrage", "RainOfArrows").
-  Skills (AutoSkillMapping) :
-        Clé = display name avec espaces ("Cannon Barrage", "Rain Of Arrows").
+  StatConfigLibrary.json
+  AscensionConfigsLibrary.json
+  colors.json
 
-────────────────────────────────────────────────────────────────────────────────
-5. AJOUTER UN NOUVEAU PATCH DE JEU
-────────────────────────────────────────────────────────────────────────────────
 
-Quand un nouveau patch sort, le workflow est :
+--------------------------------------------------------------------------------
+4. ICONES
+--------------------------------------------------------------------------------
 
-  1. Décompresser le dump dans /<projet>/<date_patch>/  (ex: 2026_04_22/)
-     pour comparaison côte-à-côte.
-  2. Cross-checker entry-par-entry les libraries depuis ce dump vers data/.
-     L'utilitaire `python -c "import json; ..."` suffit pour la plupart.
-  3. Pour les armes : si de nouvelles entrées arrivent, ajouter
-     `RealAttackDuration` (extraite via le wiki ou un nouveau WTL) dans
-     WeaponLibrary.json.
-  4. Pour les nouveaux items : compléter AutoItemMapping.json avec leurs
-     ItemName + SpriteName. Si le sprite est déjà dans data/icons/, l'outil
-     icon_recognition peut faire la calibration automatiquement.
-  5. Ne pas écraser PetBalancingLibrary.json par la version brute du patch
-     SAUF si tu as vérifié qu'elle est en format 3-entrées (Balanced/Damage/
-     Health). Si le patch fournit la version 18-entrées Rarity_Type, c'est
-     un faux multiplier — ignorer.
+Etat actuel du dossier :
 
-────────────────────────────────────────────────────────────────────────────────
-6. ATTACK SPEED — IMPORTANT
-────────────────────────────────────────────────────────────────────────────────
+  data/icons/skills/*.png       18 fichiers
+  data/icons/pets/*.png         25 fichiers
+  data/icons/mount/*.png        15 fichiers
+  data/icons/equipment/**/*.png 232 fichiers au total
 
-Aucun fichier de table de breakpoints n'existe dans data/. Tout est calculé à
-la volée par backend/calculator/attack_speed.py à partir de :
+Dans `equipment/`, 231 fichiers correspondent aux equipements. Un fichier
+supplementaire existe actuellement :
 
-  WeaponLibrary[key]["WindupTime"]            — par arme
-  WeaponLibrary[key]["RealAttackDuration"]    — par arme (1.10–1.20)
-                                                fallback "AttackDuration"=1.5
+  data/icons/equipment/mount/MountIcons.png
 
-Le calculateur reproduit EXACTEMENT la formule de statEngine.ts +
-BreakpointTables.tsx du jeu officiel :
+Structure equipment principale :
 
-  speed_mult     = max(0.1, 1 + attack_speed_pct / 100)
-  base_recovery  = max(0, attack_duration - windup_time)
-  sw = floor(windup_time / speed_mult * 10) / 10
-  sr = floor(base_recovery / speed_mult * 10) / 10
-  cycle = max(0.4, sw + sr + 0.2)
-  d = min(double_damage_pct / 100, 1.0)
-  sd = floor(0.25 / speed_mult * 10) / 10
-  double_cycle = cycle + sd
-  avg_cycle = (1 - d) * cycle + d * double_cycle
-  weighted_aps = (1 + d) / avg_cycle
+  data/icons/equipment/<Age>/<Slot>/<SpriteName>.png
 
-Validation : 1611/1611 breakpoints exacts contre le wiki sur les 62 armes
-testées (toutes les ages × tous les slots).
+Les dossiers `<Age>` actuellement presents :
 
-────────────────────────────────────────────────────────────────────────────────
-7. EN CAS DE DOUTE
-────────────────────────────────────────────────────────────────────────────────
+  Primitive
+  Medieval
+  Early-Modern
+  Modern
+  Space
+  Interstellar
+  Multiverse
+  Quantum
+  Underworld
+  Divine
 
-  - Vérifier INSTRUCTIONS_NOUVEAU_CHAT.txt à la racine du projet pour l'état
-    général du chantier.
-  - Les fichiers dans _reference/ et _archive/ contiennent l'historique des
-    décisions et des versions précédentes.
-  - Les TS sources du jeu (BattleEngine.ts, statEngine.ts, BreakpointTables.tsx)
-    sont dans `attaque speed fonctionnement/` — c'est l'autorité ultime sur
-    le comportement attendu.
+Les dossiers `<Slot>` cote disque suivent les noms de dossiers d'assets :
+
+  Headgear, Armor, Glove, Neck, Ring, Weapon, Foot, Belt
+
+La traduction depuis les noms canoniques est geree par `ui.theme` et
+`data.canonical`.
+
+
+--------------------------------------------------------------------------------
+5. ATTACK SPEED
+--------------------------------------------------------------------------------
+
+Le comportement runtime repose sur la formule dans :
+
+  backend/calculator/attack_speed.py
+
+Entrees principales :
+
+  WeaponLibrary[key]["WindupTime"]
+  WeaponLibrary[key]["RealAttackDuration"]
+  WeaponLibrary[key]["AttackDuration"]       fallback
+
+La formule reproduit le comportement officiel :
+
+  speed_mult    = max(0.1, 1 + attack_speed_pct / 100)
+  base_recovery = max(0, attack_duration - windup_time)
+  sw            = floor(windup_time / speed_mult * 10) / 10
+  sr            = floor(base_recovery / speed_mult * 10) / 10
+  cycle         = max(0.4, sw + sr + 0.2)
+  d             = min(double_damage_pct / 100, 1.0)
+  sd            = floor(0.25 / speed_mult * 10) / 10
+  double_cycle  = cycle + sd
+  avg_cycle     = (1 - d) * cycle + d * double_cycle
+  weighted_aps  = (1 + d) / avg_cycle
+
+Les anciens fichiers de reference de breakpoints ne sont pas requis au runtime.
+La source de verite du comportement est le code ci-dessus et les JSON runtime.
+
+
+--------------------------------------------------------------------------------
+6. SOUS-DOSSIERS NON RUNTIME DIRECT
+--------------------------------------------------------------------------------
+
+  _reference/
+    Fichiers gardes pour analyse de futurs patches.
+
+
+--------------------------------------------------------------------------------
+7. AJOUTER OU METTRE A JOUR DES DONNEES
+--------------------------------------------------------------------------------
+
+1. Comparer le nouveau patch avec les JSON existants.
+2. Mettre a jour les fichiers `data/*.json` concernes.
+3. Si un nouveau type de JSON doit etre lu au runtime, l'ajouter dans
+   `data/libraries.py`.
+4. Si des icones changent, les placer sous `data/icons/...` avec le display
+   name attendu par les mappings.
+5. Relancer :
+
+     python -m compileall data backend scan ui
+     python -m pytest
 
 ================================================================================
-  Dernière mise à jour : fin avril 2026
+  Derniere mise a jour : apres refactor data canonical / scan.ocr
 ================================================================================

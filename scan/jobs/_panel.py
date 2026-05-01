@@ -2,6 +2,8 @@
 ============================================================
   FORGE MASTER — 4×2 equipment-panel identification helper
 
+  Interdit aux jobs joueur. Usage adversaire ou legacy/debug uniquement.
+
   Shared between scan/jobs/player_equipment.py (Phase 5) and
   scan/jobs/opponent.py (Phase 6). The panel layout is the
   same for both: 8 tiles in a 4×2 grid, no titles, slot
@@ -18,10 +20,10 @@
       3. Load refs (age, slot) in mode="exact".
       4. match(crop, refs, ocr_name="") → top Candidate.
          Fall back to mode="all_ages" for THAT slot when
-         the colour gap is ambiguous (cf. SCAN_REFACTOR.txt
+         the colour gap is ambiguous (cf. PLAN_REFACTO_SCAN.txt
          §3 STRAT A → STRAT B).
       5. extract_level (OCR strip below the icon) — copied
-         from backend/scanner/panel.extract_level so the
+         from the legacy panel.extract_level so the
          legacy regex behaviour is preserved.
 
   Returns: list of slot_dicts in slot_order, each dict ready
@@ -61,7 +63,7 @@ log = logging.getLogger(__name__)
 
 # ────────────────────────────────────────────────────────────
 #  Per-slot Lv.NN OCR — direct port of
-#  backend/scanner/panel.extract_level. The regex tolerates
+#  Legacy panel.extract_level. The regex tolerates
 #  RapidOCR's typical artefacts ("L v . 12" / "Lv  3").
 # ────────────────────────────────────────────────────────────
 
@@ -74,7 +76,7 @@ def _ocr_strip(capture: Image.Image,
     """OCR a single rectangle. Returns ``""`` if the OCR
     backend is unavailable or raises."""
     try:
-        from backend.scanner import ocr as _ocr
+        from scan import ocr as _ocr
     except Exception:  # pragma: no cover - defensive
         return ""
     if not _ocr.is_available():
@@ -219,7 +221,7 @@ def identify_panel(
         ``border``, ``bg``) plus ``slot_order``.
     threshold : float
         Per-tile minimum hybrid score before STRAT B kicks in
-        (cf. SCAN_REFACTOR.txt §3 fallback critère c).
+        (cf. PLAN_REFACTO_SCAN.txt fallback critère c).
     skip_per_slot_ocr : bool
         Bypass the Lv.NN OCR (returns ``__level__=1`` for every
         slot). Useful for tests on synthetic captures.

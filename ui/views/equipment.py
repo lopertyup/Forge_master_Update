@@ -326,7 +326,7 @@ class EquipmentView(ctk.CTkFrame):
                     text="⚠  No item recognised in the panel",
                     text_color=C["lose"])
                 return
-            # ok / low_confidence — equipment.txt has been overwritten,
+            # ok / low_confidence: profile_store has been updated,
             # the bus already triggered the repaint.
             tag = "✅  Scan applied"
             if status == "low_confidence":
@@ -425,7 +425,7 @@ class EquipmentView(ctk.CTkFrame):
         # ── Slot picker (P2.9 single-item flow) ────────────
         # Default "Auto" keeps the legacy two-items behaviour. Picking
         # a slot enables the path where the equipped piece is loaded
-        # from equipment.txt and only the candidate needs to be in
+        # from profile_store and only the candidate needs to be in
         # the textbox -- substats won't fold back in (see backend
         # apply_change_flat_only).
         slot_row = ctk.CTkFrame(left, fg_color="transparent")
@@ -575,8 +575,8 @@ class EquipmentView(ctk.CTkFrame):
         if result is None:
             if slot is not None:
                 self._lbl_err.configure(
-                    text=(f"⚠ Slot {self._slot_var.get()} is empty in "
-                          f"equipment.txt — scan your Build first, or "
+                    text=(f"Slot {self._slot_var.get()} is empty in "
+                          f"profile_store - scan your Build first, or "
                           f"paste a 2-item text and switch back to Auto."))
             else:
                 self._lbl_err.configure(
@@ -909,4 +909,3 @@ class EquipmentView(ctk.CTkFrame):
                 self._tabs.set("Comparer")
             except Exception:
                 pass
-

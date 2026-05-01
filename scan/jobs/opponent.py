@@ -2,14 +2,11 @@
 ============================================================
   FORGE MASTER — Opponent recompute pipeline (Phase 6)
 
-  Replaces ``backend.pipeline`` (orchestrator) +
-  ``backend.scanner.icon_matcher.identify_all`` (visual
-  identification) with a thin wrapper around the unified
-  ``scan/`` building blocks. The capture flow is identical
-  to the legacy pipeline:
+  Opponent OCR + visual identification pipeline built on the
+  unified ``scan/`` building blocks:
 
       capture (PIL)
-        → backend.scanner.ocr.ocr_image(full_capture)   (text)
+        → scan.ocr.ocr_image(full_capture)              (text)
         → scan.offsets.opponent.offsets_for_capture()   (sub-zones)
         → scan.jobs._panel.identify_panel               (8 items)
         → scan.core.match against pets/mount/skill refs (companions —
@@ -20,13 +17,11 @@
                                                          standalone
                                                          pet/mount/skill
                                                          jobs)
-        → backend.scanner.ocr_parser.parse_enemy_text   (substats)
+        → scan.enemy.parser.parse_enemy_text            (substats)
         → backend.calculator.combat.calculate_enemy_stats
                                                         (final stats)
 
-  Public API (binary-compatible with ``backend.pipeline`` so
-  callers / tests do not need to change anything besides the
-  import line):
+  Public API:
 
       recompute_from_capture(capture, ocr_text=None,
                              *, skip_per_slot_ocr=False)
@@ -35,11 +30,8 @@
       capture_and_recompute(bbox, *, skip_per_slot_ocr=False)
           -> (stats, profile, raw_text, image) | None
 
-  ⚠ The OCR layer (``backend.scanner.ocr``) and the text
-  parsers (``ocr_parser`` / ``text_parser``) are KEPT — Phase 6
-  only migrates the visual identification. The legacy
-  ``backend.scanner.icon_matcher`` is no longer imported here
-  (it remains on disk until Phase 7 cleans it up).
+  OCR lives in ``scan.ocr``. Enemy text parsing and dataclasses
+  live in ``scan.enemy``.
 ============================================================
 """
 
@@ -51,9 +43,9 @@ from typing import Any, Dict, List, Optional, Tuple
 from PIL import Image
 
 # OCR + text parsers are kept untouched — these still live in backend/.
-from backend.scanner import ocr as _ocr
-from backend.scanner.ocr_parser import parse_enemy_text
-from backend.scanner.ocr_types import (
+from scan import ocr as _ocr
+from scan.enemy.parser import parse_enemy_text
+from scan.enemy.types import (
     EnemyComputedStats,
     EnemyIdentifiedProfile,
     IdentifiedItem,
@@ -62,7 +54,7 @@ from backend.scanner.ocr_types import (
     IdentifiedSkill,
 )
 from backend.calculator.combat import calculate_enemy_stats
-from backend.data.libraries import load_libs
+from data.libraries import load_libs
 
 # Visual identification — unified scan/ layer.
 from ..colors import identify_rarity_from_color
@@ -154,11 +146,7 @@ def _build_profile(
 ) -> EnemyIdentifiedProfile:
     """Glue OCR text + visual identification into a single profile.
 
-    Mirrors ``backend.pipeline._build_profile`` 1:1 but uses
-    the unified scan/ layer for the visual step. The text-side
-    profile (forge_level / displayed totals / substats) is
-    untouched because it still flows through
-    ``parse_enemy_text``.
+    Glue OCR text + visual identification into a single profile.
     """
     profile = parse_enemy_text(raw_text)
 
@@ -231,7 +219,7 @@ def _build_profile(
 
 
 # ────────────────────────────────────────────────────────────
-#  Public entry points (binary-compatible with backend.pipeline)
+#  Public entry points
 # ────────────────────────────────────────────────────────────
 
 
@@ -243,8 +231,7 @@ def recompute_from_capture(
 ) -> Tuple[EnemyComputedStats, EnemyIdentifiedProfile, str]:
     """Run the full opponent pipeline on an already-captured image.
 
-    Returns the same triple as ``backend.pipeline.recompute_from_capture``:
-    ``(EnemyComputedStats, EnemyIdentifiedProfile, raw_text)``.
+    Returns ``(EnemyComputedStats, EnemyIdentifiedProfile, raw_text)``.
 
     ``skip_per_slot_ocr`` short-circuits every Lv.NN OCR (returns
     ``level=1`` for every slot) — useful for headless tests on

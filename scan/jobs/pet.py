@@ -1,69 +1,57 @@
-"""
-============================================================
-  FORGE MASTER — Pet popup scan (Phase 3)
-
-  Single-cell scan: identifies the pet shown in a Pets popup.
-  Follows STRAT C from SCAN_REFACTOR.txt §3:
-
-      1. OCR title  → ``[Rarity]`` balise + name + Lv.NN
-      2. Fallback   → identify_rarity_from_color on the popup
-                      border when the OCR balise is illegible
-      3. Match      → autocrop_capture(crop) ↔ flat refs from
-                      ``data/icons/pets/``
-      4. Return     → ScanResult with one Candidate carrying
-                      {id, name, rarity, level} ready to be
-                      converted into ``IdentifiedPet`` by the
-                      controller.
-
-  No age, no slot, no force_* parameters consulted (kept in
-  the signature for parity with the rest of scan.jobs.*).
-
-  Public API:
-
-      scan(capture, *, libs=None, debug_dir=None,
-           threshold=DEFAULT_THRESHOLD,
-           force_slot=None, force_age=None) -> ScanResult
-============================================================
-"""
+"""OCR-only pet popup scan job."""
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 from PIL import Image
 
-from ..core import DEFAULT_THRESHOLD
-from ..types import ScanResult
+from scan.ocr import fix_ocr, is_available, ocr_image
+from scan.ocr.parsers.companion import parse_companion_text
 
-from ._flat import run_flat_scan
+from ..types import Candidate, ScanResult
+
+log = logging.getLogger(__name__)
+DEFAULT_THRESHOLD = 0.0
 
 
 def scan(
     capture: Image.Image,
     *,
-    libs:       Optional[Dict[str, Any]] = None,
-    debug_dir:  Optional[Path]           = None,
-    threshold:  float                    = DEFAULT_THRESHOLD,
-    force_slot: Optional[str]            = None,
-    force_age:  Optional[int]            = None,
+    libs: Optional[Dict[str, Any]] = None,
+    debug_dir: Optional[Path] = None,
+    threshold: float = DEFAULT_THRESHOLD,
+    force_slot: Optional[str] = None,
+    force_age: Optional[int] = None,
 ) -> ScanResult:
-    """Identify the pet shown in a Pets popup capture.
+    if capture is None:
+        return ScanResult(matches=[], status="no_match", debug={"reason": "capture is None"})
+    if not is_available():
+        return ScanResult(matches=[], status="ocr_unavailable", debug={})
+    try:
+        raw = ocr_image(capture, debug_zone="pet")
+        text = fix_ocr(raw, context="pet")
+        slot = parse_companion_text(text)
+    except Exception:
+        log.exception("scan.jobs.pet: OCR parse failed")
+        return ScanResult(matches=[], status="scan_error", debug={})
 
-    The signature mirrors every other ``scan.jobs.*.scan(...)``
-    so the controller can wire all jobs uniformly. ``force_slot``
-    and ``force_age`` are accepted but ignored — pets have no
-    age and no slot in the data model.
-    """
-    return run_flat_scan(
-        capture,
-        category="pets",
-        kind="companion",
-        threshold=threshold,
-        debug_zone="pet",
-        debug_dir=debug_dir,
-        libs=libs,
+    missing = slot.pop("missing_fields", [])
+    status = "low_confidence" if missing else "ok"
+    candidate = Candidate(
+        name=str(slot.get("__name__") or ""),
+        score=1.0 if not missing else 0.5,
+        rarity=str(slot.get("__rarity__") or ""),
+        payload=dict(slot),
+    )
+    return ScanResult(
+        matches=[candidate] if candidate.name else [],
+        status=status if candidate.name else "no_match",
+        debug={"slot_dict": slot, "raw_text": raw, "ocr_text": text, "missing_fields": missing},
     )
 
 
 __all__ = ["scan"]
+

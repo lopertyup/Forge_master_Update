@@ -2,7 +2,7 @@
 ============================================================
   FORGE MASTER — Hybrid icon matcher (core)
 
-  Cleaned-up port of ``backend.scanner.icon_recognition`` with
+  Cleaned-up visual matching core, derived from the old calibration tooling,
   the wiki-grid-specific glue removed (cell layout, OCR title
   reading, AutoItemMapping rename pipeline). Those concerns now
   live in ``scan.jobs.<job>.scan(capture, ...)`` per-job;
@@ -24,7 +24,7 @@
   Sobel edges and colour histograms require OpenCV. Without
   ``cv2`` the module still works in degraded mode (Sobel falls
   back to plain NCC, colour histogram returns 0.5). This is a
-  REQUIRED PROPERTY (cf. SCAN_REFACTOR.txt §8 V5) — the project
+  REQUIRED PROPERTY (cf. PLAN_REFACTO_SCAN.txt V7) — the project
   must boot on a machine with no opencv-python.
 
   Public API:
@@ -271,7 +271,7 @@ def ncc_grayscale(a: "np.ndarray", b: "np.ndarray") -> float:
 def ncc_edges(a: "np.ndarray", b: "np.ndarray") -> float:
     """NCC after Sobel edge extraction. Insensitive to
     colour/light. Falls back to plain NCC when OpenCV is
-    unavailable — see SCAN_REFACTOR.txt §8 V5."""
+    unavailable — see PLAN_REFACTO_SCAN.txt V7."""
     if not _CV2_AVAILABLE:
         return ncc_grayscale(a, b)  # graceful fallback
     ax = _cv2.Sobel(a, _cv2.CV_32F, 1, 0, ksize=3)

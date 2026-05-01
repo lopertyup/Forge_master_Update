@@ -28,10 +28,10 @@
                caller wants to do additional regex work
                (skill description, passives, etc.).
 
-  The two parsers in ``backend.scanner.text_parser`` already
+  The parsers in ``scan.ocr.parsers`` already
   encode the regex bestiary for these popups; we delegate to
   them rather than duplicate the patterns. The OCR pass goes
-  through ``backend.scanner.ocr.ocr_image`` so the recolour /
+  through ``scan.ocr.ocr_image`` so the recolour /
   threshold tricks calibrated for in-game UI labels apply.
 
   Public API:
@@ -63,7 +63,7 @@ def _ocr_full_popup(capture: Image.Image,
                     debug_stamp: Optional[str] = None) -> str:
     """OCR the entire popup capture via the shared OCR module.
 
-    Lazy-imports ``backend.scanner.ocr`` so ``scan.jobs._title``
+    Lazy-imports ``scan.ocr`` so ``scan.jobs._title``
     can be imported in headless tests without Pillow + RapidOCR.
 
     Returns ``""`` when the OCR backend is unavailable; callers
@@ -71,9 +71,9 @@ def _ocr_full_popup(capture: Image.Image,
     colour heuristics.
     """
     try:
-        from backend.scanner import ocr as _ocr
+        from scan import ocr as _ocr
     except Exception:  # pragma: no cover - defensive
-        log.warning("scan.jobs._title: backend.scanner.ocr unavailable")
+        log.warning("scan.jobs._title: scan.ocr unavailable")
         return ""
 
     if not _ocr.is_available():
@@ -100,7 +100,7 @@ def _normalise_text(raw: str, *, context: Optional[str] = None) -> str:
     if not raw:
         return ""
     try:
-        from backend.scanner.fix_ocr import fix_ocr
+        from scan.ocr.fix import fix_ocr
     except Exception:  # pragma: no cover - defensive
         return raw
     try:
@@ -123,7 +123,7 @@ def _parse_meta(text: str, *, kind: str) -> Dict[str, Any]:
         return {"name": None, "rarity": None, "level": None}
 
     try:
-        from backend.scanner.text_parser import (
+        from scan.ocr.parsers import (
             parse_companion_meta,
             parse_skill_meta,
         )

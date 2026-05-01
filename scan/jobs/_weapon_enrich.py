@@ -57,7 +57,7 @@ def enrich_weapon_slot(
         function is a no-op (logs a debug line).
     libs : optional
         Pre-loaded ``data/libraries`` dict. When None, this
-        helper imports ``backend.data.libraries.load_libs`` and
+        helper imports ``data.libraries.load_libs`` and
         calls it. Callers wiring a batch of slots should pass
         the libs once for performance.
 
@@ -83,7 +83,7 @@ def enrich_weapon_slot(
     # test runs that stub data/.
     if libs is None:
         try:
-            from backend.data.libraries import load_libs as _load
+            from data.libraries import load_libs as _load
             libs = _load() or {}
         except Exception:  # pragma: no cover - defensive
             log.exception("enrich_weapon_slot: load_libs() failed")

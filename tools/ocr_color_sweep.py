@@ -4,7 +4,7 @@
 
   Problem
   -------
-  `backend.scanner.fix_ocr.recolour_ui_labels()` repaints every pixel belonging
+  `scan.ocr.fix.recolour_ui_labels()` repaints every pixel belonging
   to the game's rarity/epoch label palette (red, cyan, green, yellow,
   purple, teal, dark-blue, brown, orange) with a single replacement
   colour `LABEL_REPLACEMENT_COLOR`. That colour is the ONE knob that
@@ -64,7 +64,8 @@ _ROOT = os.path.dirname(_HERE)
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from backend.scanner import fix_ocr, ocr  # noqa: E402
+from scan import ocr  # noqa: E402
+from scan.ocr import fix as fix_ocr  # noqa: E402
 
 
 DEBUG_DIR = os.path.join(_ROOT, "debug_test")
@@ -261,7 +262,7 @@ def sweep(palette:      List[RGB],
     # the repaint and clobber our test colour with the production default).
     # We do the painting ourselves, so we neutralise the engine's one.
     fix_ocr.recolour_ui_labels = lambda img: img
-    print("  [neutralised backend.scanner.fix_ocr.recolour_ui_labels "
+    print("  [neutralised scan.ocr.fix.recolour_ui_labels "
           "for the duration of the sweep]")
 
     results: Dict = {}

@@ -16,6 +16,8 @@ from typing import Optional
 import customtkinter as ctk
 from PIL import Image
 
+from data.canonical import AGE_INT_TO_NAME, EQUIPMENT_SLOT_TO_ICON_FOLDER
+
 log = logging.getLogger(__name__)
 
 # ── Icon paths (relative to ui/theme.py) ─────────────────────
@@ -242,14 +244,9 @@ def load_mount_icon(name: str, size: int = 48) -> Optional[ctk.CTkImage]:
 
 
 # Internal age-int → folder name map (mirror of
-# backend.data.libraries.AGE_INT_TO_FOLDER — duplicated here so the UI
+# data.libraries.AGE_INT_TO_FOLDER — duplicated here so the UI
 # stays decoupled from the backend, cf. UI_REFACTOR_PLAN P1).
-_AGE_INT_TO_FOLDER = {
-    0: "Primitive",   1: "Medieval",    2: "Early-Modern",
-    3: "Modern",      4: "Space",       5: "Interstellar",
-    6: "Multiverse",  7: "Quantum",     8: "Underworld",
-    9: "Divine",
-}
+_AGE_INT_TO_FOLDER = dict(AGE_INT_TO_NAME)
 
 # Two slot vocabularies are accepted:
 #  - the canonical EQUIPMENT_SLOTS keys used by the backend
@@ -258,20 +255,7 @@ _AGE_INT_TO_FOLDER = {
 #    (Helmet / Armour / Gloves / Necklace / Ring / Weapon / Shoes / Belt).
 # Both must resolve to the actual folder names under
 # data/icons/equipment/<Age>/.
-_SLOT_TO_FOLDER = {
-    # canonical (backend.constants.EQUIPMENT_SLOTS)
-    "Helmet":   "Headgear",
-    "Body":     "Armor",
-    "Gloves":   "Glove",
-    "Necklace": "Neck",
-    "Ring":     "Ring",
-    "Weapon":   "Weapon",
-    "Shoe":     "Foot",
-    "Belt":     "Belt",
-    # AutoItemMapping TypeName variants
-    "Armour":   "Armor",
-    "Shoes":    "Foot",
-}
+_SLOT_TO_FOLDER = dict(EQUIPMENT_SLOT_TO_ICON_FOLDER)
 
 
 def load_equipment_icon(age, slot: str, sprite_name: str,

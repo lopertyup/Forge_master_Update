@@ -2,8 +2,10 @@
 ============================================================
   FORGE MASTER — STRAT C orchestrator (flat-refs jobs)
 
+  Interdit aux jobs joueur. Usage adversaire ou legacy/debug uniquement.
+
   Pet, mount, and skill popups all walk the same pipeline
-  (cf. SCAN_REFACTOR.txt §3 STRAT C):
+  (cf. PLAN_REFACTO_SCAN.txt STRAT C):
 
       1. OCR the popup title → ``[<Rarity>]`` + name + Lv.
       2. If the bracket is missing, fall back to the colour

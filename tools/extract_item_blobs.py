@@ -52,7 +52,7 @@ from scipy import ndimage  # type: ignore
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from backend.data.libraries import (  # noqa: E402  (import after sys.path tweak)
+from data.libraries import (  # noqa: E402  (import after sys.path tweak)
     AGE_TO_SPRITESHEET,
     SPRITES_DIR,
     DATA_DIR,

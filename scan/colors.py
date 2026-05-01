@@ -26,7 +26,7 @@
   (0 = perfect, ↑ = worse). The hybrid matcher score in
   ``scan.core`` returns a SCORE in [0, 1] where 1 = best.
   These two metrics have INVERSE scales — never compare them
-  with the same threshold. Cf. SCAN_REFACTOR.txt §3 / §8.V3.
+  with the same threshold. Cf. PLAN_REFACTO_SCAN.txt.
 
   Constants (re-exported for jobs that need them):
 
@@ -34,7 +34,7 @@
       AGE_COLORS_HSV     — calibration table for backgrounds
       RARITY_NAMES       — ordered tuple of canonical rarities
       AGE_INT_TO_NAME    — pretty-print table (kept for parity
-                            with backend.scanner.icon_recognition)
+                            with the old calibration tooling)
 
   Tunable thresholds used by the strategy switcher in jobs:
 
@@ -64,7 +64,7 @@ log = logging.getLogger(__name__)
 # ────────────────────────────────────────────────────────────
 #
 # The canonical source of truth for these HSV calibrations is
-# ``scan/data/colors.json``. The dicts below are EMBEDDED
+# ``data/colors.json``. The dicts below are EMBEDDED
 # FALLBACKS used only if the JSON file is missing, malformed,
 # or unreadable — the project still boots in that degraded
 # state, with a warning. Edit the JSON FIRST; keep the
@@ -88,7 +88,7 @@ RARITY_COLORS_HSV: Dict[str, Tuple[float, float, float]] = {
 # triples currently coincide with rarity colours at matching
 # positions because the in-game age progression uses the same
 # colour ramp as the rarity tier — this is intentional and
-# documented in scan/data/colors.json (_comment_convergence).
+# documented in data/colors.json (_comment_convergence).
 AGE_COLORS_HSV: Dict[int, Tuple[float, float, float]] = {
     0: (0.00, 0.00, 0.88),   # Primitive    — gris
     1: (0.56, 0.89, 1.00),   # Medieval     — bleu
@@ -157,11 +157,11 @@ AGE_NAME_TO_INT: Dict[str, int] = {
 #  Strategy thresholds
 # ────────────────────────────────────────────────────────────
 #
-# Cf. SCAN_REFACTOR.txt §3 — STRAT A (per-tile colour-driven
+# Cf. PLAN_REFACTO_SCAN.txt — STRAT A (per-tile colour-driven
 # load) vs STRAT B (all-ages traversal). The job switches
 # between them autonomously based on these values. Like the
 # colour tables above, these defaults are overridden by
-# scan/data/colors.json at import time when the file is
+# data/colors.json at import time when the file is
 # present.
 
 # Squared HSV distance above which the colour heuristic is
@@ -182,13 +182,13 @@ HSV_AMBIGUITY_GAP: float = 0.02
 # ────────────────────────────────────────────────────────────
 #
 # We ship the calibration values both as Python literals
-# (above) AND as ``scan/data/colors.json``. The JSON wins when
+# (above) AND as ``data/colors.json``. The JSON wins when
 # present; the Python literals are the safety net so an
-# accidental ``rm scan/data/colors.json`` does not crash the
+# accidental removal of ``data/colors.json`` does not crash the
 # matcher — it just degrades to the snapshot baked into the
 # code.
 
-_COLORS_JSON_PATH = Path(__file__).resolve().parent / "data" / "colors.json"
+_COLORS_JSON_PATH = Path(__file__).resolve().parent.parent / "data" / "colors.json"
 
 
 def _coerce_triple(value: Any) -> Optional[Tuple[float, float, float]]:

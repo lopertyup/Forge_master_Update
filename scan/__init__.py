@@ -2,8 +2,8 @@
 ============================================================
   FORGE MASTER — Unified scan package
 
-  Refactored visual-identification pipeline. See
-  ``SCAN_REFACTOR.txt`` for the full design document.
+  Refactored scan pipeline. See ``PLAN_REFACTO_SCAN.txt`` for
+  the historical design document.
 
   All non-OCR scans (icons / panels) follow the hybrid
   matcher pattern from the wiki-grid scanner:
@@ -20,8 +20,8 @@
                        detection (background colour → age,
                        border colour → rarity).
       scan.types     — dataclasses (Candidate, ScanResult)
-                       plus re-exports of the OCR types from
-                       backend.scanner.ocr_types.
+                       plus re-exports of the enemy OCR types from
+                       scan.enemy.types.
       scan.offsets   — pixel-bbox layouts for the opponent
                        and player equipment panels.
       scan.jobs      — (added in later phases) one file per
@@ -31,9 +31,8 @@
   Phase 1 of the refactor (this checkpoint) only ships the
   matcher + helpers. Jobs and controller wiring follow.
 
-  ⚠ The OCR pipeline (text reading) lives untouched in
-  backend.scanner.ocr / fix_ocr / ocr_parser / text_parser
-  and is re-exported through scan.types where needed.
+  The OCR pipeline lives in scan.ocr. Enemy OCR types/parser live
+  in scan.enemy and are re-exported through scan.types where needed.
 ============================================================
 """
 
